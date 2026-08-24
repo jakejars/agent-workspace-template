@@ -1,0 +1,58 @@
+---
+id: frontmatter-spec
+type: doctrine
+status: draft
+description: OKF v0.2 metadata contract. Use when authoring or validating content. Not for filing paths (see doctrine/filing.md).
+updated: 2026-08-24
+---
+
+# Frontmatter — OKF v0.2
+
+[`schema.json`](schema.json) is the sole executable source for fields,
+vocabularies, defaults, type requirements, filing, and limits.
+`tools/build_catalog.py` loads it and fails closed if it is absent or invalid.
+
+Every content file opens with frontmatter. Its `id` survives moves; `type`
+selects filing; `updated` dates content changes. Status means:
+
+- `reserved`: named but empty;
+- `stub`: intended, unopened;
+- `draft`: usable with caveat;
+- `mature`: citable.
+
+`description` is the routing interface, normalized as one line:
+`<scope>. Use when <cue>. Not for <boundary> (see <destination>).`
+
+`load` controls disclosure, not importance. `owner` names change authority.
+`precedence: protected` is an override floor. `provenance` is required on
+durable content — memory, canon, decisions, policy — and `agent_proposed` is
+visible but not load-bearing: maturity is a human act, so nothing
+`agent_proposed` may be `mature`. Typed refs must resolve. Shared scope outranks
+local only for shared truth; narrower workspace scopes otherwise win. `okf`
+pins the contract version on files that travel; a mismatch fails.
+
+Omit neutral schema defaults. Never omit ownership, protected precedence,
+meaningful token use, dates, or reserved status.
+
+The workspace entrance alone declares ordinary boot inputs and caps. An
+extracted optional-pack entrance may declare its token names locally.
+
+## Edge fields
+
+A directory door (`INDEX.md` or `README.md`) may declare typed fields for its
+subtree:
+
+```yaml
+fields:
+  - name: confidence
+    kind: number              # string | number | bool | date | list
+    values: [a, b]            # optional vocabulary
+    for: preference           # optional type restriction
+    required: true            # requires for; draft/mature only
+```
+
+Unknown keys, wrong kinds, invalid values, and missing required fields fail.
+Edge declarations extend the schema; they do not override it.
+
+Exemptions are narrow: ignored catalogs, bounded runtime pointers, licences,
+root `README.md`, and journal payloads.

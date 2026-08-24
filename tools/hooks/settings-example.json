@@ -1,0 +1,24 @@
+{
+  "_readme": [
+    "Example .claude/settings.json fragment wiring the journal guard.",
+    "Copy the PreToolUse block into the workspace's .claude/settings.json.",
+    "Editing hook wiring is an OPERATOR-APPROVED change (autonomy class C):",
+    "an agent proposes this via a Decision Packet in 50_registers/decision-queue.md;",
+    "a human applies it and records the approval in 80_governance/approvals/.",
+    "The shim is the only vendor-aware file; policy lives in tools/journal_guard.py.",
+    "Exit 2 from the shim denies the tool call; any other exit lets it through."
+  ],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|NotebookEdit|Write|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/hooks/shim.py\" journal_guard"
+          }
+        ]
+      }
+    ]
+  }
+}

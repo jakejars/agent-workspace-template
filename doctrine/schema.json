@@ -1,0 +1,460 @@
+{
+ "id": "sett-okf-v0.2",
+ "version": "0.2",
+ "required_fields": [
+  "id",
+  "type",
+  "status",
+  "description",
+  "updated"
+ ],
+ "defaults": {
+  "load": "cue",
+  "tokens": false
+ },
+ "limits": {
+  "description_chars": 180,
+  "prose_lines": 150,
+  "prose_chars": 12000,
+  "boot_static_chars": 7000,
+  "boot_dynamic_chars": 3000,
+  "boot_total_chars": 10000,
+  "handover_chars": 3000
+ },
+ "formats": {
+  "date": {
+   "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+   "message": "YYYY-MM-DD",
+   "parse": {
+    "kind": "strptime",
+    "pattern": "%Y-%m-%d",
+    "result": "date"
+   }
+  },
+  "utc_timestamp": {
+   "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+   "message": "UTC YYYY-MM-DDTHH:MM:SSZ",
+   "parse": {
+    "kind": "strptime",
+    "pattern": "%Y-%m-%dT%H:%M:%SZ",
+    "result": "datetime"
+   }
+  }
+ },
+ "fields": {
+  "id": {
+   "kind": "string"
+  },
+  "type": {
+   "kind": "string",
+   "values": [
+    "doctrine",
+    "identity",
+    "intent",
+    "memory-fact",
+    "preference",
+    "procedure",
+    "dead-end",
+    "knowledge",
+    "decision",
+    "register",
+    "capability",
+    "policy",
+    "approval",
+    "seam",
+    "run",
+    "handover",
+    "template",
+    "board",
+    "field",
+    "pillar",
+    "topic",
+    "specimen"
+   ]
+  },
+  "status": {
+   "kind": "string",
+   "values": [
+    "reserved",
+    "stub",
+    "draft",
+    "mature"
+   ]
+  },
+  "description": {
+   "kind": "string",
+   "routing_pattern": "(?i)^.+\\bUse when\\b.+\\bNot for\\b.+\\(see [^)]+\\)",
+   "routing_ref_pattern": "(?i)\\(see ([^)]+)\\)",
+   "routing_ref_forms": [
+    "repo",
+    "relative"
+   ]
+  },
+  "updated": {
+   "kind": "string",
+   "format": "date"
+  },
+  "scope": {
+   "kind": "string",
+   "pattern": "^(workspace|shared|project:[a-z0-9-]+|run:[\\w.-]+)$"
+  },
+  "precedence": {
+   "kind": "string",
+   "values": [
+    "protected"
+   ]
+  },
+  "load": {
+   "kind": "string",
+   "values": [
+    "always",
+    "cue",
+    "drill"
+   ]
+  },
+  "owner": {
+   "kind": "string",
+   "values": [
+    "human",
+    "agent",
+    "shared"
+   ]
+  },
+  "review_after": {
+   "kind": "string",
+   "format": "date"
+  },
+  "closed_at": {
+   "kind": "datetime",
+   "format": "utc_timestamp"
+  },
+  "provenance": {
+   "kind": "string",
+   "values": [
+    "authored",
+    "agent_proposed",
+    "promoted",
+    "imported"
+   ]
+  },
+  "supersedes": {
+   "kind": "string"
+  },
+  "related": {
+   "kind": "list",
+   "relationship_values": [
+    "canonical",
+    "depends_on",
+    "composes_with",
+    "contrast_with",
+    "see_also",
+    "supersedes",
+    "inspiration"
+   ]
+  },
+  "tokens": {
+   "kind": "bool"
+  },
+  "okf": {
+   "kind": "string"
+  },
+  "fields": {
+   "kind": "list"
+  },
+  "boot_static": {
+   "kind": "list"
+  },
+  "boot_dynamic": {
+   "kind": "string"
+  },
+  "boot_selector": {
+   "kind": "string"
+  },
+  "boot_static_cap": {
+   "kind": "number"
+  },
+  "boot_dynamic_cap": {
+   "kind": "number"
+  },
+  "boot_total_cap": {
+   "kind": "number"
+  },
+  "declared_tokens": {
+   "kind": "list"
+  }
+ },
+ "field_kinds": [
+  "string",
+  "number",
+  "bool",
+  "date",
+  "datetime",
+  "list"
+ ],
+ "type_fields": {
+  "approval": {
+   "required": [
+    "scope",
+    "what",
+    "packet",
+    "class",
+    "granted_by",
+    "granted",
+    "expiry"
+   ],
+   "fields": {
+    "what": {
+     "kind": "string"
+    },
+    "packet": {
+     "kind": "string"
+    },
+    "class": {
+     "kind": "string",
+     "values": [
+      "B",
+      "C"
+     ]
+    },
+    "granted_by": {
+     "kind": "string"
+    },
+    "granted": {
+     "kind": "string",
+     "format": "date"
+    },
+    "expiry": {
+     "kind": "string",
+     "format": "date"
+    },
+    "conditions": {
+     "kind": "string"
+    }
+   },
+   "body_keys": [
+    "what",
+    "packet",
+    "class",
+    "scope",
+    "granted_by",
+    "granted",
+    "expiry",
+    "conditions"
+   ]
+  },
+  "seam": {
+   "fields": {
+    "verified_on": {
+     "kind": "string",
+     "format": "date"
+    }
+   },
+   "required_when": {
+    "mature": [
+     "verified_on"
+    ]
+   },
+   "headings": [
+    "What crosses",
+    "Direction",
+    "Inspect point",
+    "Control point",
+    "What never crosses"
+   ]
+  },
+  "handover": {
+   "required_all": [
+    "closed_at"
+   ],
+   "fields": {
+    "closed_at": {
+     "kind": "datetime",
+     "format": "utc_timestamp"
+    }
+   }
+  },
+  "memory-fact": {
+   "required": [
+    "provenance"
+   ]
+  },
+  "preference": {
+   "required": [
+    "provenance"
+   ]
+  },
+  "procedure": {
+   "required": [
+    "provenance"
+   ]
+  },
+  "dead-end": {
+   "required": [
+    "provenance"
+   ]
+  },
+  "decision": {
+   "required": [
+    "provenance"
+   ]
+  },
+  "knowledge": {
+   "required": [
+    "provenance"
+   ]
+  },
+  "policy": {
+   "required": [
+    "provenance"
+   ]
+  }
+ },
+ "filing": {
+  "chambers": [
+   "00_meta",
+   "10_identity",
+   "20_intent",
+   "30_memory",
+   "40_knowledge",
+   "50_registers",
+   "60_capabilities",
+   "70_seams",
+   "80_governance",
+   "90_runs",
+   "_templates",
+   "boards",
+   "doctrine",
+   "fields"
+  ],
+  "type_chambers": {
+   "identity": "10_identity",
+   "intent": "20_intent",
+   "memory-fact": "30_memory",
+   "preference": "30_memory",
+   "procedure": "30_memory",
+   "dead-end": "30_memory",
+   "knowledge": "40_knowledge",
+   "decision": "40_knowledge",
+   "capability": "60_capabilities",
+   "seam": "70_seams",
+   "policy": "80_governance",
+   "approval": "80_governance",
+   "run": "90_runs",
+   "handover": "90_runs",
+   "template": "_templates",
+   "board": "boards"
+  },
+  "universal_types": [
+   "doctrine",
+   "register"
+  ],
+  "library": {
+   "types": [
+    "field",
+    "pillar",
+    "topic",
+    "specimen"
+   ],
+   "family_prefix": "library/fields/",
+   "standalone_prefix": "fields/"
+  },
+  "registry_allowed_types": [
+   "capability",
+   "doctrine",
+   "register"
+  ],
+  "shared_context": {
+   "family_prefix": "shared-context/",
+   "bindings": [
+    {
+     "pattern": "^(SHARED|INDEX)\\.md$",
+     "types": [
+      "doctrine"
+     ]
+    },
+    {
+     "pattern": "^(CHANGES|roster)\\.md$",
+     "types": [
+      "register"
+     ]
+    },
+    {
+     "pattern": "^_meta/.*\\.md$",
+     "types": [
+      "policy"
+     ]
+    },
+    {
+     "pattern": "^boundaries/.*\\.md$",
+     "types": [
+      "policy"
+     ]
+    },
+    {
+     "pattern": "^calibration/.*\\.md$",
+     "types": [
+      "register"
+     ]
+    },
+    {
+     "pattern": "^identity/.*\\.md$",
+     "types": [
+      "identity"
+     ]
+    },
+    {
+     "pattern": "^operating-rules/.*\\.md$",
+     "types": [
+      "policy"
+     ]
+    }
+   ]
+  }
+ },
+ "constraints": [
+  {
+   "if": {
+    "field": "load",
+    "equals": "always"
+   },
+   "then": {
+    "field": "status",
+    "equals": "mature"
+   },
+   "message": "load: always requires status: mature"
+  },
+  {
+   "if": {
+    "field": "status",
+    "equals": "mature"
+   },
+   "then": {
+    "field": "provenance",
+    "not_equals": "agent_proposed"
+   },
+   "message": "status: mature requires a human act; provenance: agent_proposed cannot be mature"
+  }
+ ],
+ "stale": {
+  "field": "review_after",
+  "comparison": {
+   "operator": "before",
+   "reference": "today"
+  },
+  "exclude_statuses": [
+   "reserved"
+  ],
+  "exclude_path_prefixes": [
+   "library/inbox/",
+   "inbox/"
+  ]
+ },
+ "uncapped": {
+  "types": [
+   "register"
+  ],
+  "path_fragments": [
+   "30_memory/journal/"
+  ]
+ }
+}

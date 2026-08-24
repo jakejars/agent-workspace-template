@@ -1,0 +1,5 @@
+__pycache__/
+.DS_Store
+.sett-private/
+/CATALOG.md
+/CATALOG.json

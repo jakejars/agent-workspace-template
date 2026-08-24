@@ -1,0 +1,41 @@
+name: gates
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    # The gate suite plus the acceptance test: a fresh instance built from
+    # this commit, filled, exercised through every kit, and committed through
+    # the hooks. A green run here is the claim the README makes.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Validate the source
+        # No private store is armed here on purpose: an uninstantiated family
+        # checkout is template mode, and the acceptance test arms one inside
+        # the instance it builds, which is where the store belongs.
+        run: |
+          python3 tools/build_catalog.py --check
+          python3 tools/check_loop.py
+          python3 tools/agnostic_check.py
+          python3 tools/scrub_check.py
+          python3 tools/journal_guard.py --selftest
+
+      - name: Prove the gates fail in the right direction
+        run: |
+          python3 tools/test_gates.py
+          python3 tools/test_gate_corrections.py
+
+      - name: Build and exercise a fresh instance
+        run: python3 tools/test_instance.py

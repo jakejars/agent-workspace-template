@@ -1,0 +1,18 @@
+# Worked example of a capability manifest. See ../README.md for the
+# rules a tool enforces on every field. Data file: no OKF frontmatter.
+
+name: example-capability      # MUST equal the folder name
+version: 1                    # integer, monotonic, +1 per pack
+description: >
+  The worked example of a registry capability, carrying one payload
+  file that documents its own shape. Use when learning the capability
+  folder, manifest, and install flow. Not for the registry rules
+  themselves (see registry/README.md).
+updated: 2026-08-24
+
+files:
+  - src: README.md                                   # relative to files/
+    target: 60_capabilities/example-capability/README.md   # workspace-relative
+    sha256: 431400c43e39d6c8fcfecc6905de1b4d2c93ff8afefa37557c6756e62705cbda
+
+requires: []                  # capability names only, never paths
