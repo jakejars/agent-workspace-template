@@ -76,9 +76,9 @@ Other doctrine and content remain runtime-neutral.
 The declaration is frontmatter only, at column 0, in a `.md` file, and it is
 reciprocal: a file that declares it must name a runtime, and a file that names
 one without declaring it still fails.
-`grep -rn '^runtime_subject: true$' --include='*.md' .` lists every candidate
-declaration — only those inside a terminated frontmatter block count. The
-path exceptions above are not
-declarations and never surface in that grep; they are the `ALLOWED` and
-`POINTERS` sets in `tools/agnostic_check.py`. Adapter code cannot declare; it
-stays on the checked list.
+`grep -rnE '^runtime_subject: true[[:space:]]*$' --include='*.md' .` lists
+every candidate declaration — only those inside a terminated frontmatter
+block count. The path exceptions above are not declarations and never surface
+in that grep; they are the `ALLOWED` and `POINTERS` sets in
+`tools/agnostic_check.py`. Adapter code cannot declare; it stays on the
+checked list.

@@ -47,9 +47,11 @@ naming a runtime fails too, so an exception cannot outlive the content it
 covered.
 
 The scan is a drift-catcher, not an adversary-resistant control. Path-shaped
-tokens — anything starting `~/`, `./`, `../` or `/` — are blanked before the
-term match by design, so a real path in a settings file does not trip the gate;
-prose that shapes a runtime name like a path therefore passes unseen.
+tokens — `~/`, `./`, `../`, or a lone `/` — are blanked before the term match
+by design, but the match is guarded not to start inside a URL's `//`, so a
+vendor name written into a web URL still reaches the scan and still fails;
+prose that shapes a runtime name like a filesystem path therefore passes
+unseen.
 
 ## Fail direction, honestly
 
