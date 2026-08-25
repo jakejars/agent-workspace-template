@@ -29,7 +29,7 @@ Exit: **0** clean · **1** violation · **2** usage/runtime failure.
 | `tools/check_loop.py` | per-member three-hop reachability, links, door coverage, `lists` glob bounds, member boundaries | orphan, dead/illegal edge, unbounded glob, omission, excess hop |
 | `tools/journal_guard.py` | existing journal entry mutation; agent writes to the private store, `tools/`, the entrance, the sentinel | mutation or sealed write; blocked mode exits 2 |
 | `tools/scrub_check.py` | private terms, staged ignore config, text-only tracked content; redacted diagnostics | hit, binary/unreadable/config/private-list failure |
-| `tools/agnostic_check.py` | runtime names and bounded pointer shape | leak or malformed pointer |
+| `tools/agnostic_check.py` | runtime names, declared exceptions, bounded pointer shape | undeclared name, empty declaration, malformed pointer, or unreadable input |
 | `tools/test_gates.py` | planted core violations | a gate accepts a defect |
 | `tools/test_gate_corrections.py` | regressions for corrected defects | regression |
 | `tools/test_instance.py` | a fresh instance: fill, every kit, a session, a commit | anything a stranger would hit |
@@ -39,7 +39,19 @@ instance and commits inside it, so a commit hook would make every nested
 test-commit pay for another one. CI runs it on every push.
 
 Runtime-name exceptions: `workspace/70_seams/harness.md`; exact root/workspace
-pointer files; `tools/hooks/`; and `tools/agnostic_check.py`.
+pointer files; exactly `tools/hooks/shim.py` and
+`tools/hooks/settings-example.json`, not the directory around them;
+`tools/agnostic_check.py`; and any `.md` whose frontmatter declares
+`runtime_subject: true`. That declaration is reciprocal — declaring it without
+naming a runtime fails too, so an exception cannot outlive the content it
+covered.
+
+The scan is a drift-catcher, not an adversary-resistant control. Path-shaped
+tokens — `~/`, `./`, `../`, or a lone `/` — are blanked before the term match
+by design, but the match is guarded not to start inside a URL's `//`, so a
+vendor name written into a web URL still reaches the scan and still fails;
+prose that shapes a runtime name like a filesystem path therefore passes
+unseen.
 
 ## Fail direction, honestly
 

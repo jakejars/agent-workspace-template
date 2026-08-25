@@ -41,5 +41,7 @@ these and repeats none of them.
    by proposal after it. An agent that believes a field is wrong files
    a Decision Packet; it does not correct the field.
 6. **Agent-agnostic.** `agents.md` describes roles and remits. The
-   runtime that happens to fill a role is named in `70_seams/harness.md`
-   and nowhere else.
+   runtime that happens to fill a role is named in `70_seams/harness.md`,
+   or in a file that declares `runtime_subject: true` — never in this
+   chamber. The gate would accept a declaration here; identity doctrine
+   does not.

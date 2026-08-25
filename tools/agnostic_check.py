@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Reject runtime names outside pointers, adapter wiring, harness seam, and
-this term-list gate. Scan tracked and non-ignored files, including dotdirs;
-match case-insensitive terms not flanked by letters. Exit: 0 clean, 1 leak,
-2 usage. Usage: python3 tools/agnostic_check.py [--root <dir>]
+"""Reject runtime names outside pointers, adapter wiring, harness seam, this
+term-list gate, and markdown that declares `runtime_subject: true`. Scan
+tracked and non-ignored files, including dotdirs; match case-insensitive terms
+not flanked by letters. A declaring file must name a runtime; a declaration
+that names none is itself a leak. Exit: 0 clean, 1 leak, 2 usage.
+Usage: python3 tools/agnostic_check.py [--root <dir>]
 """
 import os
 import re
@@ -34,6 +36,12 @@ ALLOWED = {
 
 VENDOR_TERMS = ["claude", "gemini", "codex", "gpt", "copilot"]
 
+# A markdown file whose subject is the runtime says so in its own frontmatter.
+# The declaration is reciprocal: it exempts the file from the scan and obliges
+# it to name a runtime. Only frontmatter counts, so prose cannot forge it, and
+# only `.md`, so adapter code stays on ALLOWED where the schema can see it.
+DECLARATION = "runtime_subject"
+
 SKIP_DIRS = {".git", "__pycache__", "node_modules", ".mypy_cache", "venv"}
 
 # Pointer filenames are exempt; prose is not.
@@ -48,6 +56,20 @@ PATH_TOKEN = re.compile(
 
 def allowed(rel: str) -> bool:
     return rel in ALLOWED
+
+
+def declares(rel: str, text: str) -> bool:
+    """True only for `<key>: true`, trailing blanks allowed, at column 0 of a
+    terminated frontmatter."""
+    lines = text.split("\n")
+    if not rel.endswith(".md") or not lines or lines[0].strip() != "---":
+        return False
+    found = False
+    for line in lines[1:]:
+        if line.strip() == "---":
+            return found
+        found = found or line.rstrip() == DECLARATION + ": true"
+    return False                                        # unterminated: no opt-in
 
 
 def files(root: Path):
@@ -102,11 +124,17 @@ def scan(root: Path):
         except (OSError, UnicodeDecodeError):
             leaks.append(f"{rel}:1: unreadable text; cannot prove runtime-neutral")
             continue
+        hits = []
         for lineno, raw in enumerate(text.splitlines(), start=1):
             line = PATH_TOKEN.sub("", POINTER_FILENAMES.sub("", raw))
             for term, pat in pats.items():
                 if pat.search(line):
-                    leaks.append(f"{rel}:{lineno}: vendor agent name '{term}'")
+                    hits.append(f"{rel}:{lineno}: vendor agent name '{term}'")
+        if not declares(rel, text):
+            leaks.extend(hits)
+        elif not hits:
+            leaks.append(f"{rel}:1: declares '{DECLARATION}: true' but names "
+                         f"no runtime — drop the declaration")
     if not leaks:
         print("agnostic_check: clean — no runtime named outside the adapter layer.")
         return 0
@@ -114,7 +142,8 @@ def scan(root: Path):
         print(line)
     sys.stderr.write(
         f"\nagnostic_check: {len(set(leaks))} leak(s) — move runtime detail into "
-        f"workspace/70_seams/harness.md or the adapter files in tools/hooks/.\n")
+        f"workspace/70_seams/harness.md or the adapter files in tools/hooks/, "
+        f"or declare '{DECLARATION}: true' where the runtime is the subject.\n")
     return 1
 
 

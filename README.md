@@ -61,8 +61,9 @@ exchange only ever happens through a file in `workspace/70_seams/`.
    disclosure, and traversal; the validator enforces the contract.
 4. **Append, promote, never silently rewrite.** Journals are immutable;
    candidates become canonical only through promotion; corrections append.
-5. **Agent-agnostic.** Neutral files hold the logic. Runtime pointers and
-   adapter exceptions are bounded and gate-checked.
+5. **Agent-agnostic.** Neutral files hold the logic. Runtime pointers, adapter
+   exceptions, and per-file `runtime_subject` declarations are bounded and
+   gate-checked.
 
 ## How it stays true
 

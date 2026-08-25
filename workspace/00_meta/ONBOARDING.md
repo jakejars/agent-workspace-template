@@ -95,7 +95,7 @@ git config core.hooksPath .githooks   # once per clone; enables pre-commit
 python3 tools/scrub_check.py --staged # scan the Git index; redact matches
 python3 tools/build_catalog.py --check # validate source without query outputs
 python3 tools/check_loop.py           # prove every file is reachable, no orphans
-python3 tools/agnostic_check.py       # no vendor agent named outside the four places
+python3 tools/agnostic_check.py       # no undeclared vendor agent name anywhere
 ```
 
 Run at the sett root. Fix every failure; link orphans from the chamber door,
