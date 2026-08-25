@@ -17,8 +17,8 @@ related:
 # Agents
 
 An agent identity is a **role with a ceiling**, not a product. Roles
-persist across whatever runtime fills them; the runtime is named only
-in `70_seams/harness.md`.
+persist across whatever runtime fills them; the runtime is named in
+`70_seams/harness.md`, or in a file that declares `runtime_subject: true`.
 
 | Handle | Remit | Autonomy ceiling | May write |
 |---|---|---|---|

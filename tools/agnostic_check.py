@@ -59,7 +59,8 @@ def allowed(rel: str) -> bool:
 
 
 def declares(rel: str, text: str) -> bool:
-    """True only for `<key>: true` at column 0 of a terminated frontmatter."""
+    """True only for `<key>: true`, trailing blanks allowed, at column 0 of a
+    terminated frontmatter."""
     lines = text.split("\n")
     if not rel.endswith(".md") or not lines or lines[0].strip() != "---":
         return False
