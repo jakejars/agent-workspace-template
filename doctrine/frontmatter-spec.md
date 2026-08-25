@@ -32,7 +32,7 @@ local only for shared truth; narrower workspace scopes otherwise win. `okf`
 pins the contract version on files that travel; a mismatch fails.
 
 Omit neutral schema defaults. Never omit ownership, protected precedence,
-meaningful token use, dates, or reserved status.
+meaningful token use, a declared runtime subject, dates, or reserved status.
 
 The workspace entrance alone declares ordinary boot inputs and caps. An
 extracted optional-pack entrance may declare its token names locally.

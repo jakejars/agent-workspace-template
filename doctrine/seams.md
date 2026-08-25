@@ -69,5 +69,11 @@ Runtime names are limited to:
 | exact pinned pointer files | runtime is the filename |
 | `tools/hooks/` | adapter translation |
 | `tools/agnostic_check.py` | checked term list |
+| markdown declaring `runtime_subject: true` | subject declared in frontmatter |
 
 Other doctrine and content remain runtime-neutral.
+
+The declaration is frontmatter only, at column 0, in a `.md` file, and it is
+reciprocal: a file that declares it must name a runtime, and a file that names
+one without declaring it still fails. `grep -rn runtime_subject` is the whole
+exception list. Adapter code cannot declare; it stays on the checked list.

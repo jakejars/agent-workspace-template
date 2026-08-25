@@ -305,6 +305,55 @@ class GateCorrections(unittest.TestCase):
         self.assertEqual(code, 1, out)
         self.assertIn(".hidden/runtime.md", out)
 
+    def test_runtime_declaration_is_bounded_and_reciprocal(self):
+        # The opt-in lives in frontmatter, covers only its own file, and
+        # obliges the file that claims it to name what it claims.
+        vendor = "cla" "ude"
+        prose = f"\nThe runner is {vendor}.\n"
+        seam = CLEAN["workspace/70_seams/INDEX.md"]
+        declaring = seam.replace("---\n", "---\nruntime_subject: true\n", 1)
+
+        files = dict(CLEAN)
+        files["workspace/70_seams/INDEX.md"] = seam + prose
+        build(self.tmp, files)
+        code, out = run(self.tmp, "agnostic_check.py", "--root", self.tmp)
+        self.assertEqual(code, 1, out)            # undeclared: still a leak
+
+        write(self.tmp, "workspace/70_seams/INDEX.md", declaring + prose)
+        code, out = run(self.tmp, "agnostic_check.py", "--root", self.tmp)
+        self.assertEqual(code, 0, out)
+        self.assertEqual(run(self.tmp, "build_catalog.py", "--check")[0], 0)
+
+        write(self.tmp, "workspace/70_seams/INDEX.md", declaring)
+        code, out = run(self.tmp, "agnostic_check.py", "--root", self.tmp)
+        self.assertEqual(code, 1, out)            # declared, names nothing
+        self.assertIn("names no runtime", out)
+
+        write(self.tmp, "workspace/70_seams/INDEX.md",
+              seam + "\nruntime_subject: true\n" + prose)
+        code, out = run(self.tmp, "agnostic_check.py", "--root", self.tmp)
+        self.assertEqual(code, 1, out)            # body cannot forge frontmatter
+        self.assertIn("vendor agent name", out)
+
+        write(self.tmp, "workspace/70_seams/INDEX.md", declaring + prose)
+        write(self.tmp, "notes.txt", declaring + prose)
+        code, out = run(self.tmp, "agnostic_check.py", "--root", self.tmp)
+        self.assertEqual(code, 1, out)            # markdown only
+        self.assertIn("notes.txt", out)
+
+        Path(self.tmp, "notes.txt").unlink()
+        write(self.tmp, ".hidden/neighbour.md", prose)
+        code, out = run(self.tmp, "agnostic_check.py", "--root", self.tmp)
+        self.assertEqual(code, 1, out)            # exemption is per-file
+        self.assertIn(".hidden/neighbour.md", out)
+
+        Path(self.tmp, ".hidden/neighbour.md").unlink()
+        write(self.tmp, "workspace/70_seams/INDEX.md",
+              seam.replace("---\n", "---\nruntime_subject: yes\n", 1) + prose)
+        code, out = run(self.tmp, "build_catalog.py", "--check")
+        self.assertEqual(code, 1, out)            # the flag is schema-checked
+        self.assertIn("runtime_subject", out)
+
     def test_runtime_name_inside_web_url_is_scanned(self):
         # Filesystem-path blanking must not erase ordinary URLs.
         files = dict(CLEAN)

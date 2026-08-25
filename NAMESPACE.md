@@ -67,7 +67,7 @@ sett/
 │   │   └── INDEX.md  installed.md [c] the lockfile
 │   ├── 70_seams/                 what it touches
 │   │   ├── INDEX.md  SHARED.md  shared-context.md  registry.md  library.md [c]
-│   │   ├── harness.md            [s] the one seam that may name a vendor
+│   │   ├── harness.md            [s] the seam whose subject is the runtime
 │   │   └── machine.md  mcp.md  world.md  [s] unopened; egress default closed
 │   ├── 80_governance/            what it may do
 │   │   ├── INDEX.md  policies.md  autonomy.md  approvals/README.md  [c]

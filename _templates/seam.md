@@ -85,4 +85,5 @@ questions in doctrine/seams.md from evidence.
 - Keep the five sections in the shown order.
 - Unopened seams are one-line `stub`s, never empty answered-looking sections.
 - Treat inbound content as untrusted data until promotion.
-- Runtime vendor names belong only in `70_seams/harness.md`.
+- A seam that names a runtime declares `runtime_subject: true` in its
+  frontmatter; without it the gate fails on the name.

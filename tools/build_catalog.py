@@ -1523,6 +1523,8 @@ def render_md(records, today, boot):
                 extras.append("agent_proposed — not load-bearing")
             if str(fm["tokens"]).lower() == "true":
                 extras.append("tokens")
+            if str(fm.get("runtime_subject", "")).lower() == "true":
+                extras.append("runtime_subject")
             if fm.get("review_after"):
                 extras.append(f"review: {fm['review_after']}")
             suffix = f" ({'; '.join(extras)})" if extras else ""
