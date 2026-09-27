@@ -1,40 +1,8 @@
 #!/bin/sh
-# The gate suite, with no runtime in the loop.
-#
-# Install once, per clone:   git config core.hooksPath .githooks
-#
-# Two jobs. First the journal backstop: journal_guard.py runs as a PreToolUse
-# hook and a harness may treat a crashed hook as "allow", so the immutability
-# of 30_memory/journal/ is duplicated here, where it can fail closed — a commit
-# that modifies, deletes or renames an existing entry is refused outright.
-# Then the suite, cheapest-first (doctrine/gates.md, "When they run").
-# tools/test_instance.py is deliberately absent: it builds a whole
-# instance and commits inside it, so running it from a commit hook makes
-# every nested test-commit pay for another one. CI runs it instead.
-#
-# A failing gate is a stop, not a suggestion. Fix the file or fix the
-# doctrine; --no-verify is not the fix.
-
-set -u
+# Integrity checks read the exact staged snapshot. Regression suites belong in CI.
 root=$(git rev-parse --show-toplevel) || exit 1
 cd "$root" || exit 1
-python3 tools/scrub_check.py --staged || {
-    echo "pre-commit: scrub failed — commit refused."
+python3 tools/check_staged.py || {
+    echo "pre-commit: staged integrity failed — commit refused."
     exit 1
 }
-
-for gate in \
-    "tools/journal_guard.py --staged" \
-    "tools/build_catalog.py --check" \
-    "tools/check_loop.py" \
-    "tools/agnostic_check.py" \
-    "tools/journal_guard.py --selftest" \
-    "tools/test_gates.py" \
-    "tools/test_gate_corrections.py"
-do
-    # shellcheck disable=SC2086
-    python3 $gate || {
-        echo "pre-commit: gate suite failed — commit refused."
-        exit 1
-    }
-done

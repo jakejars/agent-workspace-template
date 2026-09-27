@@ -52,6 +52,14 @@ Check before step 1; stop on any failure.
 - <state that must already be true>
 - <access or approval that must already exist>
 
+## Inputs
+
+Name the load set before step 1, split by how each file is read.
+
+- Working (this run): `<path>` — <the artifact this run acts on>
+- Reference (every run): `<path>` — <the standing rule that constrains it>
+- Excluded: `<path>` — <why it looks relevant here and is not>
+
 ## Steps
 
 1. <action> — <what you should see>
@@ -84,4 +92,6 @@ Newest first; changed steps add a version line.
 ## Rules
 
 - Require two successful runs before promotion and a verification step.
+- Working inputs belong to this run; reference inputs provide standing
+  constraints and are re-read when changed. An input that is neither belongs in `related`, not in Inputs.
 - File failed steps as linked dead ends.

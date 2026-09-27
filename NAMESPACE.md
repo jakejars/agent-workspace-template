@@ -22,11 +22,11 @@ sett/
 ├── README.md  LOOP.md  NAMESPACE.md  AGENTS.md         [c]
 ├── CLAUDE.md  GEMINI.md  LICENSE  .gitignore          [c]
 ├── CATALOG.md  CATALOG.json                           [g]
-├── .githooks/pre-commit                              [c]
+├── .githooks/{pre-commit,post-commit,post-checkout,post-merge}                              [c]
 │
 ├── doctrine/                                               [c]
 │   ├── INDEX.md  schema.json
-│   ├── frontmatter-spec.md  filing.md  naming.md  disclosure.md
+│   ├── frontmatter-spec.md  filing.md  naming.md  disclosure.md  lifecycle.md
 │   └── seams.md  migrations.md  installation.md  gates.md  consumers.md
 │
 ├── _templates/                                             [c]
@@ -41,14 +41,16 @@ sett/
 │   ├── build_catalog.py  check_loop.py  journal_guard.py  sett_layout.py
 │   ├── scrub_check.py  agnostic_check.py  instantiate.py
 │   ├── test_gates.py  test_gate_corrections.py  test_instance.py
-│   └── hooks/{shim.py,settings-example.json}
+│   ├── context.py  lifecycle.py  check_staged.py
+│   ├── test_context.py  test_staged.py  test_onboarding.py  test_hooks.py
+│   └── hooks/{shim.py,settings-example.json,install.py}
 │
 ├── workspace/                    THE SETT — the instantiable member
 │   ├── AGENTS.md                 [c] the entrance: constitution + boot
 │   ├── CLAUDE.md  GEMINI.md      [c] pinned pointers
 │   ├── 00_meta/                  instantiation state
 │   │   ├── INDEX.md  ONBOARDING.md  placeholders.md  [c]
-│   │   └── .uninitialised [c] sentinel · values.json [s] the answers, once given
+│   │   └── .uninitialised [c] · .initializing [s] · values.json [s] · ready.json [s]
 │   ├── 10_identity/              who
 │   │   └── INDEX.md  principal.md  organisation.md  agents.md  machines.md [c]
 │   ├── 20_intent/                what is wanted
@@ -100,6 +102,8 @@ sett/
 ```
 
 Ignored: `.sett-private/never-share.txt` holds literal terms; never tracked.
+`.sett-cache/` holds derived context/graph and lifecycle receipts. Root or
+run-level `work/` and `artifacts/` hold ignored arbitrary-format outputs.
 
 ## Required spine
 

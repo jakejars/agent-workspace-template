@@ -2,7 +2,7 @@
 id: kit-run
 type: template
 status: mature
-description: Kit for a run folder. Use when starting any session of work that will change something. Not for what is wanted (see ../intent.md).
+description: Kit for a run folder. Use when recording an audit or consequential execution. Not for what is wanted (see ../intent.md).
 load: drill
 owner: human
 updated: 2026-08-24
@@ -46,10 +46,11 @@ related:
 
 ## Context loaded
 
-Log loaded and deliberately excluded context.
+Log the load set as read, in the split the procedure declares.
 
-- Boot set: workspace entrance, compact shared view, selected handover
-- Loaded on cue: <file> · <file>
+- Boot set: workspace entrance, compact shared view, explicitly selected task
+- Working (this run): <file> — <what was acted on>
+- Reference (every run): <file> — <what constrained it>
 - Excluded despite matching: <file> — <why>
 
 ## Actions
@@ -92,5 +93,5 @@ New durable records:
 
 ## Rules
 
-- One intent per run. Log work as it happens.
+- One intent per detailed run. Ordinary work needs only a task checkpoint.
 - After a terminal outcome, append corrections to the journal; do not edit.

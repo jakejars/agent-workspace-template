@@ -25,12 +25,12 @@ session will act on.
    **constraints**, **success definition**, **delegation deltas**.
 3. Set `lifecycle: captured`. Capture first, clarify second — a want
    half-written here beats a want remembered nowhere.
-4. Journal the capture. One line.
+4. Capture the current checkpoint. Journal only if the event needs a durable audit trail.
 
 ## Working one
 
 - Move it up the lifecycle in `../INDEX.md` one state at a time, and
-  never past `approved` without the principal.
+  recording explicit authorization already supplied by the principal; never invent approval.
 - Runs cite it by id, in their frontmatter. The intent does not list
   its runs — that link is one-directional, and `check_loop` walks it
   from the run.
@@ -44,7 +44,7 @@ session will act on.
 
 When it reaches `satisfied`, `abandoned`, or `superseded`: set
 `lifecycle:`, name the evidence or the reason, `git mv` the file to
-`../satisfied/`, and journal the close. The move is the record; do not
+`../satisfied/`, and record the outcome and evidence in its checkpoint. The move is the record; do not
 delete, do not rewrite history in place.
 
 ## Hygiene
@@ -54,3 +54,6 @@ its date is either dead or being avoided — both are findings. The
 staleness list surfaces them; a human decides which.
 
 <!-- lists: *.md -->
+
+The current checkpoint is replaceable working state. Historical handovers
+never choose this task for a new session. Select it explicitly by ID.

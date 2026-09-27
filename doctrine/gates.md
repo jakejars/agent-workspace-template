@@ -3,7 +3,7 @@ id: gates
 type: doctrine
 status: draft
 description: Gate-suite contract. Use when a gate fails or when wiring hooks or CI. Not for executable metadata rules (see doctrine/schema.json).
-updated: 2026-08-24
+updated: 2026-09-06
 related:
   - type: depends_on
     ref: LOOP.md
@@ -13,73 +13,64 @@ related:
 
 # Gates
 
-## The three rules
+Integrity gates return 0 only when the checked property holds. Nonzero stops a
+clean completion claim or commit. Runtime tripwires are identified separately.
 
-1. Fail closed when a property cannot be proved.
-2. Treat any non-zero result as a stop.
-3. Emit deterministic `path:line: message` diagnostics.
-
-Exit: **0** clean · **1** violation · **2** usage/runtime failure.
-
-## The suite
-
-| Tool | Checks | Fails on |
-|---|---|---|
-| `tools/build_catalog.py` | schema, filing, refs, tokens, edge fields, approvals, seams, limits, boot, provenance, journal entry shape, run-to-journal trace, stray sentinel; `--check` writes nothing | any violation; no output on failure |
-| `tools/check_loop.py` | per-member three-hop reachability, links, door coverage, `lists` glob bounds, member boundaries | orphan, dead/illegal edge, unbounded glob, omission, excess hop |
-| `tools/journal_guard.py` | existing journal entry mutation; agent writes to the private store, `tools/`, the entrance, the sentinel | mutation or sealed write; blocked mode exits 2 |
-| `tools/scrub_check.py` | private terms, staged ignore config, text-only tracked content; redacted diagnostics | hit, binary/unreadable/config/private-list failure |
-| `tools/agnostic_check.py` | runtime names, declared exceptions, bounded pointer shape | undeclared name, empty declaration, malformed pointer, or unreadable input |
-| `tools/test_gates.py` | planted core violations | a gate accepts a defect |
-| `tools/test_gate_corrections.py` | regressions for corrected defects | regression |
-| `tools/test_instance.py` | a fresh instance: fill, every kit, a session, a commit | anything a stranger would hit |
-
-`test_instance.py` is the release gate, not a commit gate: it builds a whole
-instance and commits inside it, so a commit hook would make every nested
-test-commit pay for another one. CI runs it on every push.
-
-Runtime-name exceptions: `workspace/70_seams/harness.md`; exact root/workspace
-pointer files; exactly `tools/hooks/shim.py` and
-`tools/hooks/settings-example.json`, not the directory around them;
-`tools/agnostic_check.py`; and any `.md` whose frontmatter declares
-`runtime_subject: true`. That declaration is reciprocal — declaring it without
-naming a runtime fails too, so an exception cannot outlive the content it
-covered.
-
-The scan is a drift-catcher, not an adversary-resistant control. Path-shaped
-tokens — `~/`, `./`, `../`, or a lone `/` — are blanked before the term match
-by design, but the match is guarded not to start inside a URL's `//`, so a
-vendor name written into a web URL still reaches the scan and still fails;
-prose that shapes a runtime name like a filesystem path therefore passes
-unseen.
-
-## Fail direction, honestly
-
-Runtime `journal_guard.py` deliberately allows internal failure (exit 1); exit 2
-means a proven block. The staged pre-commit check is the fail-closed backstop.
-Git hooks are opt-in per clone:
-
-```sh
-git config core.hooksPath .githooks
-```
-
-Other gates fail closed as ordinary processes.
-
-## When they run
-
-| Moment | Gates |
+| Tool | Checked property |
 |---|---|
-| Every write to `30_memory/journal/` | `journal_guard.py` (hook) |
-| Session close | validator then loop; catalogs not required |
-| Pre-commit | staged scrub first; then journal, validator, loop, agnostic, selftest, regressions |
-| Egress/extraction | scrub + agnostic + full suite |
-| CI, every push | full suite plus `build_catalog.py --stale`; stale is reported, not enforced |
+| `tools/build_catalog.py --check` | Metadata, filing, IDs/refs, tokens, budgets, journal shape, run traces |
+| `tools/check_loop.py` | Per-member graph reachability, dead links, directory coverage |
+| `tools/scrub_check.py --staged` | Private literal terms and text-only distribution against Git index |
+| `tools/journal_guard.py --staged` | Existing journal mutation against Git index |
+| `tools/agnostic_check.py` | Runtime names remain in declared adapter/reference boundaries |
+| `tools/check_staged.py` | Scrub/journal original index, then validate metadata/graph/neutrality in its isolated snapshot |
+| `tools/context.py refresh` | Scrub source, validate metadata/graph, atomically cache routing metadata and edges |
+| `tools/lifecycle.py status` | Configured Git path and observed lifecycle event results |
 
-CI must provision `.sett-private/never-share.txt` out-of-band for an
-instantiated workspace, or deliberately run template (sentinel) mode; a
-red scrub gate is never a reason to drop it.
+## Intervals
 
-## Adding a gate
+| Moment | What runs |
+|---|---|
+| Session start/resume | Neutral lifecycle start: validate and refresh if source changed |
+| Prompt/task query | Cached cue routing, refresh only when stale |
+| Successful write | Cheap dirty hint; full graph scan deferred |
+| End of changed work / before compaction | Neutral close: validate/refresh changed source |
+| Pre-commit | Exact staged integrity, independently of the context cache |
+| Post-commit / checkout / merge | Refresh derived context and record the result |
+| CI / release | Source gates, planted-defect suites, focused lifecycle tests, fresh instance, stale report |
+| Egress | Scrub the actual outbound material and check its authorization |
 
-Name the enforced law and observed failure; order cheapest-first and wire every
-relevant run point.
+Install/check project-local Git wiring with `tools/hooks/install.py`.
+Session/prompt/write/close events require an adapter or explicit agent calls;
+Git does not provide universal agent-session hooks. See
+[lifecycle.md](lifecycle.md) for commands and receipt interpretation.
+
+## Enforcement limits
+
+The runtime journal guard is a tripwire for supported direct writes and common
+shell mutations, not a sandbox. Internal runtime errors fail open; staged
+journal validation is the fail-closed commit backstop. An uncommitted file can
+still be damaged before that backstop, so Git history and checkpoints matter.
+
+Schema validation checks approval shape, not the authenticity of human consent.
+A checksum validates bytes, not trust or version history. Staleness is reported
+and excluded from ordinary suggestions; records are not automatically deleted.
+
+The source remains runtime-neutral. Exact pointer files, the harness seam,
+`tools/hooks/shim.py`, `tools/hooks/settings-example.json`,
+`tools/agnostic_check.py`, and Markdown with reciprocal
+`runtime_subject: true` declarations are the bounded exceptions. This scan
+is a drift detector, not a security boundary.
+
+## Regression suites
+
+`tools/test_gates.py`, `tools/test_gate_corrections.py`, `tools/test_context.py`,
+`tools/test_staged.py`, `tools/test_onboarding.py`, and `tools/test_hooks.py`
+exercise real failures. `tools/test_instance.py` fills a fresh instance, files
+all kits, finalizes, works a session, and commits through the actual hooks.
+Run suites when changing the template or making a release; ordinary commits
+pay for integrity checks only. CI also reports `build_catalog.py --stale`.
+
+Instantiated CI must provision the ignored private-term store out of band.
+Template-mode CI has no private terms and must not claim to test a real
+workspace's confidentiality from that result.

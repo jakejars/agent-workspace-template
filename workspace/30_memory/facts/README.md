@@ -64,3 +64,7 @@ may edit in place.
 
 Agents write visible, non-binding `draft` + `agent_proposed` facts. Human class-B
 promotion changes provenance/status; agents never self-promote.
+
+Agent-proposed factual evidence may guide reversible work provisionally after
+checking its source, scope, and freshness. It grants no policy or permissions.
+Human promotion remains required for standing authority and mature status.

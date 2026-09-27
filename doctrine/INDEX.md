@@ -25,6 +25,7 @@ subset when extracted ([migrations](migrations.md)).
 | [`seams.md`](seams.md) | boundary contracts and lifecycle |
 | [`installation.md`](installation.md) | location, discovery, import |
 | [`migrations.md`](migrations.md) | moves, supersession, extraction |
+| [`lifecycle.md`](lifecycle.md) | agent-neutral event wiring and context commands |
 | [`gates.md`](gates.md) | checks, failure, run times |
 | [`consumers.md`](consumers.md) | non-agent read/write contract |
 

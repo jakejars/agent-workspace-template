@@ -7,48 +7,39 @@ scope: workspace
 owner: human
 provenance: authored
 precedence: protected
-updated: 2026-08-24
+updated: 2026-09-06
 related:
   - type: composes_with
     ref: workspace/80_governance/policies.md
 ---
 
-# Autonomy classes
+# Autonomy
 
-Classify by undo path, not importance, cost, or confidence.
+Classify the effect and then check authorization already present in the task.
+The [policies](policies.md) define the default standard profile.
 
-| | Class A | Class B | Class C |
-|---|---|---|---|
-| **Test** | Fully reversible inside this workspace, by the agent, in one step | Reversible, but not by the agent alone — or it changes what future sessions believe | Irreversible, externally visible, or constitutional |
-| **Who acts** | Agent, immediately | Agent proposes, human disposes | Human decides through a named ritual |
-| **Record** | Journal entry | Decision Packet → approval record | Decision Packet → approval record, plus an entry in the run log naming it |
-| **Blocked?** | No | Not blocked — file the packet, apply the default, continue other work | Yes. Blocked until the approval exists |
-| **Undo cost** | An edit | A human's attention | Cannot be undone, only compensated |
+| Class | Effect | Action |
+|---|---|---|
+| A | Reversible local work within the user's request | Proceed and update the task checkpoint when useful |
+| B | A change to standing beliefs, policy, preferences, or authority | Use explicit human direction; otherwise propose |
+| C | External or irreversible effect, protected boundary change | Require explicit authorization for the exact effect |
 
-## Class A — proceed and log
+Evidence-backed provisional facts are evidence, not standing policy. Agents
+may record and re-verify them without promoting their own instructions.
 
-Proceed only under the exact [policies allowlist](policies.md): undoable by one
-local edit with no external observer.
+## Authorization and records
 
-## Class B — propose, human disposes
+A direct user instruction may authorize B or C work. Capture its source and
+scope in an approval record when an external effect or protected change needs
+an audit trail; the agent may transcribe that authorization faithfully. Never
+invent authorization, widen it, or ask for it again merely to fill a form.
+Record external effects and the authorization used. Existing approval records
+retain their scope, expiry, and usage limits.
 
-- promotion; commons edits; capability install/update/trust/pack;
-- human-owned edits; rulings/decisions; non-effect seam opening;
-- high-impact risk acceptance; any uncertain classification.
+If authorization is missing, finish independent reversible preparation and
+present the concrete decision. Use a packet for a decision that will outlive
+the current exchange; ordinary questions do not need a packet by default.
+No safe default means no action on that path. Silence never grants approval.
 
-File a packet, apply its default, continue other work.
-
-## Class C — never without ritual
-
-- external send/publish/pay/sign;
-- principal-data deletion or journal mutation;
-- constitution or [boundaries](boundaries.md) change;
-- opening a [`world`](../70_seams/world.md) destination;
-- anything only compensable, not undoable.
-
-Require exact packet, scoped/expiring human approval, and run-log citation. No
-current approval, no effect; single-use unless scoped otherwise.
-
-## Escalation and its absence
-
-Escalation is allowed; de-escalation, repetition, and volume never lower class.
+Journal mutation remains prohibited; correction uses a new entry. Principal
+privacy boundaries remain in [boundaries.md](boundaries.md).

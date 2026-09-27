@@ -58,3 +58,7 @@ belong in `30_memory/preferences/`, promoted, not here.
 Where a commons is linked, its identity record for the principal
 outranks this file; this file then holds only what is local to this
 workspace, and observed corrections go to the commons as candidates.
+
+An agent may faithfully record the principal's explicit instruction or approval
+and enact its authorized scope. Recording is not self-approval. Do not request
+the same authorization again solely to create a record.

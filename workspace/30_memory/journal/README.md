@@ -15,8 +15,8 @@ related:
 
 # journal/ — the append-only record
 
-One file per event. Nothing else in the sett is truth; every other
-memory file is a projection that can be rebuilt from these entries.
+One file per recorded event. Entries are immutable evidence of what was
+recorded; their assertions can be wrong or stale and require verification.
 
 ## Naming
 
@@ -28,7 +28,7 @@ memory file is a projection that can be rebuilt from these entries.
 
 Local time, 24-hour, zero-padded. Slug is kebab-case, ≤5 words, names
 the event, not the feeling: `2026-08-24-1412-registry-install-failed`.
-Collisions take the next minute — never overwrite a filename.
+Collisions add a distinguishing slug; preserve the actual event time and never overwrite a filename.
 
 ## Entry header
 
@@ -66,19 +66,20 @@ constitutional (`workspace/AGENTS.md`, law 2), not a style rule.
 
 - **Wrong entry?** Write a `correction` entry that refs it. Both stand;
   the later one wins.
-- **Guard** — `tools/journal_guard.py` blocks any edit, overwrite,
-  move, or delete of an existing entry at tool-use time (exit 2).
+- **Guard** — `tools/journal_guard.py` checks supported direct-write calls
+  and detects common destructive shell commands (exit 2). It is a tripwire,
+  not a sandbox; arbitrary shell mutations are not fully intercepted.
   A git pre-commit hook is the runtime-independent backstop. Tool-time
   blocking needs the `PreToolUse` hook wired (`00_meta/ONBOARDING.md`
   step 6); unwired, the first refusal arrives at commit.
-- Do not fight the guard. A guard failure means the edit was wrong,
-  not that the guard was.
+- Do not fight the guard. A proven block requires a correction entry. A guard error
+  is an integration fault; inspect it without bypassing the commit backstop.
 
 Git history is the tamper-evidence; the guard is the prevention.
 
 ## When to write one
 
-Every durable event, as it happens — not batched at session end:
+Record consequential events when they occur:
 a decision made, an approval used, an external effect, a surprise, a
 failure, a capability installed, an intent satisfied. Capture is
 ceremony-free: sixty seconds, one file, no permission needed
@@ -86,3 +87,5 @@ ceremony-free: sixty seconds, one file, no permission needed
 
 Entries are never pruned. Aggressive expiry elsewhere in the chamber
 is safe precisely because the journal is permanent.
+
+Routine file edits belong in the current task checkpoint, not one event each.

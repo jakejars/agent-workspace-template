@@ -62,3 +62,7 @@ updated: 2026-08-24
 Use `_templates/approval.md`; records are pattern-covered.
 
 <!-- lists: *.md -->
+
+An agent may faithfully record the principal's explicit instruction or approval
+and enact its authorized scope. Recording is not self-approval. Do not request
+the same authorization again solely to create a record.

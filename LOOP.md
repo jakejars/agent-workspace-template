@@ -16,11 +16,11 @@ related:
 ```text
 workspace/AGENTS.md
   → frontmatter boot_static, in order
-  → boot_selector match from boot_dynamic, if any
+  → explicit task selection and its current checkpoint
   → task-cued links and descriptions
-  → durable event: journal append
-  → continuing work: bounded handover
-  → session-close gates
+  → meaningful milestone: update task checkpoint
+  → consequential event/audit: optional run and journal
+  → lifecycle close validates changed source
   ↺ next session
 ```
 
@@ -36,9 +36,8 @@ intent → run → outcome → satisfied | abandoned | superseded
 consequential proposal → packet → approval → effect → run evidence
 ```
 
-Journal events never mutate. Decisions and promoted memory hold durable truth;
-registers hold unresolved state. External effects resolve to policy or explicit
-approval.
+Journal events never mutate. Decisions record authority; facts carry evidence;
+registers hold unresolved state. External effects require explicit authorization; record it without re-asking.
 
 ## Family exchange
 

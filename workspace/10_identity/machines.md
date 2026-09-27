@@ -40,10 +40,11 @@ drifting the day the machine changes.
    exactly one machine unless a row here says otherwise. A path that
    resolves on the wrong machine is the failure mode this table exists
    to make visible.
-4. **A missing truth file is a stop, not a gap to fill.** If
-   `<<MACHINE_FILE>>` does not resolve, say so and ask; do not
-   reconstruct machine facts by probing the environment and do not
-   write what you found into this sett.
+4. **Optional reference.** An empty machine path means unconfigured. Inspect
+   current machine facts with authorized read-only tools when needed; record
+   provisional evidence and scope rather than inventing a machine profile.
+   If a configured path is missing, report the stale pointer and continue
+   work that does not depend on it.
 5. **Multi-machine is not sync.** This sett has no cross-device
    protocol. Two machines running the same sett is two setts unless a
    human keeps them together deliberately.

@@ -36,6 +36,13 @@ jobs:
         run: |
           python3 tools/test_gates.py
           python3 tools/test_gate_corrections.py
+          python3 tools/test_context.py
+          python3 tools/test_staged.py
+          python3 tools/test_onboarding.py
+          python3 tools/test_hooks.py
 
       - name: Build and exercise a fresh instance
         run: python3 tools/test_instance.py
+
+      - name: Report aging context
+        run: python3 tools/build_catalog.py --stale

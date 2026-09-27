@@ -23,18 +23,18 @@ those files, and the validator rejects unflagged use.
 
 | Token | Fills | Supplied by | Example | Appears in |
 |---|---|---|---|---|
-| `<<PRINCIPAL_NAME>>` | The human this sett serves — the name used in prose and in handovers | Interview | `Jane Okoro` | `10_identity/`, `shared-context/**`, `_templates/preference.md` |
-| `<<PRINCIPAL_LEGAL_NAME>>` | Optional never-share match value; omit if withheld or identical to the public working name | Interview | `Jane Adaeze Okoro` | ignored `.sett-private/never-share.txt` only |
-| `<<PRINCIPAL_EMAIL>>` | The principal's identifying address — attribution and filtering only, never a send target | Interview | `jane@example.com` | `10_identity/principal.md` |
-| `<<ORG_NAME>>` | The organisation whose work this sett does; `—` if purely personal | Interview | `Example Ltd` | `10_identity/organisation.md` |
-| `<<CLIENT_CODENAME>>` | Optional never-share match value for client work; omit when unused | Interview | `bluebird` | ignored `.sett-private/never-share.txt` only |
-| `<<MACHINE_FILE>>` | Absolute path to this machine's truth file (hardware, toolchain, installed apps) — referenced, never copied. Must resolve **outside the sett root**, or the gates treat it as contract-bound content | Interview, verified to exist | `/Users/jane/MAC.md` | `10_identity/machines.md`, `10_identity/INDEX.md` |
-| `<<WORKSPACE_ID>>` | The kebab-case name this workspace is known by in the commons roster and changelog | Interview | `okoro-consulting` | `shared-context/roster.md`, `shared-context/CHANGES.md` |
-| `<<WORKSPACE_PATH>>` | Absolute path to this workspace, as the commons records it | Interview, verified to exist | `/Users/jane/sett/workspace` | `shared-context/roster.md` |
-| `<<SHARED_CONTEXT_PATH>>` | Absolute path to the commons this workspace refreshes from; empty = unlinked | Interview | `/Users/jane/shared-context` | `70_seams/shared-context.md`, `shared-context/SHARED.md`, `shared-context/roster.md` |
-| `<<REGISTRY_PATH>>` | Absolute path to the capability toolshed; empty = no registry linked | Interview | `/Users/jane/registry` | `70_seams/registry.md` |
-| `<<LIBRARY_PATH>>` | Absolute path to a linked external knowledge library; empty = no library linked | Interview, default empty | `/Users/jane/library` | `70_seams/library.md` |
-| `<<OBJECTION_WINDOW_HOURS>>` | Hours a commons edit or a promotion stands before it binds | Interview, default `48` | `48` | `70_seams/shared-context.md`, `shared-context/SHARED.md`, `shared-context/CHANGES.md`, `shared-context/_meta/governance.md` |
+| `<<PRINCIPAL_NAME>>` | The human this sett serves — the name used in prose and in handovers | Supplied or asked if needed | `Jane Okoro` | `10_identity/`, `shared-context/**`, `_templates/preference.md` |
+| `<<PRINCIPAL_LEGAL_NAME>>` | Optional never-share match value; omit if withheld or identical to the public working name | Supplied or asked if needed | `Jane Adaeze Okoro` | ignored `.sett-private/never-share.txt` only |
+| `<<PRINCIPAL_EMAIL>>` | The principal's identifying address — attribution and filtering only, never a send target | Supplied or asked if needed | `jane@example.com` | `10_identity/principal.md` |
+| `<<ORG_NAME>>` | The organisation whose work this sett does; `—` if purely personal | Supplied or asked if needed | `Example Ltd` | `10_identity/organisation.md` |
+| `<<CLIENT_CODENAME>>` | Optional never-share match value for client work; omit when unused | Supplied or asked if needed | `bluebird` | ignored `.sett-private/never-share.txt` only |
+| `<<MACHINE_FILE>>` | Absolute path to this machine's truth file (hardware, toolchain, installed apps) — referenced, never copied. Must resolve **outside the sett root**, or the gates treat it as contract-bound content | Supplied if configured; verify existence | `/Users/jane/MAC.md` | `10_identity/machines.md`, `10_identity/INDEX.md` |
+| `<<WORKSPACE_ID>>` | The kebab-case name this workspace is known by in the commons roster and changelog | Supplied or asked if needed | `okoro-consulting` | `shared-context/roster.md`, `shared-context/CHANGES.md` |
+| `<<WORKSPACE_PATH>>` | Absolute path to this workspace, as the commons records it | Supplied if configured; verify existence | `/Users/jane/sett/workspace` | `shared-context/roster.md` |
+| `<<SHARED_CONTEXT_PATH>>` | Absolute path to the commons this workspace refreshes from; empty = unlinked | Supplied or asked if needed | `/Users/jane/shared-context` | `70_seams/shared-context.md`, `shared-context/SHARED.md`, `shared-context/roster.md` |
+| `<<REGISTRY_PATH>>` | Absolute path to the capability toolshed; empty = no registry linked | Supplied or asked if needed | `/Users/jane/registry` | `70_seams/registry.md` |
+| `<<LIBRARY_PATH>>` | Absolute path to a linked external knowledge library; empty = no library linked | Optional; default empty | `/Users/jane/library` | `70_seams/library.md` |
+| `<<OBJECTION_WINDOW_HOURS>>` | Hours a commons edit or a promotion stands before it binds | Optional; default `48` | `48` | `70_seams/shared-context.md`, `shared-context/SHARED.md`, `shared-context/CHANGES.md`, `shared-context/_meta/governance.md` |
 
 <!-- ledger: append above this line -->
 
@@ -47,7 +47,7 @@ green while it no longer tests anything. `tools/` is never a consumer.
 
 ## Fill mechanism
 
-1. Ask/read back each row in order; write confirmed non-secret answers once to
+1. Reuse supplied facts; ask only for required gaps. Write non-secret answers to
    `00_meta/values.json` as `{"TOKEN":"value"}`.
 2. From the sett root, grep, replace, and re-grep one exact token at a time —
    **only in files declaring `tokens: true`**. Nothing else is a consumer.
@@ -58,3 +58,8 @@ green while it no longer tests anything. `tools/` is never a consumer.
 
 Absolute paths preserve extraction. Empty shared-context, registry, or library
 paths close that seam at `status: stub`.
+
+Minimal setup requires only `PRINCIPAL_NAME` and `WORKSPACE_ID`. Optional
+email, organisation, machine file, and workspace path remain empty when not
+supplied; optional member paths default closed. Fill is followed by explicit
+finalization, never by assuming a completed workspace.

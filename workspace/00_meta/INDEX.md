@@ -30,9 +30,9 @@ session runs `ONBOARDING.md`; ordinary work starts only after deletion.
 
 ## Rules
 
-1. **The sentinel is the only instantiation state.** No `initialised:`
-   flag scattered across files, no "looks filled to me". Present or
-   absent, one bit, one place.
+1. **Readiness is explicit.** The sentinel routes incomplete setup;
+   `.initializing` records fill progress and `ready.json` records verified
+   finalization. No file merely looking filled proves readiness.
 2. **`placeholders.md` is the single source of truth for tokens.** A
    token that is not in that table does not exist; adding a token to a
    file means adding the row first. `build_catalog.py` enforces both

@@ -15,8 +15,8 @@ related:
 
 # 40_knowledge — what this workspace knows
 
-Memory is what happened and what it suggests. Knowledge is what has
-survived review and may be quoted without a caveat. The chamber holds
+Memory is what happened and what it suggests. Knowledge is reusable context with explicit evidence and scope.
+Review does not remove the need to check facts that may have changed. The chamber holds
 three things, and nothing enters any of them by accident.
 
 | Sub-chamber | Holds | Entry route |
@@ -54,6 +54,6 @@ allowed to overwrite one. Institutional trust is the ability to ask
 "why is it this way?" six months later and get an answer that has not
 been edited since. That answer lives in `decisions/`.
 
-Every consequential choice made during a run lands there — the run
+Future-binding consequential choices land there — the run
 log cites the decision id, and the decision cites the approval in
 `80_governance/approvals/` when one was required.

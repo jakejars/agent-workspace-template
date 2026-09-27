@@ -3,3 +3,11 @@ __pycache__/
 .sett-private/
 /CATALOG.md
 /CATALOG.json
+
+/.sett-cache/
+/work/
+/artifacts/
+/workspace/90_runs/*/work/
+/workspace/90_runs/*/artifacts/
+/90_runs/*/work/
+/90_runs/*/artifacts/

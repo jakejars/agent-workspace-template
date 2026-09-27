@@ -85,4 +85,4 @@ Newest-first non-blockers. Durable items must cite `50_registers/open-loops.md`.
 
 - Write before close validation; maximum 3,000 characters.
 - Claims require the re-verification block.
-- One per run; boot selects the greatest parsed UTC `closed_at`.
+- One per run; historical evidence only. Select current task context explicitly.

@@ -5,7 +5,7 @@ status: draft
 description: Instance setup walk. Use when `.uninitialised` exists. Not for token definitions (see placeholders.md).
 scope: workspace
 owner: human
-updated: 2026-08-24
+updated: 2026-09-06
 related:
   - type: canonical
     ref: workspace/00_meta/placeholders.md
@@ -13,112 +13,68 @@ related:
     ref: workspace/AGENTS.md
 ---
 
-# Onboarding — the instantiation walk
+# Onboarding
 
-While `00_meta/.uninitialised` exists, do only these seven idempotent steps;
-restart an interrupted walk at 1. Door: [`INDEX.md`](INDEX.md).
+While `.uninitialised` exists, finish or resume setup. The `.initializing`
+checkpoint distinguishes a mechanical fill from a ready workspace. Family
+maintenance never runs this walk.
 
-## 1. Interview
+## 1. Reuse answers, ask only for gaps
 
-Ask one question per [`placeholders.md`](placeholders.md) row, in order; never
-batch or infer answers.
+Use values supplied in the request or a referenced configuration. Ask for the
+working name and workspace ID if missing. Batch related optional questions;
+never require a twelve-question interview before local work can begin.
+Email, organisation, machine reference, and optional family paths may be empty.
+Empty means unconfigured, never invented personal or machine facts.
 
-- Offer defaults aloud; never assume them. Accept alternatives.
-- Empty closes shared-context, registry, or library seams; for legal name or
-  client codename it omits that scrub term. Never substitute `—`.
-- Verify paths exist. `<<MACHINE_FILE>>` must resolve outside the sett root.
-- Read every answer back. Do not ask or guess pronouns; unstated = `they`.
+Write non-secret answers to `00_meta/values.json`. The
+[placeholder registry](placeholders.md) defines the fields. Names and values
+that must never leave belong only in the ignored private store, never JSON.
+The human configures `.sett-private/never-share.txt` locally, or explicitly
+records no literal terms as described in `80_governance/boundaries.md`; an agent may
+explain the format but must not ask for secrets in a model conversation.
 
-Write substitution answers to `00_meta/values.json`, except never-share
-answers: write those only to ignored `.sett-private/never-share.txt`; never print or commit it.
-
-### When you cannot ask
-
-Written answers count; cite their source in the birth journal. If nobody can
-answer:
-
-1. Apply documented defaults.
-2. Open one `50_registers/open-loops.md` row naming outstanding tokens,
-   applied defaults, and uninstantiated state.
-3. Stop before step 2; do not write identity or delete the sentinel.
-
-## 2. Fill the workspace
+## 2. Mechanical fill
 
 ```sh
-python3 tools/instantiate.py          # fill; --check audits an instance
+python3 tools/instantiate.py --minimal
 ```
 
-It applies `values.json` per `placeholders.md`, token-by-token, in files
-declaring `tokens: true` and nowhere else, closes any seam whose path was left
-empty, completes steps 3 and 7, and refuses if an answer is missing. Do it by
-hand only if you cannot run Python — and then touch no file without the flag,
-because a family-wide replace also rewrites the `tools/` test fixtures.
+Only `tokens: true` consumers are filled. Unlinked optional seams close.
+The script records a fill checkpoint and birth event, but **keeps the sentinel**.
+An interrupted fill resumes from the same saved answers. Do not change the
+answers mid-fill. A completed fill is not readiness.
 
-## 3. Instantiate the other members
+## 3. First task and relevant seams
 
-Fill linked optional members. For commons, complete this workspace's roster row
-(both dates today) and replace the fabricated `CHANGES.md` trailer with the
-instantiation change; keep the library example topic. Verify family-wide that
-no `<<` remains in a `tokens: true` file; a survivor means missing registration
-or a missing flag. Tokens outside a consumer — doctrine prose, `tools/`
-fixtures — stay as they are.
+Capture the first intent using `_templates/intent.md`, including a short current
+checkpoint. Use the user's actual objective, constraints, and authorization.
+Link it from the active directory or its declared pattern. Open only the seams
+needed now; optional commons, registry, and library may stay closed.
+Machine facts may be observed through authorized tools when needed; a machine
+reference document is optional, and its absence does not prevent other work.
 
-## 4. Link the seams
+## 4. Hook disposition
 
-- Shared context: verify path; if linked, distil human-approved shared truth to
-  `70_seams/SHARED.md`; otherwise keep it free of shared principal facts.
-- Registry: verify path. Linking installs nothing; installation remains a
-  separate human-gated act in `60_capabilities/`.
-- Library: verify path, readable `LIBRARY.md` and catalog, and gates exit 0.
-  It never boots; unlinked knowledge stays in `40_knowledge/`.
-- Consumer: if enabled, list this root in `~/.sett/roots` and open its seam;
-  otherwise leave both closed. Either answer is reversible.
+Install the runtime-neutral Git hooks with `python3 tools/hooks/install.py`.
+Choose portable commands, or explicitly configure an adapter for the current
+runtime. See `doctrine/lifecycle.md` for event intervals and observed receipts.
+Declining automatic runtime hooks is valid; start and close remain explicit
+commands in the entrance. Merely copying an example does not prove it fires.
 
-## 5. Seed identity and first intent
-
-Fill `10_identity/` only from interview answers. Reference `<<MACHINE_FILE>>`;
-never copy hardware facts. Copy the intent kit into `20_intent/active/` and
-record the first intent in the principal's words.
-
-## 6. Install the hooks and run the gates
-
-Two hooks, not one. The commit hook is the backstop; the runtime hook is the
-prevention, and without it an agent can edit a journal entry and only learn at
-commit that it was forbidden. Wiring it is the principal's act: copy the
-`PreToolUse` block from `tools/hooks/settings-example.json` into this
-workspace's runtime settings, then answer `70_seams/harness.md`, which
-otherwise stands as "no hooks fire". Declining is a valid answer; record it in
-the seam.
+## 5. Verify and finalize
 
 ```sh
-git config core.hooksPath .githooks   # once per clone; enables pre-commit
-python3 tools/scrub_check.py --staged # scan the Git index; redact matches
-python3 tools/build_catalog.py --check # validate source without query outputs
-python3 tools/check_loop.py           # prove every file is reachable, no orphans
-python3 tools/agnostic_check.py       # no undeclared vendor agent name anywhere
+python3 tools/instantiate.py --finalize --hooks portable
+python3 tools/instantiate.py --check
 ```
 
-Run at the sett root. Fix every failure; link orphans from the chamber door,
-never delete them. Generate ignored query outputs only on demand. Full suite:
-`doctrine/gates.md`.
+Use `--hooks runtime` only to record the decision to use a runtime adapter;
+it does not claim its installation or invocation. Finalization requires an
+active intent, an explicit hook disposition, an explicit instance private-term configuration,
+and passing metadata, graph, scrub, and neutrality gates. A failure retains
+the setup markers. The ready receipt is written only after successful checks,
+and the sentinel is removed last in the readiness transition.
 
-## 7. Delete the sentinel
-
-Only now delete `00_meta/.uninitialised`; append one birth journal entry naming
-the instance, links, and first intent. The sentinel never comes back: beside a
-written journal it is a gate error, because it re-routes every later session
-into this walk.
-
-## Checklist
-
-- [ ] Every token answered and read back, or defaults + open-loops row
-- [ ] `values.json` written; no `<<` survives in any `tokens: true`
-      file, and none was touched outside one; `CHANGES.md`'s example
-      trailer replaced
-- [ ] Member seams true (linked and verified, or explicitly stub);
-      the consumer question answered
-- [ ] `10_identity/` filled from the interview; first intent
-      captured in `20_intent/active/`
-- [ ] `core.hooksPath` set; the runtime `PreToolUse` hook wired or
-      declined in `70_seams/harness.md`; every gate exits 0
-- [ ] `.uninitialised` deleted, and instantiation journalled
+A later ordinary session starts with the entrance and current task. It never
+replays the onboarding interview or resumes an arbitrary old handover.

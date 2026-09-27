@@ -55,9 +55,10 @@ files:                      # required; at least one entry
 requires: []                # optional; capability names, by name only
 ```
 
-Enforced: folder/name equality; rising integer version (no semver); exact
+Validator-enforced: folder/name equality; integer version shape (no semver); exact
 one-to-one `files[]` coverage; workspace-relative safe targets (no absolute,
-`..`, `~`, or symlink ancestors); matching sha256.
+`..`, or `~`); matching sha256. A future installer must additionally
+check resolved targets and symlink ancestors.
 
 ## Install flow (registry → workspace)
 
@@ -103,3 +104,8 @@ installable nor catalogued.
 Copy `_templates/capability.md` or `example-capability/`; replace payload,
 rewrite manifest at version 1, run the gate, append a ledger row. Publish
 `draft`; maturity is earned in use.
+
+Install/pack flows and their flags above are a consumer contract, not shipped
+commands. No installer or packer is included. Version monotonicity and no-op
+bump detection require comparison with a prior manifest and are not enforced
+by the current snapshot checksum validator.

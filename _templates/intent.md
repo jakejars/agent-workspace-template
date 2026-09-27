@@ -70,11 +70,12 @@ Falsifiable conditions:
 
 - <excluded thing>
 
-## Runs
+## Checkpoint
 
-Newest first; one line each.
-
-- {{TODAY}} — `90_runs/<run-id>/` — <outcome in five words>
+- State: <what is verified now>
+- Next: <first concrete step>
+- Open: <blocker or question, if any>
+- Evidence: <relevant file/check and result>
 ```
 
 ## Rules
@@ -84,3 +85,8 @@ Newest first; one line each.
 - `status` is trust; `lifecycle` is captured → clarified → approved →
   delegated → satisfied | abandoned | superseded. Move terminal records to
   `20_intent/satisfied/` with `git mv`; never delete them.
+
+This record is the standard work unit. Keep the whole current task within
+3,000 characters; move detailed evidence behind a relevant link. Update its
+checkpoint in place. Separate runs and journals are optional unless the
+effect or selected audit profile requires them.

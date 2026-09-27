@@ -82,10 +82,23 @@ Then:
 Duplicated post-extraction ids share ancestry; later divergence is a merge
 problem, not an identity change.
 
-Historical handovers predate required UTC `closed_at`. Before validation, add
-the closed-session time as `closed_at: YYYY-MM-DDTHH:MM:SSZ`; do not change the
-run slug or body. If the exact time is unavailable, record the best evidenced
-UTC time and the uncertainty in the next run.
+## Existing instances adopting current-task context
+
+Keep immutable history. The entrance now uses `boot_selector: explicit-task`
+and `boot_dynamic: workspace/20_intent/active/*.md`. Add a current checkpoint
+to each task actually being continued; do not move historical handovers into
+boot or infer current work from their timestamps. A task record is capped at
+3,000 characters; link detailed evidence instead of enlarging it.
+
+Install the updated Git hooks, then run `tools/lifecycle.py start` and status.
+Existing runtime adapters must add the neutral lifecycle events explicitly;
+new scripts on disk alone do not prove they fire. No daemon is introduced.
+
+Existing finalized instances without a ready receipt need a deliberate setup
+audit; do not recreate the sentinel automatically. Preserve their identity,
+private store, and journal. The new receipt records verified setup, never an
+assumed successful migration. Historical handovers still require UTC
+`closed_at`; if uncertain, record the best evidence and uncertainty.
 
 ## Pre-redesign exposure
 

@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""Perform the mechanical half of the instantiation walk.
+"""Fill, resume and finalize a workspace without inventing user answers.
 
 Usage:
   python3 tools/instantiate.py              fill this sett from values.json
   python3 tools/instantiate.py --check      audit an instance; change nothing
+  python3 tools/instantiate.py --finalize --hooks portable  validate readiness
   python3 tools/instantiate.py --date D     stamp D (YYYY-MM-DD) instead of today
   python3 tools/instantiate.py --help       this text
 
 `00_meta/ONBOARDING.md` owns the walk. The interview, the first intent, the
-consumer answer and the runtime hook are judgement and stay there; this tool
-owns only what is deterministic once the answers exist: substitution, seam
-closure, the commons row and trailer, the birth journal, and the sentinel.
+consumer answer and hook disposition stay there; this tool substitutes answers,
+closes unused seams, writes the birth journal, and records a resumable fill.
+Finalization validates the first intent and integrity gates before removing
+setup markers. It records the hook choice without claiming runtime installation.
 
 Splitting it this way is the point. Hand-substitution is where instances break
 — a family-wide grep also rewrites the `tools/` fixtures that the negative
@@ -19,7 +21,10 @@ tests plant, and the suite then passes while testing nothing.
 Exit: 0 done or clean, 1 refused or incomplete, 2 usage.
 """
 
+import argparse
 import datetime
+import subprocess
+from pathlib import Path
 import json
 import os
 import re
@@ -34,19 +39,21 @@ from build_catalog import (ROOT, LAYOUT, PLACEHOLDERS,  # noqa: E402
 
 # Policy per placeholders.md. Asserted against the registry below, so a token
 # added there without a decision here is an error rather than a silent skip.
-REQUIRED = ("PRINCIPAL_NAME", "PRINCIPAL_EMAIL", "ORG_NAME", "MACHINE_FILE",
-            "WORKSPACE_ID", "WORKSPACE_PATH")
+REQUIRED = ("PRINCIPAL_NAME", "WORKSPACE_ID")
+OPTIONAL = ("PRINCIPAL_EMAIL", "ORG_NAME", "MACHINE_FILE", "WORKSPACE_PATH")
 CLOSES_A_SEAM = {
     "SHARED_CONTEXT_PATH": "workspace/70_seams/shared-context.md",
     "REGISTRY_PATH": "workspace/70_seams/registry.md",
     "LIBRARY_PATH": "workspace/70_seams/library.md",
 }
-DEFAULTS = {"OBJECTION_WINDOW_HOURS": "48"}
+DEFAULTS = {"OBJECTION_WINDOW_HOURS": "48", **{name: "" for name in OPTIONAL}}
 # Never in values.json: never-share answers live only in the ignored store.
 PRIVATE_ONLY = ("PRINCIPAL_LEGAL_NAME", "CLIENT_CODENAME")
 
 VALUES = "workspace/00_meta/values.json"
 SENTINEL = "workspace/00_meta/.uninitialised"
+INITIALIZING = "workspace/00_meta/.initializing"
+READY = "workspace/00_meta/ready.json"
 JOURNAL = "workspace/30_memory/journal"
 ROSTER = "shared-context/roster.md"
 CHANGES = "shared-context/CHANGES.md"
@@ -120,6 +127,8 @@ def load_values(problems):
 
     machine = str(values.get("MACHINE_FILE", "")).strip()
     if machine:
+        if not os.path.isabs(os.path.expanduser(machine)) or not os.path.isfile(os.path.expanduser(machine)):
+            problems.append("MACHINE_FILE must be an existing absolute file path")
         resolved = os.path.realpath(os.path.expanduser(machine))
         if resolved.startswith(os.path.realpath(ROOT) + os.sep):
             problems.append("MACHINE_FILE must resolve outside the sett root; "
@@ -204,9 +213,10 @@ def birth_journal(values, today, changed):
     """One entry naming the instance and its links (ONBOARDING step 7)."""
     journal = path_of(JOURNAL)
     os.makedirs(journal, exist_ok=True)
-    name = f"{today}-1200-instantiated.md"
+    minute = datetime.datetime.now().strftime("%H%M")
+    name = f"{today}-{minute}-instantiated.md"
     target = os.path.join(journal, name)
-    if os.path.isfile(target):
+    if any(n.endswith("-instantiated.md") for n in os.listdir(journal)):
         return
     linked = [member for token, member in
               (("SHARED_CONTEXT_PATH", "commons"), ("REGISTRY_PATH", "registry"),
@@ -214,7 +224,7 @@ def birth_journal(values, today, changed):
               if str(values.get(token, "")).strip()]
     with open(target, "w", encoding="utf-8") as handle:
         handle.write(
-            f"---\ndate: {today}T12:00\nkind: event\n"
+            f"---\ndate: {today}T{minute[:2]}:{minute[2:]}\nkind: event\n"
             "refs: [00_meta/values.json]\n---\n\n"
             f"Sett instantiated as `{values['WORKSPACE_ID']}` from the answers "
             f"in `00_meta/values.json`. Linked: "
@@ -235,11 +245,12 @@ def survivors():
     return left
 
 
-def audit(values, problems):
+def audit(values, problems, require_finalized=True):
     """What `--check` proves about a sett that claims to be instantiated."""
-    if os.path.isfile(path_of(SENTINEL)):
-        problems.append(f"{SENTINEL} is still present — the walk has not "
-                        "finished (00_meta/ONBOARDING.md step 7)")
+    if require_finalized and os.path.isfile(path_of(SENTINEL)):
+        problems.append(f"{SENTINEL} is still present — run --finalize after the first intent and hook choice")
+    if require_finalized and os.path.isfile(path_of(INITIALIZING)):
+        problems.append("Setup checkpoint remains — resume --finalize to finish readiness.")
     problems.extend(survivors())
     journal = path_of(JOURNAL)
     entries = [n for n in sorted(os.listdir(journal))
@@ -260,75 +271,122 @@ def audit(values, problems):
                             "seam is a stub")
 
 
-def main(argv):
-    args = argv[1:]
-    if "--help" in args or "-h" in args:
-        print(__doc__)
-        return 0
-    today = str(datetime.date.today())
-    if "--date" in args:
-        index = args.index("--date")
-        if index + 1 >= len(args):
-            sys.stderr.write(__doc__)
-            return 2
-        today = args[index + 1]
-        del args[index:index + 2]
-        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", today):
-            sys.stderr.write("--date takes YYYY-MM-DD\n")
-            return 2
-    check = "--check" in args
-    if check:
-        args.remove("--check")
-    if args:
-        sys.stderr.write(__doc__)
-        return 2
-    if LAYOUT.kind == "family" and not os.path.isdir(path_of("workspace")):
-        sys.stderr.write("instantiate: no workspace/ here\n")
-        return 2
+def write_state(rel, value):
+    from context import atomic_write
+    atomic_write(path_of(rel), json.dumps(value, indent=2)+"\n")
 
+
+def finalize(values, hooks, today):
+    problems = []
+    audit(values, problems, require_finalized=False)
+    if not hooks:
+        problems.append("Finalization needs explicit --hooks portable or --hooks runtime; neither is assumed.")
+    active = Path(path_of("workspace/20_intent/active"))
+    intents = []
+    for p in active.glob("*.md"):
+        fm = parse_frontmatter(p.read_text()) or {}
+        if fm.get("type") == "intent" and fm.get("status") in {"draft", "mature"} and fm.get("lifecycle") not in {"satisfied", "abandoned", "superseded"}:
+            intents.append(p)
+    if not intents:
+        problems.append("Create the first active intent before finalization.")
+    if not os.path.isfile(path_of(INITIALIZING)):
+        problems.append("No fill checkpoint exists; complete the mechanical fill first.")
+    if problems:
+        for problem in problems: print("ERROR "+problem)
+        return 1
+    # --check normally sees template mode while sentinel remains. Read the
+    # instance privacy configuration explicitly before allowing that transition.
+    from scrub_check import load_terms
+    _, error = load_terms(Path(ROOT), False)
+    if error:
+        print("ERROR finalization gate: "+error)
+        return 1
+    for tool, args in (("build_catalog.py", ["--check"]), ("check_loop.py", []),
+                       ("scrub_check.py", []), ("agnostic_check.py", [])):
+        result = subprocess.run([sys.executable, str(Path(ROOT)/"tools"/tool), *args],
+                                cwd=ROOT, text=True, capture_output=True)
+        if result.returncode:
+            print("ERROR finalization gate: "+tool+"\n"+result.stdout+result.stderr)
+            return 1
+    # Readiness is written only after validation. If interrupted after this
+    # point, --finalize can safely finish removing the remaining markers.
+    write_state(READY, {"version": 1, "workspace_id": values["WORKSPACE_ID"],
+                        "finalized_on": today, "hooks": hooks})
+    Path(path_of(SENTINEL)).unlink(missing_ok=True)
+    os.remove(path_of(INITIALIZING))
+    print("Ready: first intent, hook disposition and integrity gates verified. "
+          "Runtime hooks are not claimed installed by this receipt.")
+    return 0
+
+
+def main(argv):
+    parser = argparse.ArgumentParser(description=__doc__)
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--check", action="store_true")
+    modes.add_argument("--finalize", action="store_true")
+    parser.add_argument("--minimal", action="store_true", help="name and workspace id suffice; optional answers stay empty")
+    parser.add_argument("--hooks", choices=["portable", "runtime"])
+    parser.add_argument("--date", default=str(datetime.date.today()))
+    args = parser.parse_args(argv[1:])
+    try: datetime.date.fromisoformat(args.date)
+    except ValueError:
+        parser.error("--date takes a real YYYY-MM-DD date")
     problems = []
     values = load_values(problems)
-    if check:
-        if values:
-            audit(values, problems)
-        for problem in problems:
-            print(f"ERROR {problem}")
-        if problems:
-            print(f"\n{len(problems)} problem(s) — the instance is incomplete.")
-            return 1
-        print(f"OK: instantiated as {values['WORKSPACE_ID']}; every token "
-              "filled, every unlinked seam closed, instantiation journalled.")
+    if args.check:
+        if values: audit(values, problems)
+        try:
+            with open(path_of(READY), encoding="utf-8") as handle:
+                receipt = json.load(handle)
+            valid = (receipt.get("version") == 1
+                     and receipt.get("workspace_id") == values.get("WORKSPACE_ID")
+                     and receipt.get("hooks") in {"portable", "runtime"})
+            datetime.date.fromisoformat(receipt.get("finalized_on", ""))
+            if not valid: raise ValueError("invalid receipt")
+        except (OSError, ValueError, AttributeError, TypeError):
+            problems.append("Missing or invalid readiness receipt; complete --finalize.")
+        for problem in problems: print("ERROR "+problem)
+        if problems: return 1
+        print("OK: instantiated and finalized as "+values["WORKSPACE_ID"])
         return 0
-
-    if not os.path.isfile(path_of(SENTINEL)):
-        print("instantiate: no .uninitialised sentinel — this sett is already "
-              "instantiated. Use --check to audit it.")
-        return 1
     if problems:
-        for problem in problems:
-            print(f"ERROR {problem}")
-        print(f"\n{len(problems)} problem(s) — nothing was changed.")
+        for problem in problems: print("ERROR "+problem)
+        print("Nothing was changed.")
         return 1
-
+    if args.finalize and os.path.isfile(path_of(INITIALIZING)):
+        return finalize(values, args.hooks, args.date)
+    if not os.path.isfile(path_of(SENTINEL)):
+        print("Already instantiated; use --check to audit it.")
+        return 1
+    if args.finalize:
+        return finalize(values, args.hooks, args.date)
+    if os.path.isfile(path_of(INITIALIZING)):
+        try:
+            with open(path_of(INITIALIZING), encoding="utf-8") as handle:
+                prior = json.load(handle)
+            if prior.get("state") == "filled":
+                print("Fill checkpoint exists; resume setup and run --finalize. Nothing re-filled.")
+                return 0
+        except (OSError, ValueError, AttributeError):
+            print("ERROR invalid fill checkpoint; inspect setup state before retrying.")
+            return 1
+    write_state(VALUES, values)
+    marker = {"version": 1, "state": "filling", "workspace_id": values["WORKSPACE_ID"], "started_on": args.date}
+    write_state(INITIALIZING, marker)
     changed = []
     substitute(values, changed)
     for token, seam in CLOSES_A_SEAM.items():
-        if not str(values.get(token, "")).strip():
-            close_seam(seam, token, today, changed)
-    fill_commons(values, today, changed)
-    birth_journal(values, today, changed)
-
+        if not str(values.get(token, "")).strip(): close_seam(seam, token, args.date, changed)
+    fill_commons(values, args.date, changed)
+    birth_journal(values, args.date, changed)
     left = survivors()
     if left:
-        for problem in left:
-            print(f"ERROR {problem}")
-        print(f"\n{len(left)} unfilled token(s) — the sentinel stays until the "
-              "fill is complete.")
+        for problem in left: print("ERROR "+problem)
         return 1
-    os.remove(path_of(SENTINEL))
-    print(f"instantiated {values['WORKSPACE_ID']}: {len(changed)} file(s) "
-          "filled, sentinel removed. Remaining walk steps: the first intent, "
-          "the consumer answer, and the runtime hook (00_meta/ONBOARDING.md).")
+    marker["state"] = "filled"
+    write_state(INITIALIZING, marker)
+    print(f"Filled {values['WORKSPACE_ID']}: {len(changed)} files. Setup remains open; "
+          "create the first intent, choose hook disposition, then run --finalize.")
     return 0
 
 

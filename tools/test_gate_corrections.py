@@ -530,12 +530,12 @@ updated: 2026-08-24
             "boot_static: [workspace/AGENTS.md, workspace/70_seams/SHARED.md]",
             frontmatter,
         )
-        self.assertIn("boot_dynamic: workspace/90_runs/*/handover.md", frontmatter)
-        self.assertIn("boot_selector: latest-closed-at", frontmatter)
+        self.assertIn("boot_dynamic: workspace/20_intent/active/*.md", frontmatter)
+        self.assertIn("boot_selector: explicit-task", frontmatter)
         self.assertIn("boot_static_cap: 7000", frontmatter)
         self.assertIn("boot_dynamic_cap: 3000", frontmatter)
         self.assertIn("boot_total_cap: 10000", frontmatter)
-        boot = body.split("## Boot", 1)[1].split("## ", 1)[0]
+        boot = body.split("## Start and select", 1)[1].split("## ", 1)[0]
         for forbidden in (
             "CATALOG", "shared-context.md", "decision-queue.md",
             "open-loops.md", "shared-context/", "registry/", "library/",
@@ -843,7 +843,9 @@ updated: 2026-08-24
             out,
         )
         self.assertIsNotNone(match, out)
-        self.assertTrue(all(int(value) > 0 for value in match.groups()), out)
+        self.assertGreater(int(match.group(1)), 0, out)
+        self.assertEqual(int(match.group(2)), 0, out)
+        self.assertEqual(match.group(1), match.group(3), out)
         for tool, args in (
             ("check_loop.py", ()),
             ("scrub_check.py", ()),
@@ -1011,10 +1013,14 @@ Everything.
         self.assertIn("seam", out)
         self.assertNotIn("private-binary-payload", out)
 
-    def test_precommit_runs_correction_regressions(self):
+    def test_precommit_checks_integrity_without_running_development_suites(self):
+        self.build_git_fixture()
+        write(self.tmp, "tools/test_gate_corrections.py", "raise AssertionError('development suite should not run in an ordinary commit')\n")
+        self.assertEqual(git(self.tmp, "add", "tools/test_gate_corrections.py").returncode, 0)
         hook = Path(__file__).resolve().parents[1] / ".githooks/pre-commit"
-        text = hook.read_text(encoding="utf-8")
-        self.assertIn("tools/test_gate_corrections.py", text)
+        result = subprocess.run(["sh", str(hook)], cwd=self.tmp,
+                                capture_output=True, text=True, env=isolated_git_env())
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def test_reachability_is_local_to_each_member_entrance(self):
         # Per-member BFS prevents another entrance masking this disconnect.

@@ -49,7 +49,7 @@ tier 1.
 `tools/scrub_check.py` reads the ignored private list. `--staged`
 reads Git index blobs and staged `.gitignore`, never unstaged file
 content. Hits identify location and class but redact values. An
-instantiated workspace fails if the private list is missing, empty,
+instantiated workspace fails if its active private list is empty,
 tracked, unreadable, or contains an unusable term. The uninitialised
 template may have no real terms.
 
@@ -63,3 +63,13 @@ Editing the list is class C — a human act outside the runtime.
 
 Paraphrase, inference, and identifying combinations. The gate is a
 floor; class C still governs ambiguous disclosure.
+
+Derived `.sett-cache/` and ignored working artifacts are not a distribution
+channel. Context routing scrubs source before producing suggestions. Artifacts
+require separate review before export; never assume ignore rules permit egress.
+
+If the human explicitly has no literal terms to configure, they may write
+`{"version":1,"confirmed":true}` to ignored `.sett-private/no-private-terms.json`
+and omit the list. Missing configuration is never interpreted as this choice.
+This disables literal matching only; confidentiality and authorization rules
+still apply. A present list takes precedence, and an invalid list still fails.

@@ -69,3 +69,7 @@ decision citing the prior verdict.
 
 File immediately on proof (Class A), then continue. Agent records remain
 `agent_proposed` until promoted.
+
+Agent-proposed factual evidence may guide reversible work provisionally after
+checking its source, scope, and freshness. It grants no policy or permissions.
+Human promotion remains required for standing authority and mature status.

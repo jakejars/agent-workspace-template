@@ -34,7 +34,8 @@ PRIVATE_ROOT = Path(".sett-private")
 # gates, the constitution, or the onboarding sentinel can edit its way out of
 # every other rule, so those three are sealed the same way the private store
 # is. Family maintenance edits them from the repo, where no runtime hook runs.
-SEALED = ("tools", "workspace/AGENTS.md", "workspace/00_meta/.uninitialised")
+SEALED = ("tools", "workspace/AGENTS.md", "workspace/00_meta/.uninitialised",
+          "workspace/00_meta/.initializing", "workspace/00_meta/ready.json")
 
 JOURNAL_PATH_RE = re.compile(r"30_memory/journal")
 PRIVATE_PATH_RE = re.compile(r"\.sett-private")

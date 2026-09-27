@@ -11,22 +11,28 @@ nothing to run but the gates.
 
 ```sh
 git clone <this-repo> my-sett && cd my-sett
-git config core.hooksPath .githooks
+python3 tools/hooks/install.py
 ```
 
-Then open [`workspace/AGENTS.md`](workspace/AGENTS.md) with your agent. The
+Then open [`workspace/AGENTS.md`](workspace/AGENTS.md) with your agent.
+Adopting an existing folder rather than starting clean? Import follows the
+ladder in [`doctrine/installation.md`](doctrine/installation.md) — the source
+stays put behind a seam until a rung genuinely fails. The
 `00_meta/.uninitialised` sentinel routes the first session into
-[`00_meta/ONBOARDING.md`](workspace/00_meta/ONBOARDING.md), which interviews you
-one question at a time and writes the answers to `00_meta/values.json`. The
+[`00_meta/ONBOARDING.md`](workspace/00_meta/ONBOARDING.md), which reuses supplied facts and asks only for missing essentials, writing
+non-secret answers to `00_meta/values.json`. The
 mechanical half is a script, not a chore:
 
 ```sh
-python3 tools/instantiate.py          # fill from values.json
-python3 tools/instantiate.py --check  # audit an instance
+python3 tools/instantiate.py --minimal  # fill; setup stays open
+# Capture the first intent and configure the private-term store.
+python3 tools/instantiate.py --finalize --hooks portable
+python3 tools/instantiate.py --check    # verify readiness
 ```
 
-It fills every token, closes the seams you left unlinked, journals the birth,
-and removes the sentinel. Working without an agent is fine — write
+Fill closes unlinked seams and records a resumable setup checkpoint.
+Finalization checks the first intent, hook choice, and gates before removing
+the sentinel. Working without an agent is fine — write
 `values.json` by hand and run the same command.
 
 Verify at any time:
@@ -57,18 +63,19 @@ exchange only ever happens through a file in `workspace/70_seams/`.
 2. **Everything reachable, nothing ambient.** Every content file is within
    three human-authored link hops of its member's entrance. Generated catalogs
    grant no reachability.
-3. **Frontmatter is the interface.** Metadata drives routing, trust,
-   disclosure, and traversal; the validator enforces the contract.
-4. **Append, promote, never silently rewrite.** Journals are immutable;
-   candidates become canonical only through promotion; corrections append.
+3. **Frontmatter is the interface.** Metadata drives routing and traversal;
+   evidence and human authorization establish factual trust and permissions.
+4. **Current state and history differ.** Task checkpoints update in place;
+   journals stay immutable. Provisional evidence is usable after verification;
+   standing policy and preference promotion require human direction.
 5. **Agent-agnostic.** Neutral files hold the logic. Runtime pointers, adapter
    exceptions, and per-file `runtime_subject` declarations are bounded and
    gate-checked.
 
 ## How it stays true
 
-Every rule above is a gate, and every gate has a test that plants the defect it
-is supposed to catch — a gate that cannot fail is decoration. On top of that,
+Structural rules have gates and negative tests. Authority and evidence rules
+also require judgment; the [gate contract](doctrine/gates.md) states the limits. On top of that,
 `tools/test_instance.py` builds a fresh instance from the current commit, files
 one record from every kit, works a session, and commits through the hooks, so
 the path a new user takes is the path CI walks on every push.
@@ -92,3 +99,24 @@ combine, and the family checkout is never onboarded.
 
 Lineage: FAW/OKF, Zettelkasten, Johnny.Decimal, ADRs, BagIt, lazy consensus,
 and schema-first metadata systems. License: MIT.
+
+## Ordinary work
+
+One active intent with a current checkpoint is the default. Detailed runs,
+review packets, and event journals are optional unless an effect or explicit
+audit requirement needs them. Select context by task, never latest handover.
+
+```sh
+python3 tools/lifecycle.py start
+python3 tools/context.py show --query "<task terms>"
+python3 tools/context.py show --task <intent-id>
+python3 tools/context.py checkpoint --task <intent-id> --text "<state; next step>"
+python3 tools/lifecycle.py close
+python3 tools/lifecycle.py status
+```
+
+Git hooks automatically validate staged changes and refresh context after
+commits, checkouts, and merges. Runtime session events call the same neutral
+commands through an optional adapter. The generated cache contains metadata
+and knowledge-graph edges, with at most three cue suggestions per query.
+See [lifecycle](doctrine/lifecycle.md) for precise intervals and observed receipts.

@@ -24,6 +24,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
 TOOLS = os.path.dirname(os.path.abspath(__file__))
 SOURCE = os.path.dirname(TOOLS)
@@ -128,12 +129,29 @@ def gates_pass(root, stage):
 
 
 def clone_source(root):
-    """Every tracked file, exactly as `git clone` would deliver it."""
+    """Tracked files plus safe new implementation files from this checkout."""
     listing = subprocess.run(["git", "ls-files", "-z"], cwd=SOURCE,
                              capture_output=True, text=True, check=True)
-    names = [n for n in listing.stdout.split("\0") if n]
+    names = {n for n in listing.stdout.split("\0") if n}
+    pending = subprocess.run(
+        ["git", "ls-files", "--others", "--exclude-standard", "-z"],
+        cwd=SOURCE, capture_output=True, text=True, check=True)
+    blocked_parts = {".sett-private", ".sett-cache", "__pycache__", "scratch",
+                     "artifacts", "work"}
+    blocked_paths = {"CATALOG.md", "CATALOG.json",
+                     "workspace/00_meta/values.json"}
+    for name in (n for n in pending.stdout.split("\0") if n):
+        parts = set(Path(name).parts)
+        dynamic = (name.startswith("workspace/30_memory/journal/") and
+                   not name.endswith(("README.md", "INDEX.md"))) or \
+                  (name.startswith("workspace/90_runs/") and
+                   not name.endswith(("README.md", "INDEX.md"))) or \
+                  (name.startswith("workspace/20_intent/active/") and
+                   not name.endswith("README.md"))
+        if name not in blocked_paths and not parts & blocked_parts and not dynamic:
+            names.add(name)
     assert names, "no tracked files — is the source a Git repository?"
-    for name in names:
+    for name in sorted(names):
         target = os.path.join(root, name)
         os.makedirs(os.path.dirname(target), exist_ok=True)
         shutil.copy2(os.path.join(SOURCE, name), target)
@@ -170,10 +188,10 @@ def instantiate(root):
     code, out = run(root, "instantiate.py", "--date", TODAY)
     assert code == 0, f"instantiate refused:\n{out}"
     code, out = run(root, "instantiate.py", "--check")
-    assert code == 0, f"the instance it produced does not audit clean:\n{out}"
+    assert code == 1 and "finalize" in out, f"a fill must not claim readiness:\n{out}"
     code, out = run(root, "instantiate.py")
-    assert code == 1 and "already instantiated" in out, \
-        f"a second run must refuse, not re-fill:\n{out}"
+    assert code == 0 and "checkpoint exists" in out.lower(), \
+        f"a second fill must resume, not erase progress:\n{out}"
 
     body = read(root, "workspace/10_identity/principal.md")
     assert "Jane Okoro" in body and "<<" not in body, body[:400]
@@ -376,9 +394,9 @@ def suites_pass_inside_the_instance(root):
 def main(argv):
     flags = argv[1:]
     keep = "--keep" in flags
-    # The nested suites are two thirds of the runtime. The commit hook runs
-    # --fast; CI runs the whole thing, which is where portability regressions
-    # like a suite that cannot run from inside an instance get caught.
+    # --fast is for focused local checks. CI runs the nested suites too, which
+    # catches regressions that appear only inside an extracted instance.
+    # Routine commit hooks validate integrity without running this suite.
     fast = "--fast" in flags
     if [a for a in flags if a not in ("--keep", "--fast")]:
         sys.stderr.write(__doc__)
@@ -399,6 +417,10 @@ def main(argv):
         seed_journal(root)
         filed = file_every_kit(root)
         work_a_session(root)
+        code, out = run(root, "instantiate.py", "--finalize", "--hooks", "portable")
+        assert code == 0, f"finalization failed:\n{out}"
+        code, out = run(root, "instantiate.py", "--check")
+        assert code == 0, out
         gates_pass(root, "closed")
         commit_through_hooks(root)
         if not fast:

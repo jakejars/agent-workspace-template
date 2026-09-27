@@ -24,7 +24,7 @@ from sett_layout import SettLayout
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LAYOUT = SettLayout(ROOT)
-SKIP_DIRS = {".git", "__pycache__", ".venv", "node_modules", "outputs", "work"}
+SKIP_DIRS = {".git", "__pycache__", ".venv", "node_modules", "outputs", "work", "artifacts"}
 SCHEMA_PATH = os.path.join(ROOT, "doctrine", "schema.json")
 
 
@@ -701,9 +701,9 @@ def check_sentinel(errors):
     """`00_meta/.uninitialised` routes every session into onboarding.
 
     It ships with the family and is deleted at the end of the walk, so it may
-    legitimately sit beside a half-filled workspace — but never beside a
-    journal that already holds entries. That pairing means the sentinel came
-    back after the walk, which quietly re-routes every future session.
+    legitimately sit beside a half-filled workspace and its birth journal
+    when a fill checkpoint exists. Without that checkpoint the pairing means
+    the sentinel came back after the walk, rerouting future sessions.
     """
     meta_rel = LAYOUT.physical_rel("workspace/00_meta")
     sentinel = os.path.join(ROOT, meta_rel, ".uninitialised")
@@ -712,6 +712,17 @@ def check_sentinel(errors):
         return
     entries = [n for n in os.listdir(journal)
                if n.endswith(".md") and n not in JOURNAL_DOORS]
+    marker = os.path.join(ROOT, meta_rel, ".initializing")
+    if entries and os.path.isfile(marker):
+        try:
+            with open(marker, encoding="utf-8") as handle:
+                state = json.load(handle)
+            if (state.get("version") == 1 and state.get("state") in {"filling", "filled"}
+                    and isinstance(state.get("workspace_id"), str) and state["workspace_id"]
+                    and state.get("started_on")):
+                return
+        except (OSError, ValueError, AttributeError):
+            pass
     if entries:
         errors.append(f"{meta_rel}/.uninitialised: the sentinel is back in an "
                       f"instantiated sett ({len(entries)} journal entr"
@@ -1129,7 +1140,7 @@ def check_boot_budget(records, errors):
 
     dynamic_glob = LAYOUT.physical_rel(str(fm.get("boot_dynamic", "")))
     selector = str(fm.get("boot_selector", ""))
-    if selector and selector != "latest-closed-at":
+    if selector and selector not in {"latest-closed-at", "explicit-task"}:
         errors.append(f"{BOOT_ENTRANCE}: unsupported boot_selector '{selector}'")
     dynamic_re = re.compile(
         "^" + re.escape(dynamic_glob).replace(r"\*", "[^/]*") + "$"
@@ -1138,6 +1149,13 @@ def check_boot_budget(records, errors):
         (rec for rec in records if dynamic_re.match(rec["rel"])),
         key=lambda rec: rec["rel"],
     )
+    if selector == "explicit-task":
+        for rec in matches:
+            if rec["fm"].get("type") == "intent" and rec["chars"] > dynamic_cap:
+                errors.append(f"{rec['rel']}: current task is {rec['chars']} chars; cap {dynamic_cap}")
+        # A structural check cannot infer which task the user selected. Runtime
+        # context loading checks that specific task against the same budget.
+        matches = []
     handovers = []
     for rec in matches:
         rel = rec["rel"]
@@ -1169,7 +1187,25 @@ def check_boot_budget(records, errors):
                 f"{dynamic_cap}"
             )
         if valid:
-            handovers.append((closed_at, rec["rel"], rec))
+            by_id = {r["fm"].get("id"): r for r in records}
+            pending = [rec]
+            seen = set()
+            while pending:
+                current = pending.pop()
+                if current["rel"] in seen: continue
+                seen.add(current["rel"])
+                if current["fm"].get("type") == "intent":
+                    if (current["fm"].get("lifecycle") in {"satisfied", "abandoned", "superseded"}
+                            or "/satisfied/" in current["rel"]):
+                        valid = False
+                    continue
+                for edge in current["fm"].get("related", []):
+                    ref = edge.get("ref") if isinstance(edge, dict) else None
+                    target = by_id.get(ref) or by_rel.get(LAYOUT.physical_rel(ref or ""))
+                    if target and target["fm"].get("type") in {"run", "intent"}:
+                        pending.append(target)
+            if valid:
+                handovers.append((closed_at, rec["rel"], rec))
     selected = max(handovers, default=(None, None, None))[-1]
     static_chars = sum(rec["chars"] for rec in static)
     dynamic_chars = selected["chars"] if selected else 0

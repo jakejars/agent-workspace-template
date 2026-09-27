@@ -59,3 +59,7 @@ persist across whatever runtime fills them; the runtime is named in
 5. **Agent-agnostic.** No vendor, model, or product name appears in
    this file. If which runtime is in use changes what an agent may do,
    that is a harness fact and belongs in `70_seams/harness.md`.
+
+An agent may faithfully record the principal's explicit instruction or approval
+and enact its authorized scope. Recording is not self-approval. Do not request
+the same authorization again solely to create a record.

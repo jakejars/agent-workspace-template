@@ -10,6 +10,7 @@ usage: python3 tools/scrub_check.py [--staged] [--root <dir>]
        python3 tools/scrub_check.py --selftest
 Exit: 0 clean, 1 match/config error, 2 usage.
 """
+import json
 import os
 import re
 import subprocess
@@ -26,7 +27,7 @@ SENTINEL = LAYOUT.physical_rel("workspace/00_meta/.uninitialised")
 RETIRED_STORE = "tools/scrub-terms.txt"
 SKIP_DIRS = {
     ".git", ".sett-private", ".venv", "venv", "__pycache__",
-    "node_modules", ".mypy_cache",
+    "node_modules", ".mypy_cache", ".sett-cache", "work", "artifacts",
 }
 
 
@@ -90,6 +91,17 @@ def load_terms(root: Path, template_mode: bool):
     try:
         text = path.read_text(encoding="utf-8")
     except FileNotFoundError:
+        # An explicit human choice may declare that no literal terms exist.
+        # It never overrides a present but invalid/empty active list.
+        none = root / ".sett-private/no-private-terms.json"
+        if none.exists():
+            try:
+                choice = json.loads(none.read_text(encoding="utf-8"))
+                if choice == {"version": 1, "confirmed": True}:
+                    return [], None
+            except (OSError, ValueError):
+                pass
+            return None, "invalid explicit no-private-terms declaration"
         if template_mode:
             return [], None
         return None, f"missing ignored {PRIVATE_TERMS}"

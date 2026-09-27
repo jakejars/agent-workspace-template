@@ -1,12 +1,9 @@
 {
   "_readme": [
-    "Example .claude/settings.json fragment wiring the journal guard.",
-    "Copy the PreToolUse block into the workspace's .claude/settings.json.",
-    "Editing hook wiring is an OPERATOR-APPROVED change (autonomy class C):",
-    "an agent proposes this via a Decision Packet in 50_registers/decision-queue.md;",
-    "a human applies it and records the approval in 80_governance/approvals/.",
-    "The shim is the only vendor-aware file; policy lives in tools/journal_guard.py.",
-    "Exit 2 from the shim denies the tool call; any other exit lets it through."
+    "Optional Claude Code adapter. Neutral lifecycle.py commands own behavior; other runtimes call the same commands.",
+    "Merge into project settings without overwriting existing hooks. Settings existence is not proof an event fired; inspect lifecycle.py status.",
+    "SessionStart validates and routes; UserPromptSubmit suggests cues; PostToolUse marks dirty; Stop validates changed source. No full graph scan on each write.",
+    "PreCompact and SessionEnd refresh evidence only; they cannot reconstruct task meaning. Update the task checkpoint during meaningful work."
   ],
   "hooks": {
     "PreToolUse": [
@@ -16,6 +13,73 @@
           {
             "type": "command",
             "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/hooks/shim.py\" journal_guard"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/hooks/shim.py\" lifecycle",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/hooks/shim.py\" lifecycle",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/hooks/shim.py\" lifecycle",
+            "timeout": 30
+          }
+        ],
+        "matcher": "Edit|MultiEdit|NotebookEdit|Write|Bash|mcp__.*"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/hooks/shim.py\" lifecycle",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/hooks/shim.py\" lifecycle",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/hooks/shim.py\" lifecycle",
+            "timeout": 30
           }
         ]
       }

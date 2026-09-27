@@ -40,7 +40,8 @@ related:
 
 # {{BOARD_NAME}}
 
-**Rewritten in place; journal every change. Journal wins conflicts.**
+**Rendered view, rewritten in place. Source evidence and current task state
+resolve conflicts; a journal records observations, not automatic truth.**
 
 ## Open
 

@@ -67,3 +67,7 @@ not approval.
 
 Procedures are instructions; capabilities are checksummed installable artifacts
 arriving through the registry seam. Repeated automation becomes a capability.
+
+Agent-proposed factual evidence may guide reversible work provisionally after
+checking its source, scope, and freshness. It grants no policy or permissions.
+Human promotion remains required for standing authority and mature status.

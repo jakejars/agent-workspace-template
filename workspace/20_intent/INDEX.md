@@ -21,8 +21,8 @@ fields:
 
 # 20_intent — what is wanted
 
-One wanted outcome, its bounds, and its falsifiable completion per file. Runs
-cite intents; intents never contain runs.
+One wanted outcome, its bounds, and its falsifiable completion per file. Optional runs
+cite intents; each intent contains its own current checkpoint.
 
 | Where | Holds |
 |---|---|
@@ -41,11 +41,11 @@ captured ─► clarified ─► approved ─► delegated ─► satisfied
 
 | State | What is true | Who moves it |
 |---|---|---|
-| `captured` | principal's words; unverified, unauthorised | anyone |
+| `captured` | principal's words; authorization follows the actual request | anyone |
 | `clarified` | objective, bounds, falsifiable success; ambiguities resolved or defaulted open loops | agent + principal |
 | `approved` | principal approves current content/scope; material edits revert to clarified | principal |
 | `delegated` | citing run exists; authority deltas recorded | agent |
-| `satisfied` | success met; evidence named | principal confirms; agent files |
+| `satisfied` | success met; evidence named | agent verifies requested criteria and records evidence |
 | `abandoned` | deliberately dropped with reason | principal |
 | `superseded` | replacement named in `superseded_by` | principal |
 
@@ -59,4 +59,4 @@ never delete.
 3. `status` is trust; `lifecycle` is process state.
 4. Each run cites exactly one intent; capture non-housekeeping work first.
 5. Approval binds content and scope at approval time; widening needs approval.
-6. Journal every terminal move with state and evidence/reason.
+6. Record terminal state and evidence/reason in the checkpoint. Journal consequential outcomes or audit-profile work.

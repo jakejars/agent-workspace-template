@@ -26,8 +26,9 @@ selects filing; `updated` dates content changes. Status means:
 `load` controls disclosure, not importance. `owner` names change authority.
 `precedence: protected` is an override floor. `provenance` is required on
 durable content — memory, canon, decisions, policy — and `agent_proposed` is
-visible but not load-bearing: maturity is a human act, so nothing
-`agent_proposed` may be `mature`. Typed refs must resolve. Shared scope outranks
+provisional evidence, never self-granted policy or permissions. Factual use
+requires source/scope/freshness checks. Human promotion is required for standing
+authority and mature status, so nothing `agent_proposed` may be `mature`. Typed refs must resolve. Shared scope outranks
 local only for shared truth; narrower workspace scopes otherwise win. `okf`
 pins the contract version on files that travel; a mismatch fails.
 
