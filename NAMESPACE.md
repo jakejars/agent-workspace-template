@@ -39,10 +39,11 @@ sett/
 │
 ├── tools/                                                  [c]
 │   ├── build_catalog.py  check_loop.py  journal_guard.py  sett_layout.py
-│   ├── scrub_check.py  agnostic_check.py  instantiate.py
+│   ├── scrub_check.py  agnostic_check.py  instantiate.py  sett_setup.py
+│   ├── new.py  doctor.py  lifecycle.py  context.py  check_staged.py
 │   ├── test_gates.py  test_gate_corrections.py  test_instance.py
-│   ├── context.py  lifecycle.py  check_staged.py
 │   ├── test_context.py  test_staged.py  test_onboarding.py  test_hooks.py
+│   ├── test_new.py
 │   └── hooks/{shim.py,settings-example.json,install.py}
 │
 ├── workspace/                    THE SETT — the instantiable member

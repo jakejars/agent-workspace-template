@@ -65,7 +65,8 @@ is a drift detector, not a security boundary.
 ## Regression suites
 
 `tools/test_gates.py`, `tools/test_gate_corrections.py`, `tools/test_context.py`,
-`tools/test_staged.py`, `tools/test_onboarding.py`, and `tools/test_hooks.py`
+`tools/test_staged.py`, `tools/test_onboarding.py`, `tools/test_hooks.py`, and
+`tools/test_new.py`
 exercise real failures. `tools/test_instance.py` fills a fresh instance, files
 all kits, finalizes, works a session, and commits through the actual hooks.
 Run suites when changing the template or making a release; ordinary commits

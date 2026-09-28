@@ -41,6 +41,18 @@ those files, and the validator rejects unflagged use.
 Generic `<<TOKEN>>` is never filled or flagged. Add rows above the marker before
 use. Corrections append another row for the same token; newest wins.
 
+Member paths — SHARED_CONTEXT_PATH, REGISTRY_PATH, LIBRARY_PATH — may point
+to a bundled family member when operating in the family-style layout, or to
+an extracted or external member by absolute path. Unlike MACHINE_FILE they
+are not required to resolve outside the sett root. For a new standalone
+workspace they stay empty and their seams closed; do not open them merely
+because the template source contains optional packs.
+
+Angle-bracket token syntax is reserved for token consumers. A prose file that
+merely discusses a token should refer to it by the bare name (for example
+PRINCIPAL_NAME) without delimiters; escape the delimiters only when rendered
+token syntax is genuinely needed.
+
 Registered tokens also appear as literals in `tools/` test fixtures, where they
 are the defect a negative test plants. Substituting them there leaves the suite
 green while it no longer tests anything. `tools/` is never a consumer.

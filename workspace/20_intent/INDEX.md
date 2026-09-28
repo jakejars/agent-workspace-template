@@ -58,5 +58,7 @@ never delete.
 2. Keep unfalsifiable success in `clarified`.
 3. `status` is trust; `lifecycle` is process state.
 4. Each run cites exactly one intent; capture non-housekeeping work first.
+   Onboarding's required first intent is the user's first real objective, not
+   a "set up Sett" task; setup housekeeping never becomes the first intent.
 5. Approval binds content and scope at approval time; widening needs approval.
 6. Record terminal state and evidence/reason in the checkpoint. Journal consequential outcomes or audit-profile work.

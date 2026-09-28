@@ -20,7 +20,7 @@ import re
 import sys
 
 sys.dont_write_bytecode = True
-from sett_layout import SettLayout
+from sett_layout import SettLayout, refuse_unknown
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LAYOUT = SettLayout(ROOT)
@@ -529,8 +529,10 @@ def check_tokens(rel, text, fm, registry, registry_label, errors):
     if (str(fm["tokens"]).lower() != "true"
             and not rel.startswith(TOKEN_UNFLAGGED)):
         errors.append(f"{rel}: holds {', '.join('<<%s>>' % n for n in sorted(set(names)))} "
-                      f"but does not declare 'tokens: true' — a leftover token "
-                      f"in a file instantiation never touches")
+                      f"but does not declare 'tokens: true' — the angle-bracket "
+                      f"form triggers token semantics; declare the flag, use a "
+                      f"{{{{marker}}}} for a per-artefact fill, or refer to the "
+                      f"token by its bare name in prose (placeholders.md)")
     for name in sorted(set(names)):
         if name not in registry:
             errors.append(f"{rel}: <<{name}>> has no row in {registry_label} — "
@@ -1464,7 +1466,7 @@ def scan(errors, warnings):
         if route_pattern and not re.search(route_pattern, desc):
             errors.append(
                 f"{rel}: description must match "
-                "'<scope>. Use when … Not for … (see …)'"
+                "'<summary>. Use when … Not for … (see …)'"
             )
         if DESCRIPTION_CHARS and len(desc) > DESCRIPTION_CHARS:
             errors.append(
@@ -1615,6 +1617,10 @@ def main(argv):
         return 0
     if len(argv) > 2 or mode not in ("", "--check", "--stale"):
         sys.stderr.write(__doc__)
+        return 2
+    refused = refuse_unknown(LAYOUT, "build_catalog")
+    if refused:
+        sys.stderr.write(refused + "\n")
         return 2
 
     errors, warnings = [], []

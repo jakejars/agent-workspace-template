@@ -17,6 +17,7 @@ import sys
 
 sys.dont_write_bytecode=True
 import context as routing
+from sett_layout import refuse_unknown
 
 ROOT=routing.ROOT
 RECEIPTS=ROOT/'.sett-cache/lifecycle.json'
@@ -78,6 +79,12 @@ def main(argv=None):
     parser.add_argument('--task')
     parser.add_argument('--json',action='store_true')
     args=parser.parse_args(argv)
+    if args.event not in ('status',):
+        # status only reports local configuration, so it may run anywhere.
+        refused=refuse_unknown(routing.catalog.LAYOUT,'lifecycle')
+        if refused:
+            print(refused,file=sys.stderr)
+            return 2
     try:
         if args.json:
             payload=json.load(sys.stdin)

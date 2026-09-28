@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_catalog import (ROOT, LAYOUT, PLACEHOLDERS,  # noqa: E402
                            content_files, parse_frontmatter, read_text,
                            token_registry)
+from sett_layout import refuse_unknown  # noqa: E402
 
 # Policy per placeholders.md. Asserted against the registry below, so a token
 # added there without a decision here is an error rather than a silent skip.
@@ -248,7 +249,7 @@ def survivors():
 def audit(values, problems, require_finalized=True):
     """What `--check` proves about a sett that claims to be instantiated."""
     if require_finalized and os.path.isfile(path_of(SENTINEL)):
-        problems.append(f"{SENTINEL} is still present — run --finalize after the first intent and hook choice")
+        problems.append(f"{LAYOUT.physical_rel(SENTINEL)} is still present — run --finalize after the first intent and hook choice")
     if require_finalized and os.path.isfile(path_of(INITIALIZING)):
         problems.append("Setup checkpoint remains — resume --finalize to finish readiness.")
     problems.extend(survivors())
@@ -321,10 +322,17 @@ def finalize(values, hooks, today):
 
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__)
+    refused = refuse_unknown(LAYOUT, "instantiate")
+    if refused:
+        sys.stderr.write(refused + "\n")
+        return 2
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument("--check", action="store_true")
     modes.add_argument("--finalize", action="store_true")
-    parser.add_argument("--minimal", action="store_true", help="name and workspace id suffice; optional answers stay empty")
+    parser.add_argument("--minimal", action="store_true",
+                        help="minimal answers, not minimal effects; only name "
+                             "and workspace id are asked, optional member "
+                             "paths stay empty and close their seams")
     parser.add_argument("--hooks", choices=["portable", "runtime"])
     parser.add_argument("--date", default=str(datetime.date.today()))
     args = parser.parse_args(argv[1:])

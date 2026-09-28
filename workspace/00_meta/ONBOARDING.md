@@ -15,6 +15,8 @@ related:
 
 # Onboarding
 
+Most users create a workspace with the source checkout's `tools/new.py`
+wizard; this document owns manual, interrupted, and agent-led instance setup.
 While `.uninitialised` exists, finish or resume setup. The `.initializing`
 checkpoint distinguishes a mechanical fill from a ready workspace. Family
 maintenance never runs this walk.
@@ -28,11 +30,18 @@ Email, organisation, machine reference, and optional family paths may be empty.
 Empty means unconfigured, never invented personal or machine facts.
 
 Write non-secret answers to `00_meta/values.json`. The
-[placeholder registry](placeholders.md) defines the fields. Names and values
+[placeholder registry](placeholders.md) defines the fields.
+`values.json` is tracked in Git. It is for non-secret configuration only.
+Never place credentials, private literal terms, or other never-share values
+in it. Names and values
 that must never leave belong only in the ignored private store, never JSON.
 The human configures `.sett-private/never-share.txt` locally, or explicitly
 records no literal terms as described in `80_governance/boundaries.md`; an agent may
-explain the format but must not ask for secrets in a model conversation.
+explain the format but must not ask for secrets in a model conversation. An
+explanation may be given in conversation. If a durable local procedure is
+needed, file it under `30_memory/procedures/`; never write explanatory content
+into `.sett-private/`, which holds only the ignored private configuration
+itself.
 
 ## 2. Mechanical fill
 
@@ -48,7 +57,11 @@ answers mid-fill. A completed fill is not readiness.
 ## 3. First task and relevant seams
 
 Capture the first intent using `_templates/intent.md`, including a short current
-checkpoint. Use the user's actual objective, constraints, and authorization.
+checkpoint. Finalization requires a first active intent: during onboarding,
+capture the user's first real objective, not "set up Sett" housekeeping. The
+housekeeping-first prohibition does not block this required capture; it
+prevents setup chores from replacing the user's actual objective.
+Use the user's actual objective, constraints, and authorization.
 Link it from the active directory or its declared pattern. Open only the seams
 needed now; optional commons, registry, and library may stay closed.
 Machine facts may be observed through authorized tools when needed; a machine

@@ -23,6 +23,7 @@ sys.dont_write_bytecode = True
 import build_catalog as catalog
 import check_loop as graph
 import scrub_check as scrub
+from sett_layout import refuse_unknown
 
 ROOT = Path(catalog.ROOT)
 CACHE = ROOT / '.sett-cache' / 'context.json'
@@ -248,6 +249,10 @@ def main(argv=None):
     parser.add_argument('--from',dest='source')
     parser.add_argument('--text')
     args=parser.parse_args(argv)
+    refused=refuse_unknown(catalog.LAYOUT,'context')
+    if refused:
+        print(refused,file=sys.stderr)
+        return 2
     try:
         data, rebuilt=refresh(args.force)
         if args.command=='refresh':

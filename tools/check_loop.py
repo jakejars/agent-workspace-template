@@ -28,6 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_catalog import (ROOT, LAYOUT, LINK_RE, EXEMPT_PATHS,  # noqa: E402
                            content_files, parse_frontmatter, read_text,
                            resolve_ref, standalone_member, strip_fences)
+from sett_layout import refuse_unknown  # noqa: E402
 
 ENTRANCE = "workspace/AGENTS.md"
 MEMBER_ENTRANCES = {
@@ -274,6 +275,10 @@ def main(argv):
         return 0
     if len(argv) > 2 or mode not in ("", "--graph"):
         sys.stderr.write(__doc__)
+        return 2
+    refused = refuse_unknown(LAYOUT, "check_loop")
+    if refused:
+        sys.stderr.write(refused + "\n")
         return 2
 
     errors, warnings = [], []

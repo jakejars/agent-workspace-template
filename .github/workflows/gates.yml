@@ -40,6 +40,7 @@ jobs:
           python3 tools/test_staged.py
           python3 tools/test_onboarding.py
           python3 tools/test_hooks.py
+          python3 tools/test_new.py
 
       - name: Build and exercise a fresh instance
         run: python3 tools/test_instance.py

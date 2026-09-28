@@ -14,8 +14,11 @@ related:
 
 # Maintaining Sett
 
-This is the template family, not an instantiated workspace. Do not run the
-workspace boot, onboarding, journal, or handover sequence here.
+This is the Sett template family: the template/source repository, not an
+instantiated workspace. Do not onboard it as an instance, and do not run the
+workspace boot, onboarding, journal, or handover sequence here. To create a
+user workspace, run `python3 tools/new.py` with a destination outside this
+checkout.
 
 ## Before writing
 

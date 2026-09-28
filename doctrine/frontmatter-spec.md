@@ -20,8 +20,9 @@ selects filing; `updated` dates content changes. Status means:
 - `draft`: usable with caveat;
 - `mature`: citable.
 
-`description` is the routing interface, normalized as one line:
-`<scope>. Use when <cue>. Not for <boundary> (see <destination>).`
+`description` is the routing interface, normalized to one line and at most
+180 characters: `<summary>. Use when <cue>. Not for <boundary> (see
+<destination>)`, where `<summary>` is the subject phrase.
 
 `load` controls disclosure, not importance. `owner` names change authority.
 `precedence: protected` is an override floor. `provenance` is required on

@@ -53,6 +53,14 @@ related:
 The validator requires the target and warns if a superseded record remains
 `mature`.
 
+## Link or extract?
+
+Link in place by default. Extract a member only when it genuinely needs an
+independent lifecycle: separate history/versioning, ownership/permissions,
+release cadence, deployment, or when several workspaces depending on it makes
+co-location materially awkward. Extraction is an operational decision, not a
+prerequisite for ordinary use.
+
 ## Extracting a member
 
 Members are independently extractable: no direct sibling links; cross only

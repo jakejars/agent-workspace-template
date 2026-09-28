@@ -25,6 +25,17 @@ aid discovery without constraining location.
 
 Other locations are valid.
 
+## Unsupported locations
+
+A Sett root is the nearest ancestor containing `NAMESPACE.md`. Therefore:
+
+- do not nest one Sett root inside another;
+- do not create an instance inside the Sett template/source checkout;
+- a directory that merely contains several sibling Setts is not itself a Sett;
+- sibling Setts under a normal container such as `~/setts/` are valid;
+- project-specific Setts may live at a project root when that root is itself
+  the Sett.
+
 ## Discovery
 
 1. Inside a tree, walk upward to `NAMESPACE.md`.

@@ -7,6 +7,23 @@ from pathlib import Path, PurePosixPath
 
 MEMBERS = ("workspace", "shared-context", "registry", "library")
 
+NOT_A_SETT = (
+    "this directory is not a Sett workspace or Sett source checkout. Run the "
+    "command from the cloned Sett source repository, or open an existing "
+    "workspace and run `python3 tools/doctor.py`."
+)
+
+
+def refuse_unknown(layout, command):
+    """Return an error line when `layout` did not recognize a Sett root.
+
+    An unrecognized layout is never silently treated as a family checkout:
+    commands that require a Sett root fail closed on it.
+    """
+    if layout.kind != "unknown":
+        return None
+    return f"{command}: {NOT_A_SETT}"
+
 
 class SettLayout:
     def __init__(self, root):
@@ -30,12 +47,18 @@ class SettLayout:
             self.kind = "member"
             self.member = "registry"
         else:
-            self.kind = "family"
+            # An unrecognized layout is never silently a family checkout.
+            self.kind = "unknown"
             self.member = None
 
     @property
     def exact_workspace(self):
         return self.kind == "workspace"
+
+    @property
+    def is_sett_root(self):
+        """True for any recognized Sett root: family, workspace, or member."""
+        return self.kind in {"family", "workspace", "member"}
 
     def workspace_path(self, rel):
         """Physical path for a canonical path inside workspace/."""
