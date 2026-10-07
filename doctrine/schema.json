@@ -19,7 +19,8 @@
   "boot_static_chars": 7000,
   "boot_dynamic_chars": 3000,
   "boot_total_chars": 10000,
-  "handover_chars": 3000
+  "handover_chars": 3000,
+  "stage_chars": 3000
  },
  "formats": {
   "date": {
@@ -70,7 +71,9 @@
     "field",
     "pillar",
     "topic",
-    "specimen"
+    "specimen",
+    "pipeline",
+    "stage"
    ]
   },
   "status": {
@@ -325,6 +328,72 @@
    "required": [
     "provenance"
    ]
+  },
+  "pipeline": {
+   "required_all": [
+    "version"
+   ],
+   "fields": {
+    "version": {
+     "kind": "number",
+     "pattern": "^[1-9][0-9]*$"
+    }
+   }
+  },
+  "stage": {
+   "required_all": [
+    "executor",
+    "checkpoint",
+    "output"
+   ],
+   "fields": {
+    "executor": {
+     "kind": "string",
+     "values": [
+      "script",
+      "model",
+      "human"
+     ]
+    },
+    "command": {
+     "kind": "string"
+    },
+    "skill": {
+     "kind": "string"
+    },
+    "checkpoint": {
+     "kind": "bool"
+    },
+    "output": {
+     "kind": "string",
+     "pattern": "^artifacts/[A-Za-z0-9][A-Za-z0-9._-]*$"
+    }
+   },
+   "headings": [
+    "Purpose",
+    "Inputs",
+    "Reference",
+    "Working",
+    "Process"
+   ]
+  },
+  "run": {
+   "fields": {
+    "pipeline": {
+     "kind": "string"
+    },
+    "pipeline_version": {
+     "kind": "number",
+     "pattern": "^[1-9][0-9]*$"
+    },
+    "pipeline_digest": {
+     "kind": "string",
+     "pattern": "^[a-f0-9]{64}$"
+    },
+    "pipeline_stages": {
+     "kind": "list"
+    }
+   }
   }
  },
  "filing": {
@@ -361,7 +430,9 @@
    "run": "90_runs",
    "handover": "90_runs",
    "template": "_templates",
-   "board": "boards"
+   "board": "boards",
+   "pipeline": "60_capabilities",
+   "stage": "60_capabilities"
   },
   "universal_types": [
    "doctrine",

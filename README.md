@@ -62,6 +62,11 @@ One active intent with a current checkpoint is the default. Detailed runs,
 review packets, and event journals are optional unless an effect or explicit
 audit requirement needs them. Select context by task, never latest handover.
 
+For a fixed deliverable process, a pipeline defines numbered stages with small
+contracts. Each stage loads its own inputs and writes an output a human can
+inspect or edit before continuing. [Execution guidance](doctrine/execution.md)
+explains when to use scripts, model judgement, or a sub-agent.
+
 ```sh
 python3 tools/lifecycle.py start
 python3 tools/context.py show --query "<task terms>"
@@ -86,6 +91,7 @@ See [lifecycle](doctrine/lifecycle.md) for precise intervals and observed receip
 | [`doctrine/`](doctrine/INDEX.md) | Mechanics |
 | [`_templates/`](_templates/README.md) | Record kits |
 | [`workspace/60_capabilities/skills/`](workspace/60_capabilities/skills/README.md) | Reusable behaviour in the open Agent Skills format |
+| [`_templates/pipeline/`](_templates/pipeline/README.md) | Reusable stage contracts; executions use ordinary runs |
 | [`tools/`](tools/) | Validators, regressions, the fill, the wizard |
 
 Skills package reusable behaviour as `<name>/SKILL.md`, with optional scripts

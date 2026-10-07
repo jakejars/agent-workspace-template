@@ -55,6 +55,18 @@ Skills use the capability trust ladder. Agent-authored skills begin
 `draft` / `agent_proposed` and `untrusted`; packaging and export grant no
 promotion or permission.
 
+## Pipeline contracts
+
+`pipeline` defines a versioned process in `60_capabilities/pipelines/`; `stage`
+defines one numbered contract beneath it. Stages declare `executor`, `output`,
+and `checkpoint`; a script also declares `command`. Each contract is capped at
+3,000 characters including frontmatter, matching the dynamic disclosure budget.
+`tools/pipeline.py check` enforces the schema fields and stage shape.
+
+A pipeline execution remains type `run`. Its `pipeline`, `pipeline_version`,
+`pipeline_digest`, and `pipeline_stages` record the definition and stage plan
+used at start. Output and checkpoint receipts are evidence, never permissions.
+
 ## Edge fields
 
 A directory door (`INDEX.md` or `README.md`) may declare typed fields for its

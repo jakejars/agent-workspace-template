@@ -24,6 +24,7 @@ import build_catalog as catalog
 import check_loop as graph
 import scrub_check as scrub
 import skills
+import pipeline
 from workspace_layout import private_directory, refuse_unknown
 
 ROOT = Path(catalog.ROOT)
@@ -119,6 +120,8 @@ def refresh(force=False):
     catalog.check_journal(errors, {r['fm'].get('id') for r in records})
     catalog.check_run_journal(errors)
     catalog.check_sentinel(errors)
+    pipeline_errors, _ = pipeline.check_errors()
+    errors.extend(pipeline_errors)
     # Use the same graph gate as CI, not a weaker second interpretation.
     captured = io.StringIO()
     graph.declared_globs.cache_clear()

@@ -22,6 +22,7 @@ subset when extracted ([migrations](migrations.md)).
 | [`filing.md`](filing.md) | deterministic placement and ambiguities |
 | [`naming.md`](naming.md) | paths, ids, root resolution |
 | [`disclosure.md`](disclosure.md) | load tiers and boot budgets |
+| [`execution.md`](execution.md) | scripts, delegation, procedures, pipelines, and resumable state |
 | [`seams.md`](seams.md) | boundary contracts and lifecycle |
 | [`installation.md`](installation.md) | location, discovery, import |
 | [`migrations.md`](migrations.md) | moves, supersession, extraction |

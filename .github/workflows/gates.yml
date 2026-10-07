@@ -29,6 +29,7 @@ jobs:
           python3 tools/build_catalog.py --check
           python3 tools/skills.py check
           python3 tools/check_loop.py
+          python3 tools/pipeline.py check
           python3 tools/agnostic_check.py
           python3 tools/scrub_check.py
           python3 tools/journal_guard.py --selftest
@@ -43,6 +44,7 @@ jobs:
           python3 tools/test_hooks.py
           python3 tools/test_new.py
           python3 tools/test_skills.py
+          python3 tools/test_pipeline.py
 
       - name: Build and exercise a fresh instance
         run: python3 tools/test_instance.py

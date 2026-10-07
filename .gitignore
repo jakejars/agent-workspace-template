@@ -13,3 +13,5 @@ __pycache__/
 /workspace/90_runs/*/artifacts/
 /90_runs/*/work/
 /90_runs/*/artifacts/
+/workspace/90_runs/*/[0-9][0-9]_*/artifacts/
+/90_runs/*/[0-9][0-9]_*/artifacts/

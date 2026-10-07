@@ -34,6 +34,10 @@ Exceptions: `AGENTS.md`, pointer files, `README.md`, `INDEX.md`, `LOOP.md`,
 `NAMESPACE.md`, `CATALOG.md`, `SHARED.md`, `SKILL.md`, `LICENSE`; numeric chamber directories
 retain underscores.
 
+Pipeline definitions also use `60_capabilities/pipelines/<slug>/PIPELINE.md`
+and their stage contracts use `NN_<stage>/STAGE.md`. These uppercase filenames
+are reserved for that subtree.
+
 ## The machine-read subset
 
 Machine syntax: inline Markdown links; `related`/`supersedes` refs; restricted
@@ -54,19 +58,22 @@ Never change or reuse it; replacements mint a new id and name `supersedes`.
 Prefer ids in frontmatter because they survive moves; use paths for clickable
 prose.
 
-## No numeric prefixes inside chambers
+## Numeric prefixes inside chambers
 
-The spine is numbered. Nothing below it is.
+The spine is numbered. Child prefixes are allowed only for the exceptions below.
 
 ```text
 50_registers/open-loops.md            yes
 50_registers/01-open-loops.md         no
 30_memory/facts/03-build-times.md     no
-40_knowledge/decisions/0003-cache.md  yes  (the one exception, below)
+40_knowledge/decisions/0003-cache.md  yes  (a bounded exception, below)
 ```
 
-Only `40_knowledge/decisions/NNNN-slug.md` may use a numeric child prefix:
-four-digit, monotonic, never renumbered. Other ordering belongs in data:
+`40_knowledge/decisions/NNNN-slug.md` uses a four-digit, monotonic prefix,
+never renumbered. Pipeline stage folders use contiguous two-digit prefixes
+starting at `01`: `60_capabilities/pipelines/<slug>/NN_<stage>/` and the matching
+`90_runs/<run-id>/NN_<stage>/` output folders. `<stage>` is kebab-case.
+Other ordering belongs in data:
 
 - chronological ordering → `updated:` and the ledger convention
   (append-only, newest-first, `<!-- ledger: append above this line -->`);
@@ -77,4 +84,5 @@ four-digit, monotonic, never renumbered. Other ordering belongs in data:
 ## Why the chambers are numbered
 
 Chamber numbers encode the fixed dependency spine, make lexical order semantic,
-and leave insertion gaps. These conditions do not apply below chambers.
+and leave insertion gaps. Below chambers, only the bounded exceptions above
+give numeric prefixes meaning.

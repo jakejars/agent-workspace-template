@@ -5,7 +5,7 @@ status: mature
 description: Procedure kit. Use when a proven sequence should be reusable. Not for a one-off execution plan (see _templates/run/README.md).
 load: drill
 owner: human
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: depends_on
     ref: doctrine/frontmatter-spec.md
@@ -61,6 +61,9 @@ Name the load set before step 1, split by how each file is read.
 - Excluded: `<path>` — <why it looks relevant here and is not>
 
 ## Steps
+
+**Executor per step:** `script` | `model` | `human`; label each step.
+**Deterministic steps:** <step numbers and commands, or "none">.
 
 1. <action> — <what you should see>
 2. <action> — <what you should see>

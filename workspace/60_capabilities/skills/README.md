@@ -22,6 +22,8 @@ One `<name>/SKILL.md` per skill, `type: skill`. The directory and frontmatter
 Only `SKILL.md` sits at the skill root. Optional `scripts/`, `references/`,
 and `assets/` hold material loaded when the skill calls for it.
 
+[Pipeline](../pipelines/README.md) model stages may name a skill to reuse its behaviour.
+
 <!-- lists: */SKILL.md -->
 <!-- lists: */references/*.md -->
 <!-- lists: */scripts/*.md -->

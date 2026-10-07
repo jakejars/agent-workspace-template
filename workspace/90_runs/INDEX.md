@@ -5,7 +5,7 @@ status: draft
 description: Runs chamber map. Use when starting work or closing a session. Not for durable extracted truth (see workspace/30_memory/INDEX.md).
 scope: workspace
 owner: agent
-updated: 2026-09-06
+updated: 2026-10-07
 related:
   - type: composes_with
     ref: workspace/50_registers/decision-queue.md
@@ -41,6 +41,17 @@ Cite artifacts by relative path and, where integrity matters, checksum. A
 small typed Markdown evidence note is the durable index; generated artifacts
 need no frontmatter. Keep required external sources behind a seam. Ignoring a
 file does not grant permission to share it or make it a backup.
+
+## Optional pipeline run
+
+A [pipeline](../60_capabilities/pipelines/README.md) execution is a run here.
+Start with `python3 tools/pipeline.py start --pipeline <slug> --run <run-id>`;
+select `--intent <id-or-slug>` if needed. The run records the definition's
+version, digest, and ordered plan; each numbered stage gets its own
+`01_<stage>/artifacts/` output folder. Contracts stay in capabilities.
+`python3 tools/pipeline.py status --run <run-id>` reports produced outputs,
+pending human checkpoints, and the next stage. Keep the intent checkpoint
+current as usual; output or checkpoint presence grants no authorization.
 
 ## Current state versus history
 

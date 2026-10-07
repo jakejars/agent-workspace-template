@@ -41,6 +41,7 @@ promotes them.
 | [`preference.md`](preference.md) | `preference` | `30_memory/preferences/` |
 | [`procedure.md`](procedure.md) | `procedure` | `30_memory/procedures/` |
 | [`skill/README.md`](skill/README.md) | `skill` | `60_capabilities/skills/<name>/SKILL.md` |
+| [`pipeline/README.md`](pipeline/README.md) | `pipeline` + `stage` | `60_capabilities/pipelines/<slug>/` |
 | [`dead-end.md`](dead-end.md) | `dead-end` | `30_memory/dead-ends/` |
 | [`decision.md`](decision.md) | `decision` | `40_knowledge/decisions/` |
 | [`board.md`](board.md) | `board` | `50_registers/boards/` |

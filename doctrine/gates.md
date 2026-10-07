@@ -21,11 +21,12 @@ clean completion claim or commit. Runtime tripwires are identified separately.
 | `tools/build_catalog.py --check` | Metadata, filing, IDs/refs, tokens, budgets, journal shape, run traces |
 | `tools/skills.py check` | Agent Skills names, directory shape, cue descriptions, required template metadata |
 | `tools/check_loop.py` | Per-member graph reachability, dead links, directory coverage |
+| `tools/pipeline.py check` | Pipeline metadata, contiguous stages, contracts, executors, and stage budgets |
 | `tools/scrub_check.py --staged` | Private literal terms and text-only distribution against Git index |
 | `tools/journal_guard.py --staged` | Existing journal mutation against Git index |
 | `tools/agnostic_check.py` | Runtime names remain in declared adapter/reference boundaries |
-| `tools/check_staged.py` | Scrub/journal original index, then validate metadata/skills/graph/neutrality in its isolated snapshot |
-| `tools/context.py refresh` | Scrub source, validate metadata/skills/graph, atomically cache routing metadata and edges |
+| `tools/check_staged.py` | Scrub/journal original index, then validate metadata/skills/pipelines/graph/neutrality in its isolated snapshot |
+| `tools/context.py refresh` | Scrub source, validate metadata/skills/pipelines/graph, atomically cache routing metadata and edges |
 | `tools/lifecycle.py status` | Configured Git path and observed lifecycle event results |
 
 ## Intervals
@@ -67,7 +68,7 @@ is a drift detector, not a security boundary.
 
 `tools/test_gates.py`, `tools/test_gate_corrections.py`, `tools/test_context.py`,
 `tools/test_staged.py`, `tools/test_onboarding.py`, `tools/test_hooks.py`,
-`tools/test_new.py`, and `tools/test_skills.py`
+`tools/test_new.py`, `tools/test_skills.py`, and `tools/test_pipeline.py`
 exercise real failures. `tools/test_instance.py` fills a fresh instance, files
 all kits, finalizes, works a session, and commits through the actual hooks.
 Run suites when changing the template or making a release; ordinary commits

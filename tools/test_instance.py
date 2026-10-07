@@ -121,7 +121,8 @@ def gates_pass(root, stage):
     """The session-close suite, in the order doctrine/gates.md runs it."""
     for tool, args in (("scrub_check.py", ()), ("build_catalog.py", ("--check",)),
                        ("skills.py", ("check",)),
-                       ("check_loop.py", ()), ("agnostic_check.py", ()),
+                       ("check_loop.py", ()), ("pipeline.py", ("check",)),
+                       ("agnostic_check.py", ()),
                        ("journal_guard.py", ("--selftest",))):
         code, out = run(root, tool, *args)
         assert code == 0, f"[{stage}] {tool} {' '.join(args)} failed:\n{out}"
@@ -131,7 +132,7 @@ def gates_pass(root, stage):
 # 1. what a stranger downloads
 
 
-def clone_source(root):
+def clone_source(root, require_template=True):
     """Tracked files plus safe new implementation files from this checkout."""
     listing = subprocess.run(["git", "ls-files", "-z"], cwd=SOURCE,
                              capture_output=True, text=True, check=True)
@@ -163,8 +164,9 @@ def clone_source(root):
         target = os.path.join(root, name)
         os.makedirs(os.path.dirname(target), exist_ok=True)
         shutil.copy2(os.path.join(SOURCE, name), target)
-    assert os.path.isfile(os.path.join(root, "workspace/00_meta/.uninitialised")), \
-        "the sentinel is not tracked — a clone would arrive already 'instantiated'"
+    if require_template:
+        assert os.path.isfile(os.path.join(root, "workspace/00_meta/.uninitialised")), \
+            "the sentinel is not tracked — a clone would arrive already 'instantiated'"
 
 
 # --------------------------------------------------------------------------
@@ -319,7 +321,17 @@ def file_every_kit(root):
     ordered = sorted(kits(root),
                      key=lambda k: re.sub(r"\[[^\]]*\]", "", k[2]).count("/"))
     for kit, record, destination in ordered:
-        filed.append((kit, place(root, kit, record, destination)))
+        target = place(root, kit, record, destination)
+        filed.append((kit, target))
+        if kit.replace(os.sep, "/") == "_templates/pipeline/README.md":
+            # A pipeline kit is one definition with two small stage contracts.
+            # Exercise each fenced file; checking only PIPELINE.md would hide
+            # a stage kit that cannot pass the real schema or graph gates.
+            records = FENCE_RE.findall(read(root, kit))
+            assert len(records) == 3, f"{kit} must ship its two worked stages"
+            for stage, contract in zip(("01_prepare", "02_review"), records[1:]):
+                place(root, kit, contract,
+                      f"{os.path.dirname(target)}/{stage}/STAGE.md")
         if kit.endswith("intent.md"):
             # A second intent so the kit's `<other>` neighbour is a real file.
             place(root, kit, record, destination,
@@ -327,6 +339,31 @@ def file_every_kit(root):
     assert any(kit.endswith("skill/README.md") and target.endswith("/SKILL.md")
                for kit, target in filed), "the skill kit must file a native SKILL.md"
     return filed
+
+
+def execute_pipeline(root):
+    """Start the copied kit and reconstruct its next stage from disk alone."""
+    run_id = f"{TODAY}-pipeline-example"
+    code, out = run(root, "pipeline.py", "start", "--pipeline", KIT_MARKERS["SLUG"],
+                    "--run", run_id, "--intent", "intent-worked-example")
+    assert code == 0, f"pipeline start refused the copied kit:\n{out}"
+    folder = f"workspace/90_runs/{run_id}"
+    assert os.path.isfile(os.path.join(root, folder, "run.md"))
+    for stage in ("01_prepare", "02_review"):
+        assert os.path.isdir(os.path.join(root, folder, stage)), stage
+    contract = read(root, f"workspace/60_capabilities/pipelines/"
+                    f"{KIT_MARKERS['SLUG']}/01_prepare/STAGE.md")
+    output = re.search(r"^output:\s*(\S+)\s*$", contract, re.M)
+    assert output, "the prepare stage must name its inspectable artifact"
+    write(root, f"{folder}/01_prepare/{output.group(1)}",
+          "# Prepared material\n\nThe first stage produced an inspectable file.\n")
+    code, out = run(root, "pipeline.py", "status", "--run", run_id)
+    assert code == 0 and "Next: 02_review" in out, \
+        f"a fresh agent cannot reconstruct the second stage:\n{out}"
+    code, out = run(root, "check_loop.py", "--graph")
+    assert code == 0, f"pipeline reachability failed:\n{out}"
+    assert f"60_capabilities/pipelines/{KIT_MARKERS['SLUG']}/01_prepare/STAGE.md" in out
+    assert f"90_runs/{run_id}/run.md" in out
 
 
 # --------------------------------------------------------------------------
@@ -396,7 +433,8 @@ def commit_through_hooks(root):
 
 def suites_pass_inside_the_instance(root):
     """The shipped regressions must run from where they are shipped to."""
-    for suite in ("test_gates.py", "test_gate_corrections.py", "test_skills.py"):
+    for suite in ("test_gates.py", "test_gate_corrections.py", "test_skills.py",
+                  "test_pipeline.py"):
         code, out = run(root, suite)
         assert code == 0, f"{suite} does not pass inside an instance:\n{out[-3000:]}"
 
@@ -426,6 +464,7 @@ def main(argv):
         instantiate(root)
         seed_journal(root)
         filed = file_every_kit(root)
+        execute_pipeline(root)
         work_a_session(root)
         code, out = run(root, "instantiate.py", "--finalize", "--hooks", "portable")
         assert code == 0, f"finalization failed:\n{out}"
@@ -444,7 +483,7 @@ def main(argv):
             return 0
         shutil.rmtree(home)
     print(f"test_instance: a fresh instance instantiates, files {len(filed)} "
-          "kits, closes a session, and commits through the hooks"
+          "kits, resumes a two-stage pipeline, closes a session, and commits through the hooks"
           f"{'' if fast else '; its own suites pass from inside it'}.")
     return 0
 

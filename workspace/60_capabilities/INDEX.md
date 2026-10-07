@@ -22,6 +22,7 @@ in this workspace, and is recorded in the lockfile.
 |---|---|
 | [installed.md](installed.md) | The install lockfile: capability, version, sha256, date, trust state |
 | [skills/README.md](skills/README.md) | Agent Skills source: reusable task-cued behaviour, optional runtime export |
+| [pipelines/README.md](pipelines/README.md) | Reusable staged processes and their small contracts |
 
 ## Three rules
 
