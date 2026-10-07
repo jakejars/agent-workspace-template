@@ -14,25 +14,45 @@ LEGACY_PRIVATE_DIR = ".sett-private"
 PRIVATE_DIRS = (PRIVATE_DIR, LEGACY_PRIVATE_DIR)
 PRIVATE_CONFLICT_WARNING = (
     f"warning: both {PRIVATE_DIR}/ and {LEGACY_PRIVATE_DIR}/ exist; "
-    f"using {PRIVATE_DIR}/."
+    "enforcing combined terms. To consolidate, preserve all terms in "
+    f"{PRIVATE_DIR}/never-share.txt, then explicitly retire {LEGACY_PRIVATE_DIR}/."
 )
 
 
-def private_directory(root, *, warn=True):
-    """Select the new private store, falling back only when it is absent."""
+def private_directories(root, *, warn=True):
+    """Return every existing private store, or the default configuration path."""
     root = Path(root).resolve()
-    current, legacy = (root / name for name in PRIVATE_DIRS)
-    if current.exists():
-        if warn and legacy.exists():
+    stores = []
+    for name in PRIVATE_DIRS:
+        private = root / name
+        try:
+            private.lstat()
+        except FileNotFoundError:
+            continue
+        except OSError:
+            # Keep inaccessible stores selected so policy loading fails closed.
+            pass
+        stores.append(private)
+    if warn and len(stores) == 2:
+        warning = PRIVATE_CONFLICT_WARNING
+        for private in stores:
             try:
-                warning = _redact_private_diagnostic(current, PRIVATE_CONFLICT_WARNING)
+                warning = _redact_private_diagnostic(private, warning)
             except FileNotFoundError:
-                warning = PRIVATE_CONFLICT_WARNING
+                pass
             except (OSError, UnicodeDecodeError):
-                warning = "warning: both private stores exist; using the new store."
-            print(warning, file=sys.stderr)
-        return current
-    return legacy if legacy.exists() else current
+                warning = (
+                    "warning: both private stores exist; enforcing combined terms. "
+                    "To consolidate, preserve all terms in one store, then explicitly "
+                    "retire the other."
+                )
+        print(redact_private_diagnostic(root, warning), file=sys.stderr)
+    return stores or [root / PRIVATE_DIR]
+
+
+def private_directory(root, *, warn=True):
+    """Preferred configuration path; confidentiality uses every private store."""
+    return private_directories(root, warn=warn)[0]
 
 
 def _redact_private_diagnostic(private, message):
@@ -46,10 +66,12 @@ def _redact_private_diagnostic(private, message):
 
 
 def redact_private_diagnostic(root, message):
-    try:
-        return _redact_private_diagnostic(private_directory(root, warn=False), message)
-    except (OSError, UnicodeDecodeError):
-        return message
+    for private in private_directories(root, warn=False):
+        try:
+            message = _redact_private_diagnostic(private, message)
+        except (OSError, UnicodeDecodeError):
+            pass
+    return message
 
 NOT_A_WORKSPACE = (
     "this directory is not a workspace or Agent Workspace Template source checkout. Run the "

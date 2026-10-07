@@ -147,24 +147,88 @@ class GateCorrections(unittest.TestCase):
             self.assertIn("never-share term", out)
             self.assertNotIn(FAKE_TERM, out)
 
-    def test_scrub_prefers_new_private_directory_and_warns(self):
-        # The new store must win even when the old store has different terms.
+    def test_both_private_stores_enforce_union_across_gates(self):
         self.build_git_fixture()
+        shutil.copy(Path(TOOLS, "context.py"), Path(self.tmp, "tools"))
+        Path(self.tmp, "workspace/00_meta/.uninitialised").touch()
         legacy_term = "zz-legacy-private-term"
         write(self.tmp, ".sett-private/never-share.txt", legacy_term + "\n")
-        write(self.tmp, ".gitignore", ".workspace-private/\n.sett-private/\n")
-        write(self.tmp, "notes.md", legacy_term + "\n")
-        self.assertEqual(git(self.tmp, "add", ".gitignore", "notes.md").returncode, 0)
-        for args in ((), ("--staged",)):
-            code, out = run(self.tmp, "scrub_check.py", *args)
+        write(self.tmp, ".gitignore",
+              ".workspace-private/\n.sett-private/\n.workspace-cache/\n")
+        self.assertEqual(git(self.tmp, "add", ".").returncode, 0)
+        commands = (
+            ("scrub_check.py",), ("scrub_check.py", "--staged"),
+            ("check_staged.py",), ("context.py", "refresh", "--force"),
+        )
+        for command in commands:
+            code, out = run(self.tmp, *command)
             self.assertEqual(code, 0, out)
-            self.assertIn("warning", out.lower())
-            self.assertIn(".workspace-private", out)
-        write(self.tmp, "notes.md", FAKE_TERM + "\n")
-        self.assertEqual(git(self.tmp, "add", "notes.md").returncode, 0)
-        code, out = run(self.tmp, "scrub_check.py", "--staged")
-        self.assertEqual(code, 1, out)
-        self.assertNotIn(FAKE_TERM, out)
+        target = "workspace/70_seams/harness.md"
+        original = Path(self.tmp, target).read_text(encoding="utf-8")
+        for confirmed_store, leak_terms in (
+            (None, (legacy_term, FAKE_TERM)),
+            (".workspace-private", (legacy_term,)),
+            (".sett-private", (FAKE_TERM,)),
+        ):
+            for directory, term in ((".workspace-private", FAKE_TERM),
+                                    (".sett-private", legacy_term)):
+                choice = Path(self.tmp, directory, "no-private-terms.json")
+                if choice.exists():
+                    choice.unlink()
+                write(self.tmp, f"{directory}/never-share.txt", term + "\n")
+                if directory == confirmed_store:
+                    Path(self.tmp, directory, "never-share.txt").unlink()
+                    write(self.tmp, f"{directory}/no-private-terms.json",
+                          '{"version":1,"confirmed":true}\n')
+            for term in leak_terms:
+                write(self.tmp, target, original + "\n" + term + "\n")
+                self.assertEqual(git(self.tmp, "add", target).returncode, 0)
+                for command in commands:
+                    with self.subTest(confirmed_store=confirmed_store, term=term,
+                                      command=command):
+                        code, out = run(self.tmp, *command)
+                        self.assertEqual(code, 1, out)
+                        self.assertIn("never-share term", out)
+                        self.assertIn("warning", out.lower())
+                        self.assertIn("combined terms", out)
+                        self.assertIn("consolidate", out)
+                        self.assertNotIn(term, out)
+
+    def test_inaccessible_legacy_store_cannot_disable_terms(self):
+        import contextlib
+        import io
+        from unittest.mock import patch
+        import scrub_check
+        self.build_git_fixture()
+        Path(self.tmp, PRIVATE_TERMS).unlink()
+        write(self.tmp, ".workspace-private/no-private-terms.json",
+              '{"version":1,"confirmed":true}\n')
+        write(self.tmp, ".gitignore", ".workspace-private/\n.sett-private/\n")
+        legacy = Path(self.tmp, ".sett-private")
+        with tempfile.TemporaryDirectory() as policy_home:
+            policy = Path(policy_home, "policy")
+            policy.mkdir()
+            (policy / "never-share.txt").write_text(FAKE_TERM + "\n")
+            legacy.symlink_to(policy, target_is_directory=True)
+            write(self.tmp, "notes.md", FAKE_TERM + "\n")
+            self.assertEqual(git(self.tmp, "add", ".gitignore", "notes.md").returncode, 0)
+            original_stat, original_open = os.stat, Path.open
+            def denied_stat(path, *args, **kwargs):
+                if not isinstance(path, int) and Path(path) == legacy:
+                    raise PermissionError("private target ancestor denied")
+                return original_stat(path, *args, **kwargs)
+            def denied_open(path, *args, **kwargs):
+                if path.parent == legacy:
+                    raise PermissionError("private target ancestor denied")
+                return original_open(path, *args, **kwargs)
+            output = io.StringIO()
+            with patch.object(os, "stat", denied_stat), patch.object(Path, "open", denied_open), \
+                    contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
+                terms, error = scrub_check.load_terms(Path(self.tmp), False)
+                self.assertIsNone(terms)
+                self.assertIn("cannot read ignored", error)
+                self.assertEqual(scrub_check.scan(Path(self.tmp), staged=True), 1)
+            self.assertNotIn(FAKE_TERM, output.getvalue())
 
     def test_scrub_reads_legacy_no_private_terms_declaration(self):
         self.build_git_fixture()
@@ -217,6 +281,19 @@ class GateCorrections(unittest.TestCase):
         finally:
             routing.ROOT = previous_root
 
+    def test_context_fingerprint_reads_both_private_stores(self):
+        import context as routing
+        previous_root = routing.ROOT
+        routing.ROOT = Path(self.tmp)
+        try:
+            write(self.tmp, PRIVATE_TERMS, FAKE_TERM + "\n")
+            write(self.tmp, ".sett-private/never-share.txt", "zz-first-private-term\n")
+            before = routing.fingerprint()
+            write(self.tmp, ".sett-private/never-share.txt", "zz-second-private-term\n")
+            self.assertNotEqual(routing.fingerprint(), before)
+        finally:
+            routing.ROOT = previous_root
+
     def test_legacy_tool_imports_keep_working(self):
         # Existing callers can keep the old module, class and helper names.
         proc = subprocess.run(
@@ -240,7 +317,8 @@ class GateCorrections(unittest.TestCase):
         write(self.tmp, ".gitignore", ".workspace-private/\n.sett-private/\n")
         _, out = run(self.tmp, "doctor.py")
         self.assertIn("warning", out.lower())
-        self.assertIn("using .workspace-private/", out)
+        self.assertIn("enforcing combined terms", out)
+        self.assertIn("consolidate", out)
         self.assertNotIn(FAKE_TERM, out)
 
     def test_doctor_accepts_a_symlinked_checkout_path(self):
@@ -285,6 +363,23 @@ class GateCorrections(unittest.TestCase):
                         self.assertIn("<redacted-term>", output)
         finally:
             routing.ROOT = previous_root
+
+    def test_private_conflict_warning_redacts_terms_when_other_store_unreadable(self):
+        import contextlib
+        import io
+        from workspace_layout import private_directories
+        for unreadable in (".workspace-private", ".sett-private"):
+            with self.subTest(unreadable=unreadable):
+                for directory in (".workspace-private", ".sett-private"):
+                    write(self.tmp, f"{directory}/never-share.txt", "combined\n")
+                Path(self.tmp, unreadable, "never-share.txt").write_bytes(b"\xff")
+                captured = io.StringIO()
+                with contextlib.redirect_stderr(captured):
+                    private_directories(self.tmp)
+                output = captured.getvalue()
+                self.assertIn("warning", output)
+                self.assertNotIn("combined", output)
+                self.assertIn("<redacted-term>", output)
 
     def test_staged_scrub_reads_staged_ignore_configuration(self):
         # Staged ignore rules, not later worktree edits, define commit safety.

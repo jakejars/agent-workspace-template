@@ -25,7 +25,7 @@ import check_loop as graph
 import scrub_check as scrub
 import skills
 import pipeline
-from workspace_layout import private_directory, refuse_unknown
+from workspace_layout import private_directories, refuse_unknown
 
 ROOT = Path(catalog.ROOT)
 CACHE = ROOT / '.workspace-cache' / 'context.json'
@@ -58,11 +58,11 @@ def fingerprint():
     for invalidation. Skip generated artifacts, runtime settings and cache.
     """
     digest = hashlib.sha256(datetime.date.today().isoformat().encode())
-    private_root = private_directory(ROOT)
-    for private_name in ('never-share.txt', 'no-private-terms.json'):
-        private = private_root/private_name
-        digest.update(private_name.encode())
-        if private.exists(): digest.update(private.read_bytes())
+    for private_root in private_directories(ROOT):
+        for private_name in ('never-share.txt', 'no-private-terms.json'):
+            private = private_root/private_name
+            digest.update(private.relative_to(ROOT).as_posix().encode())
+            if private.exists(): digest.update(private.read_bytes())
     for directory, dirs, files in os.walk(ROOT):
         dirs[:] = sorted(d for d in dirs if not d.startswith('.')
                          and d not in catalog.SKIP_DIRS and d != 'artifacts')

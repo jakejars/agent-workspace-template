@@ -14,7 +14,8 @@ updated: 2026-10-07
 
 This policy defines categories, not literal values. Real never-share
 terms exist only in ignored `.workspace-private/never-share.txt`, one per
-line. This file is human-owned; loosening it is class C.
+line, or the legacy `.sett-private/never-share.txt`. This file is human-owned;
+loosening it is class C.
 
 ## Tier 1 — never leaves the machine
 
@@ -46,10 +47,11 @@ tier 1.
 
 ## Machine gate
 
-`tools/scrub_check.py` reads the ignored private list. `--staged`
+`tools/scrub_check.py` reads the ignored private lists. When both stores exist,
+it warns and enforces the union of their terms. `--staged`
 reads Git index blobs and staged `.gitignore`, never unstaged file
 content. Hits identify location and class but redact values. An
-instantiated workspace fails if its active private list is empty,
+instantiated workspace fails if any present private list is empty,
 tracked, unreadable, or contains an unusable term. The uninitialised
 template may have no real terms.
 
@@ -58,6 +60,9 @@ template may have no real terms.
 The list is untracked: no Git history, no tamper evidence.
 `tools/journal_guard.py` blocks agent writes to `.workspace-private/`.
 Editing the list is class C — a human act outside the runtime.
+To consolidate two stores, preserve their combined terms in
+`.workspace-private/never-share.txt`, then have the human explicitly retire
+`.sett-private/`.
 
 ## What the gate cannot catch
 
@@ -72,4 +77,6 @@ If the human explicitly has no literal terms to configure, they may write
 `{"version":1,"confirmed":true}` to ignored `.workspace-private/no-private-terms.json`
 and omit the list. Missing configuration is never interpreted as this choice.
 This disables literal matching only; confidentiality and authorization rules
-still apply. A present list takes precedence, and an invalid list still fails.
+still apply. Within each store, a present list takes precedence, and an invalid
+list still fails.
+A confirmation in one store never suppresses terms in the other.

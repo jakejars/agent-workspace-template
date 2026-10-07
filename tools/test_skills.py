@@ -286,6 +286,41 @@ with patch.object(os, 'scandir', fail_scan):
         self.assertEqual(after, before)
         self.assertEqual(sorted(path.name for path in self.output.iterdir()), [skill.name])
 
+    def test_inaccessible_skill_shelf_refuses_check_export_and_pruning(self):
+        skill = self.skill()
+        self.ledger([("sample-skill", "trusted", self.approval())])
+        code, out = self.run_tool("export", "--to", str(self.output), "--trusted-only")
+        self.assertEqual(code, 0, out)
+        exported = self.output / skill.name
+        before = {path.relative_to(exported): path.read_bytes()
+                  for path in exported.rglob("*") if path.is_file()}
+        script = """import os
+from pathlib import Path
+from unittest.mock import patch
+import skills
+
+def denied(function):
+    def fail_stat(path, *args, **kwargs):
+        if not isinstance(path, int) and Path(path) == Path(%r):
+            raise PermissionError('skill shelf ancestor denied')
+        return function(path, *args, **kwargs)
+    return fail_stat
+
+with patch.object(os, 'stat', denied(os.stat)), patch.object(os, 'lstat', denied(os.lstat)):
+    print('check exit:', skills.main(['check']))
+    raise SystemExit(skills.export(%r, trusted_only=True))
+""" % (str(self.shelf), str(self.output))
+        result = subprocess.run([sys.executable, "-c", script],
+                                cwd=self.root / "tools", capture_output=True, text=True)
+        out = result.stdout + result.stderr
+        self.assertEqual(result.returncode, 1, out)
+        self.assertIn("check exit: 1", out)
+        self.assertIn("unreadable skill shelf (PermissionError)", out)
+        after = {path.relative_to(exported): path.read_bytes()
+                 for path in exported.rglob("*") if path.is_file()}
+        self.assertEqual(after, before)
+        self.assertEqual(sorted(path.name for path in self.output.iterdir()), [skill.name])
+
     def test_foreign_directory_is_preserved_without_partial_export(self):
         self.skill("first-skill")
         self.skill("foreign-skill")
@@ -414,6 +449,21 @@ with patch.object(os, 'scandir', fail_scan):
         self.assertIn("never-share", out)
         self.assertEqual(secret.read_bytes(), before)
         self.assertFalse(self.output.exists())
+
+    def test_export_scrubs_generated_marker_filename_and_bytes(self):
+        skill = self.skill()
+        identity = hashlib.sha256(str(self.root).encode("utf-8")).hexdigest()
+        private = self.root / ".workspace-private"
+        private.mkdir()
+        for term in (identity, ".awt-skill-export.json"):
+            with self.subTest(term=term):
+                self.assertNotIn(term.encode("utf-8"), (skill / "SKILL.md").read_bytes())
+                (private / "never-share.txt").write_text(term + "\n")
+                code, out = self.run_tool("export", "--to", str(self.output))
+                self.assertEqual(code, 1, out)
+                self.assertNotIn(term, out)
+                self.assertIn("never-share", out)
+                self.assertFalse(self.output.exists())
 
     def test_export_obeys_existing_text_only_distribution_rule(self):
         skill = self.skill()

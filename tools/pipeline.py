@@ -34,14 +34,14 @@ SKILLS = LAYOUT.workspace_path("workspace/60_capabilities/skills")
 RUNS = LAYOUT.workspace_path("workspace/90_runs")
 
 
-def safe_path(path):
-    """Refuse escaping or symlinked paths before reading or creating evidence."""
+def safe_path(path, allow_symlinks=False):
+    """Refuse escapes and unsupported symlinks before reading or creating evidence."""
     path = Path(path)
     rel = path.relative_to(ROOT)
     cursor = ROOT
     for part in rel.parts:
         cursor /= part
-        if cursor.is_symlink():
+        if cursor.is_symlink() and not allow_symlinks:
             raise ValueError(f"{rel}: symlinks are not supported for pipeline files")
     path.resolve().relative_to(ROOT.resolve())
     return path
@@ -77,16 +77,16 @@ def sections(text):
 def source_errors():
     """Reuse canonical metadata/ref validation; retain pipeline diagnostics only."""
     errors, warnings = [], []
+    prefix = PIPELINES.relative_to(ROOT).as_posix() + "/"
     try:
-        # Catalog reads source bytes; refuse links before it can follow one.
+        # Catalog may follow ordinary contained links, but pipeline sources may not.
         safe_path(PIPELINES)
         for rel in catalog.content_files():
-            safe_path(ROOT / rel)
+            safe_path(ROOT / rel, allow_symlinks=not rel.startswith(prefix))
         records = catalog.scan(errors, warnings)
         catalog.validate(records, errors, warnings)
     except (TypeError, ValueError, KeyError) as exc:
         return [f"doctrine/schema.json: invalid metadata or schema ({exc})"]
-    prefix = PIPELINES.relative_to(ROOT).as_posix() + "/"
     relevant = [error for error in errors
                 if error.startswith((prefix, "doctrine/schema.json:"))]
     for record in records:
@@ -252,16 +252,20 @@ def start(slug, run_id, intent):
     safe_path(RUNS).mkdir(parents=True, exist_ok=True)
     # mkdir is exclusive even if another writer creates this run after the check.
     folder.mkdir()
+    entry_created = False
     try:
         (folder / "run.md").write_text(text, encoding="utf-8")
         for stage in stages:
             (folder / stage["stage"] / "artifacts").mkdir(parents=True)
         journal.mkdir(parents=True, exist_ok=True)
         with entry.open("x", encoding="utf-8") as handle:
+            entry_created = True
             handle.write(f"---\ndate: {today}T{now:%H:%M}\nkind: event\n"
                          f"refs: [90_runs/{run_id}/run.md]\n---\n\n"
                          f"Started pipeline {slug} version {fm['version']}; outputs pending.\n")
     except BaseException:
+        if entry_created:
+            entry.unlink()
         shutil.rmtree(folder)
         raise
     print(f"Started: {folder.relative_to(ROOT)}/run.md (pipeline {slug} version {fm['version']})")

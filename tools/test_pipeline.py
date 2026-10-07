@@ -5,11 +5,13 @@ import hashlib
 import json
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
 
-from test_instance import clone_source, run
+from test_gates import CLEAN, build
+from test_instance import clone_source, git, run
 
 
 TODAY = "2026-10-07"
@@ -104,6 +106,7 @@ updated: {TODAY}
 id: intent-pipeline-probe
 type: intent
 status: draft
+lifecycle: clarified
 description: Pipeline probe objective. Use when testing execution. Not for doctrine (see workspace/20_intent/INDEX.md).
 scope: workspace
 owner: agent
@@ -238,6 +241,137 @@ def test_evaluation_requires_numeric_revision_limit(home, base):
     return 6
 
 
+def test_ordinary_contained_symlink_passes_pipeline_context_and_staged(home, base):
+    tree = Path(home, "ordinary-symlink")
+    build(str(tree), CLEAN)
+    shutil.copy2(Path(__file__).parent / "context.py", tree / "tools/context.py")
+    (tree / "workspace/00_meta/.uninitialised").touch()
+    write(tree, ".gitignore", ".workspace-private/\n.workspace-cache/\n")
+    assert not list((tree / PIPELINES).glob("*/PIPELINE.md")), \
+        "this regression requires zero pipeline definitions"
+    linked = tree / "workspace/70_seams/SHARED.md"
+    target = tree / "tools/ordinary-shared.txt"
+    linked.rename(target)
+    linked.symlink_to("../../tools/ordinary-shared.txt")
+    for tool, args in (("scrub_check.py", ()), ("build_catalog.py", ("--check",)),
+                       ("check_loop.py", ())):
+        code, out = run(str(tree), tool, *args)
+        assert code == 0, f"{tool} rejected contained ordinary symlink:\n{out}"
+    require_pass(tree, "check")
+    code, out = run(str(tree), "context.py", "refresh", "--force")
+    assert code == 0, f"context rejected contained ordinary symlink:\n{out}"
+    git(str(tree), "init", "-q")
+    git(str(tree), "add", "-A")
+    code, out = run(str(tree), "check_staged.py")
+    assert code == 0, f"staged gates rejected contained ordinary symlink:\n{out}"
+    # Containment still applies outside the pipeline shelf, before source reads.
+    outside = write(home, "outside-ordinary.md", "OUTSIDE-ORDINARY-MARKER\n")
+    linked.unlink()
+    linked.symlink_to(outside)
+    diagnostic = require_failure(tree, "check")
+    assert "OUTSIDE-ORDINARY-MARKER" not in diagnostic, \
+        "pipeline validation read external content before refusing an escape"
+    return 5
+
+
+def test_partial_journal_write_rolls_back_new_trace_and_run(home, base):
+    tree = Path(home, "partial-journal")
+    shutil.copytree(base, tree)
+    write(tree, "workspace/00_meta/.initializing",
+          json.dumps({"version": 1, "state": "filled", "workspace_id": SLUG,
+                      "started_on": TODAY}) + "\n")
+    # clone_source omits ignored values; inherited journals may still name them.
+    write(tree, "workspace/00_meta/values.json", "{}\n")
+    start(tree)
+    code, out = run(str(tree), "build_catalog.py", "--check")
+    assert code == 0, f"journal rollback baseline failed catalog:\n{out}"
+    before = snapshot(tree)
+    interrupted = RUN_ID + "-interrupted"
+    script = """from pathlib import Path
+from unittest.mock import patch
+import pipeline
+
+open_file = Path.open
+class InterruptedTrace:
+    def __init__(self, handle):
+        self.handle = handle
+    def __enter__(self):
+        return self
+    def __exit__(self, *args):
+        self.handle.close()
+    def write(self, text):
+        self.handle.write(text[:8])
+        self.handle.flush()
+        raise OSError('injected failure after eight journal bytes')
+
+def fail_trace(path, mode='r', *args, **kwargs):
+    handle = open_file(path, mode, *args, **kwargs)
+    if mode == 'x' and path.parent.name == 'journal':
+        return InterruptedTrace(handle)
+    return handle
+
+with patch.object(Path, 'open', fail_trace):
+    raise SystemExit(pipeline.main(['start', '--pipeline', %r, '--run', %r,
+                                  '--intent', 'intent-pipeline-probe']))
+""" % (SLUG, interrupted)
+    result = subprocess.run([sys.executable, "-c", script], cwd=tree / "tools",
+                            capture_output=True, text=True)
+    out = result.stdout + result.stderr
+    assert result.returncode == 1 and "injected failure" in out, out
+    assert before == snapshot(tree), \
+        "failed start retained a partial trace or changed pre-existing history"
+    start(tree, interrupted)
+    code, out = run(str(tree), "build_catalog.py", "--check")
+    assert code == 0, f"retry after interrupted journal write failed catalog:\n{out}"
+    return 2
+
+
+def test_journal_creation_race_preserves_preexisting_trace(home, base):
+    tree = Path(home, "existing-journal-race")
+    shutil.copytree(base, tree)
+    script = """from pathlib import Path
+from unittest.mock import patch
+import pipeline
+
+open_file = Path.open
+def race_trace(path, mode='r', *args, **kwargs):
+    if mode == 'x' and path.parent.name == 'journal':
+        with open_file(path, 'w', encoding='utf-8') as handle:
+            handle.write('Pre-existing history from another writer.\\n')
+    return open_file(path, mode, *args, **kwargs)
+
+with patch.object(Path, 'open', race_trace):
+    raise SystemExit(pipeline.main(['start', '--pipeline', %r, '--run', %r,
+                                  '--intent', 'intent-pipeline-probe']))
+""" % (SLUG, RUN_ID)
+    result = subprocess.run([sys.executable, "-c", script], cwd=tree / "tools",
+                            capture_output=True, text=True)
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert not (tree / "workspace/90_runs" / RUN_ID).exists(), "run was not rolled back"
+    trace_slug = "pipeline-" + hashlib.sha256(RUN_ID.encode()).hexdigest()[:12]
+    traces = list((tree / "workspace/30_memory/journal").glob(f"*-{trace_slug}.md"))
+    assert len(traces) == 1 and traces[0].read_text() == \
+        "Pre-existing history from another writer.\n", \
+        "rollback removed or changed a trace it did not create"
+    return 1
+
+
+def test_pipeline_symlink_sources_are_refused_before_reading(home, base):
+    for location in ("contained", "outside"):
+        tree = Path(home, "symlinked-stage-" + location)
+        shutil.copytree(base, tree)
+        target_root = tree if location == "contained" else Path(home)
+        target = write(target_root, "tools/symlinked-stage.txt",
+                       contract(STAGES[0], "SYMLINKED-STAGE-MARKER"))
+        linked = tree / PIPELINES / SLUG / STAGES[0] / "STAGE.md"
+        linked.unlink()
+        linked.symlink_to(target)
+        diagnostic = require_failure(tree, "check", contains=("symlink",))
+        assert "SYMLINKED-STAGE-MARKER" not in diagnostic, \
+            "validation read symlink bytes before rejecting a pipeline source"
+    return 2
+
+
 def main():
     checks = 0
     with tempfile.TemporaryDirectory(prefix="workspace-pipeline-") as home:
@@ -250,7 +384,11 @@ def main():
                            test_recorded_version_matches_definition,
                            test_recorded_stage_plan_matches_definition,
                            test_unverified_definition_requires_restoration,
-                           test_evaluation_requires_numeric_revision_limit):
+                           test_evaluation_requires_numeric_revision_limit,
+                           test_ordinary_contained_symlink_passes_pipeline_context_and_staged,
+                           test_partial_journal_write_rolls_back_new_trace_and_run,
+                           test_journal_creation_race_preserves_preexisting_trace,
+                           test_pipeline_symlink_sources_are_refused_before_reading):
             checks += regression(home, base)
 
         with_skill = Path(home, "with-skill")
@@ -324,17 +462,6 @@ def main():
             mutate(tree)
             require_failure(tree, "check", contains=words)
             checks += 1
-
-        symlinked = Path(home, "symlinked-stage")
-        shutil.copytree(base, symlinked)
-        outside = write(home, "outside-stage.md", contract(STAGES[0], "OUTSIDE-MARKER"))
-        linked = symlinked / PIPELINES / SLUG / STAGES[0] / "STAGE.md"
-        linked.unlink()
-        linked.symlink_to(outside)
-        diagnostic = require_failure(symlinked, "check", contains=("symlink",))
-        assert "OUTSIDE-MARKER" not in diagnostic, \
-            "validation read external symlink bytes before rejecting the path"
-        checks += 1
 
         tree = Path(home, "ordinary-run")
         shutil.copytree(base, tree)

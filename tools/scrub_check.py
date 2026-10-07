@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Block private terms in worktree or staged content.
 
-Terms live only in ignored `.workspace-private/never-share.txt`, one per line.
+Terms live in ignored `.workspace-private/never-share.txt`, one per line.
+Legacy `.sett-private/never-share.txt` terms are also enforced when present.
 `--staged` scans index blobs and validates staged `.gitignore` configuration;
 unstaged divergence cannot affect its result. Diagnostics never print a term
 or a path containing one.
@@ -20,7 +21,7 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 from workspace_layout import (
     PRIVATE_DIR, PRIVATE_DIRS, WorkspaceLayout,
-    private_directory, redact_private_diagnostic,
+    private_directories, redact_private_diagnostic,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -89,15 +90,24 @@ def private_rule_active(text: str, directory=PRIVATE_DIR):
     return active
 
 
-def load_terms(root: Path, template_mode: bool):
-    private = private_directory(root, warn=False)
+def load_terms(root: Path, template_mode: bool, *, warn=True):
+    terms = []
+    for private in private_directories(root, warn=warn):
+        store_terms, error = _load_store_terms(root, private, template_mode)
+        if error:
+            return None, error
+        terms.extend(store_terms)
+    return list(dict.fromkeys(terms)), None
+
+
+def _load_store_terms(root: Path, private: Path, template_mode: bool):
     path = private / PRIVATE_TERMS.name
     rel = path.relative_to(root.resolve())
     try:
         text = path.read_text(encoding="utf-8")
     except FileNotFoundError:
         # An explicit human choice may declare that no literal terms exist.
-        # It never overrides a present but invalid/empty active list.
+        # It never overrides a present list or terms in another store.
         none = private / "no-private-terms.json"
         if none.exists():
             try:
@@ -207,9 +217,9 @@ def scan_items(items, terms):
 
 def scan(root: Path, staged: bool = False):
     root = Path(root).resolve()
-    private = private_directory(root)
+    stores = private_directories(root)
     if staged:
-        preliminary_terms, preliminary_error = load_terms(root, True)
+        preliminary_terms, preliminary_error = load_terms(root, True, warn=False)
         if preliminary_error:
             sys.stderr.write(
                 f"scrub_check: {preliminary_error}; values are never printed.\n"
@@ -246,13 +256,14 @@ def scan(root: Path, staged: bool = False):
             ignore_text = ignore.decode("utf-8") if ignore is not None else ""
         except UnicodeDecodeError:
             ignore_text = ""
-        if not private_rule_active(ignore_text, private.name):
-            sys.stderr.write(redact_text(
-                "scrub_check: .gitignore in the Git index must contain an "
-                f"effective `{private.name}/` rule with no later negation.\n",
-                preliminary_patterns,
-            ))
-            return 1
+        for private in stores:
+            if not private_rule_active(ignore_text, private.name):
+                sys.stderr.write(redact_text(
+                    "scrub_check: .gitignore in the Git index must contain an "
+                    f"effective `{private.name}/` rule with no later negation.\n",
+                    preliminary_patterns,
+                ))
+                return 1
         template_mode = SENTINEL in entries
         items = staged_items(root, entries)
     else:
@@ -260,16 +271,17 @@ def scan(root: Path, staged: bool = False):
             ignore_text = (root / ".gitignore").read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             ignore_text = ""
-        if not private_rule_active(ignore_text, private.name):
-            sys.stderr.write(redact_private_diagnostic(root,
-                "scrub_check: .gitignore must contain an effective "
-                f"`{private.name}/` rule with no later negation.\n"
-            ))
-            return 1
+        for private in stores:
+            if not private_rule_active(ignore_text, private.name):
+                sys.stderr.write(redact_private_diagnostic(root,
+                    "scrub_check: .gitignore must contain an effective "
+                    f"`{private.name}/` rule with no later negation.\n"
+                ))
+                return 1
         template_mode = (root / SENTINEL).is_file()
         items = worktree_items(root)
 
-    terms, error = load_terms(root, template_mode)
+    terms, error = load_terms(root, template_mode, warn=False)
     if error:
         sys.stderr.write(f"scrub_check: {error}; values are never printed.\n")
         return 1

@@ -36,12 +36,12 @@ workspace root containing `NAMESPACE.md`, then run this block:
 ```
 
 Merge local tool, ignore, or schema customizations before replacing support files.
-Preserve instance content, readiness receipts, and immutable journals; no refill
-or onboarding is required. Keep `.sett-private/` in place: tools enforce its terms,
-and `SETT_ROOT` remains a fallback after `WORKSPACE_ROOT`. Renaming it to
-`.workspace-private/` is optional; if both exist, the new directory wins and tools warn.
-Updated tools include `workspace_layout.py`, `workspace_setup.py`, and their legacy
-compatibility imports. Both `.sett-cache/` and `.workspace-cache/` remain disposable.
+Preserve instance content, readiness receipts, and immutable journals; no refill or onboarding.
+`SETT_ROOT` remains a fallback after `WORKSPACE_ROOT`. `.sett-private/` can stay
+or be renamed; if both stores exist, tools warn and enforce their terms' union.
+A no-private-terms confirmation in one never suppresses the other.
+To consolidate, the human preserves all terms in `.workspace-private/never-share.txt`, then explicitly retires `.sett-private/`.
+Updated tools retain legacy compatibility imports. Both cache directories remain disposable.
 
 `tools/test_upgrade.py` builds a finalized last-Sett-release instance and executes this block,
 exercising gates, scrub, write protection, context, and feature checks.

@@ -47,6 +47,16 @@ def _symlink_ancestor(path):
     return None
 
 
+def _source_mode(path, layout, errors, subject):
+    try:
+        return path.lstat().st_mode
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        errors.append(f"{_label(path, layout)}: unreadable {subject} ({exc.__class__.__name__})")
+        return None
+
+
 def _metadata(text, rel, errors, expected_type):
     catalog = _catalog()
     fm = catalog.parse_frontmatter(text)
@@ -136,10 +146,12 @@ def _skill(path, name, layout, errors):
 def _discover(layout, errors):
     sources, local = [], []
     shelf = layout.workspace_path("workspace/60_capabilities/skills")
-    if layout.kind in {"family", "workspace"} and (shelf.exists() or shelf.is_symlink()):
-        if _symlink_ancestor(shelf):
+    shelf_mode = (_source_mode(shelf, layout, errors, "skill shelf")
+                  if layout.kind in {"family", "workspace"} else None)
+    if shelf_mode is not None:
+        if stat.S_ISLNK(shelf_mode) or _symlink_ancestor(shelf):
             errors.append(f"{_label(shelf, layout)}: skill shelf has a symlink ancestor")
-        elif not shelf.is_dir():
+        elif not stat.S_ISDIR(shelf_mode):
             errors.append(f"{_label(shelf, layout)}: skill shelf must be a directory")
         else:
             try:
@@ -148,22 +160,30 @@ def _discover(layout, errors):
                 errors.append(f"{_label(shelf, layout)}: unreadable skill shelf ({exc.__class__.__name__})")
                 children = []
             for path in children:
-                if path.is_dir() or path.is_symlink():
+                mode = _source_mode(path, layout, errors, "skill source")
+                if mode is None:
+                    continue
+                if stat.S_ISDIR(mode) or stat.S_ISLNK(mode):
                     sources.append((path, path.name, True))
                 elif path.name != "README.md":
                     errors.append(f"{_label(path, layout)}: skill shelf permits only README.md and skill directories")
     registry = layout.root if layout.member == "registry" else layout.root / "registry"
-    if registry.is_dir() and _symlink_ancestor(registry):
+    registry_mode = _source_mode(registry, layout, errors, "registry")
+    if registry_mode is not None and (stat.S_ISLNK(registry_mode) or _symlink_ancestor(registry)):
         errors.append(f"{_label(registry, layout)}: registry has a symlink ancestor")
-    elif registry.is_dir():
+    elif registry_mode is not None and stat.S_ISDIR(registry_mode):
         try:
             capabilities = sorted(registry.iterdir())
         except OSError as exc:
             errors.append(f"{_label(registry, layout)}: unreadable registry ({exc.__class__.__name__})")
             capabilities = []
         for capability in capabilities:
+            mode = _source_mode(capability, layout, errors, "registry capability")
+            if mode is None or not (stat.S_ISDIR(mode) or stat.S_ISLNK(mode)):
+                continue
             manifest = capability / "manifest.yml"
-            if not manifest.is_file():
+            mode = _source_mode(manifest, layout, errors, "manifest")
+            if mode is None or not (stat.S_ISREG(mode) or stat.S_ISLNK(mode)):
                 continue
             if _symlink_ancestor(manifest):
                 errors.append(f"{_label(manifest, layout)}: manifest has a symlink ancestor")
@@ -350,8 +370,11 @@ def export(target, trusted_only=False, layout=None):
     if error:
         print(redact_private_diagnostic(layout.root, f"skills: export scrub failed: {error}"), file=sys.stderr)
         return 1
+    markers = {record["name"]: (json.dumps(_marker(record, layout), sort_keys=True) + "\n").encode("utf-8")
+               for record in selected}
     items = [(record["name"] + "/" + rel, data, None)
              for record in selected for rel, (data, _mode) in record["payload"].items()]
+    items += [(name + "/" + MARKER, data, None) for name, data in markers.items()]
     if scrub_check.scan_items(items, terms):
         return 1
     # All format, ownership, path, and egress checks precede the first write.
@@ -370,7 +393,7 @@ def export(target, trusted_only=False, layout=None):
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     destination.write_bytes(data)
                     destination.chmod(mode)
-                (staged / MARKER).write_text(json.dumps(_marker(record, layout), sort_keys=True) + "\n", encoding="utf-8")
+                (staged / MARKER).write_bytes(markers[record["name"]])
                 if output.exists():
                     output.rename(backup)
                 try:

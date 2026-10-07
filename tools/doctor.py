@@ -96,7 +96,7 @@ def check(values_rel, active_rel):
     # Privacy --------------------------------------------------------------
     _, privacy_error = scrub_check.load_terms(
         Path(ROOT), template_mode)
-    terms_path = (private_directory(ROOT).relative_to(Path(ROOT))
+    terms_path = (private_directory(ROOT, warn=False).relative_to(Path(ROOT))
                   / "never-share.txt")
     add("privacy configuration", privacy_error is None,
         redact_private_diagnostic(ROOT, "No explicit private-term choice is recorded. Configure private "
