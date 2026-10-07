@@ -4,7 +4,7 @@ type: doctrine
 status: draft
 description: The rights contract for collected work. Use when adding an image, clip, font. Not for how taste is described (see claims.md).
 owner: human
-updated: 2026-08-24
+updated: 2026-10-07
 review_after: 2027-08-24
 related:
   - type: canonical
@@ -15,7 +15,7 @@ related:
 
 # Media and rights
 
-Tracked sett content is text-only. Binary media stays external and enters by
+Tracked workspace content is text-only. Binary media stays external and enters by
 URL through a documented seam; each linked asset has a rights row.
 
 ## Link-only is the default
@@ -60,7 +60,7 @@ row per file:
 
 ## Hygiene
 
-- Keep binary and heavy working formats outside the sett.
+- Keep binary and heavy working formats outside the workspace.
 - Personal data requires a written reason in the NOTE.
 
 ## What an agent may do

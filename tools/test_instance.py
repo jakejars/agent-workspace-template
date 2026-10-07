@@ -26,6 +26,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from workspace_layout import PRIVATE_DIRS
+
 TOOLS = os.path.dirname(os.path.abspath(__file__))
 SOURCE = os.path.dirname(TOOLS)
 TODAY = "2026-08-24"
@@ -132,14 +134,18 @@ def clone_source(root):
     """Tracked files plus safe new implementation files from this checkout."""
     listing = subprocess.run(["git", "ls-files", "-z"], cwd=SOURCE,
                              capture_output=True, text=True, check=True)
-    names = {n for n in listing.stdout.split("\0") if n}
     pending = subprocess.run(
         ["git", "ls-files", "--others", "--exclude-standard", "-z"],
         cwd=SOURCE, capture_output=True, text=True, check=True)
-    blocked_parts = {".sett-private", ".sett-cache", "__pycache__", "scratch",
-                     "artifacts", "work"}
+    # Exclude existing legacy stores and disposable caches from copied source.
+    blocked_parts = {*PRIVATE_DIRS, ".workspace-cache", ".sett-cache",
+                     "__pycache__", "scratch", "artifacts", "work"}
     blocked_paths = {"CATALOG.md", "CATALOG.json",
                      "workspace/00_meta/values.json"}
+    names = {name for name in listing.stdout.split("\0")
+             if name and name not in blocked_paths
+             and not set(Path(name).parts) & blocked_parts
+             and Path(SOURCE, name).is_file()}
     for name in (n for n in pending.stdout.split("\0") if n):
         parts = set(Path(name).parts)
         dynamic = (name.startswith("workspace/30_memory/journal/") and
@@ -148,7 +154,8 @@ def clone_source(root):
                    not name.endswith(("README.md", "INDEX.md"))) or \
                   (name.startswith("workspace/20_intent/active/") and
                    not name.endswith("README.md"))
-        if name not in blocked_paths and not parts & blocked_parts and not dynamic:
+        if (name not in blocked_paths and not parts & blocked_parts and not dynamic
+                and Path(SOURCE, name).is_file()):
             names.add(name)
     assert names, "no tracked files — is the source a Git repository?"
     for name in sorted(names):
@@ -180,7 +187,7 @@ def answer_interview(root, home):
     # An unanswered library path closes that seam; the other two stay open.
     # Built from parts: this file is copied into the instance, and a literal
     # term here would be a hit against itself.
-    write(root, ".sett-private/never-share.txt",
+    write(root, ".workspace-private/never-share.txt",
           "zz-example-" + "private-term\n")
 
 
@@ -369,7 +376,7 @@ def commit_through_hooks(root):
 
     tracked = git(root, "ls-files").stdout.split()
     assert "workspace/00_meta/values.json" in tracked
-    assert not [n for n in tracked if n.startswith(".sett-private")], \
+    assert not [n for n in tracked if any(n.startswith(d + "/") for d in PRIVATE_DIRS)], \
         "the private store must never be committed"
     assert not [n for n in tracked if n.startswith("CATALOG.")], \
         "catalogs are query outputs, never tracked"
@@ -407,8 +414,8 @@ def main(argv):
     if not os.path.isfile(os.path.join(SOURCE, "workspace/AGENTS.md")):
         print("test_instance: not a family checkout; nothing to instantiate.")
         return 0
-    home = tempfile.mkdtemp(prefix="sett-instance-")
-    root = os.path.join(home, "my-sett")
+    home = tempfile.mkdtemp(prefix="workspace-instance-")
+    root = os.path.join(home, "my-workspace")
     os.makedirs(root)
     try:
         clone_source(root)

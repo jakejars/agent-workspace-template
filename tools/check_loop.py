@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_catalog import (ROOT, LAYOUT, LINK_RE, EXEMPT_PATHS,  # noqa: E402
                            content_files, parse_frontmatter, read_text,
                            resolve_ref, standalone_member, strip_fences)
-from sett_layout import refuse_unknown  # noqa: E402
+from workspace_layout import refuse_unknown  # noqa: E402
 
 ENTRANCE = "workspace/AGENTS.md"
 MEMBER_ENTRANCES = {
@@ -120,7 +120,7 @@ def build_graph(errors):
             if target is None:
                 if form == "unsafe":
                     errors.append(
-                        f"{rel}:{n}: link resolves outside the sett root -> {raw}"
+                        f"{rel}:{n}: link resolves outside the workspace root -> {raw}"
                     )
                 else:
                     errors.append(f"{rel}:{n}: dead link -> {raw}")

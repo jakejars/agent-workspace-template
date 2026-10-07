@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Read-only Sett health check, in plain language.
+"""Read-only health check for Agent Workspace Template, in plain language.
 
 usage: python3 tools/doctor.py [--verbose]
-Exit: 0 healthy, 1 valid Sett with actionable problems, 2 not a Sett root.
+Exit: 0 healthy, 1 workspace with actionable problems, 2 not a workspace root.
 
 Doctor reuses the real validators and never changes anything. `--verbose`
 shows the underlying tool output for any failing check.
@@ -11,6 +11,7 @@ shows the underlying tool output for any failing check.
 import argparse
 import json
 import os
+from pathlib import Path
 import re
 import subprocess
 import sys
@@ -18,11 +19,12 @@ import sys
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from sett_layout import SettLayout, refuse_unknown  # noqa: E402
+from workspace_layout import (  # noqa: E402
+    WorkspaceLayout, private_directory, redact_private_diagnostic, refuse_unknown)
 import scrub_check  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LAYOUT = SettLayout(ROOT)
+LAYOUT = WorkspaceLayout(ROOT)
 
 REQUIRED_VALUES = ("PRINCIPAL_NAME", "WORKSPACE_ID")
 
@@ -61,8 +63,8 @@ def check(values_rel, active_rel):
     # Setup state ----------------------------------------------------------
     if template_mode:
         add("setup complete", True,
-            "this is the Sett source checkout; it is a template, not a "
-            "workspace, so setup checks do not apply here. Run "
+            "this is the template source checkout, so setup checks do not "
+            "apply here. Run "
             "`python3 tools/new.py <destination>` to create a workspace.")
     else:
         code, out = run_tool("instantiate.py", "--check")
@@ -93,11 +95,13 @@ def check(values_rel, active_rel):
 
     # Privacy --------------------------------------------------------------
     _, privacy_error = scrub_check.load_terms(
-        __import__("pathlib").Path(ROOT), template_mode)
+        Path(ROOT), template_mode)
+    terms_path = (private_directory(ROOT).relative_to(Path(ROOT))
+                  / "never-share.txt")
     add("privacy configuration", privacy_error is None,
-        "No explicit private-term choice is recorded. Configure private "
-        "terms in the ignored .sett-private/never-share.txt, or explicitly "
-        "confirm there are none.",
+        redact_private_diagnostic(ROOT, "No explicit private-term choice is recorded. Configure private "
+        f"terms in the ignored {terms_path}, or explicitly "
+        "confirm there are none."),
         privacy_error or "")
 
     # Active task ----------------------------------------------------------
@@ -178,7 +182,7 @@ def check(values_rel, active_rel):
 
 def report(checks, verbose, context=None):
     healthy = all(c["ok"] for c in checks)
-    print("Sett health" + (f" ({context})" if context else "") + "\n")
+    print("Workspace health" + (f" ({context})" if context else "") + "\n")
     for c in checks:
         print(f"{'✓' if c['ok'] else '✗'} {c['name']}")
         if not c["ok"] and c["hint"]:
@@ -208,11 +212,11 @@ def main(argv=None):
         sys.stderr.write(refused + "\n")
         return 2
     if LAYOUT.kind == "member":
-        print("Sett health\n")
+        print("Workspace health\n")
         print("✓ member layout")
-        print("This is a Sett member (optional pack), not a workspace; "
+        print("This is an optional member, not a workspace; "
               "workspace checks do not apply. Run doctor from a workspace "
-              "or the Sett source checkout.")
+              "or the template source checkout.")
         return 0
     values_rel = LAYOUT.physical_rel("workspace/00_meta/values.json")
     active_rel = LAYOUT.physical_rel("workspace/20_intent/active")

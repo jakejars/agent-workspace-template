@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Create a ready-to-use Sett workspace with one command.
+"""Create a ready-to-use workspace from Agent Workspace Template.
 
 usage:
-  python3 tools/new.py ~/setts/my-workspace            interactive wizard
+  python3 tools/new.py ~/workspaces/my-workspace            interactive wizard
   python3 tools/new.py TARGET --non-interactive --name NAME \
       --workspace-id ID --goal GOAL [--no-private-terms | --private-term] \
       [--hooks portable] [--verbose]
@@ -24,7 +24,7 @@ import sys
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from sett_setup import (  # noqa: E402
+from workspace_setup import (  # noqa: E402
     SetupError, SOURCE_LAYOUT, build_workspace, check_workspace_id,
     kebab, normalize_workspace_id, validate_family_source, validate_target)
 
@@ -52,7 +52,7 @@ def ask_choice(prompt, options):
 
 def gather_answers(args, target):
     """Interactive interview. Each answer maps onto one setup fact."""
-    print("Set up a new Sett workspace at:")
+    print("Set up a new workspace at:")
     print(f"  {target}")
     print("Answer a few questions; defaults are shown in [brackets].\n")
 
@@ -87,7 +87,7 @@ def gather_answers(args, target):
             privacy = []
         else:
             print("Enter them one per line; an empty line finishes. "
-                  "They are stored only in the ignored .sett-private/ "
+                  "They are stored only in the ignored .workspace-private/ "
                   "and are never printed.")
             privacy = []
             while True:
@@ -99,7 +99,7 @@ def gather_answers(args, target):
 
 
 def success(target):
-    print(f"\nSett workspace ready: {target}\n")
+    print(f"\nWorkspace ready: {target}\n")
     print("✓ identity configured")
     print("✓ privacy choice recorded")
     print("✓ first task captured")

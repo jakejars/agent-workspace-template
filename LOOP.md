@@ -2,8 +2,8 @@
 id: loop
 type: doctrine
 status: draft
-description: Sett flows and reachability. Use when wiring a seam or tracing lifecycle. Not for filing rules (see doctrine/filing.md).
-updated: 2026-08-24
+description: Agent Workspace Template flows and reachability. Use when wiring a seam or tracing lifecycle. Not for filing rules (see doctrine/filing.md).
+updated: 2026-10-07
 related:
   - type: see_also
     ref: doctrine/INDEX.md

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Block private terms in worktree or staged content.
 
-Terms live only in ignored `.sett-private/never-share.txt`, one per line.
+Terms live only in ignored `.workspace-private/never-share.txt`, one per line.
 `--staged` scans index blobs and validates staged `.gitignore` configuration;
 unstaged divergence cannot affect its result. Diagnostics never print a term
 or a path containing one.
@@ -18,16 +18,19 @@ import sys
 from pathlib import Path
 
 sys.dont_write_bytecode = True
-from sett_layout import SettLayout
+from workspace_layout import (
+    PRIVATE_DIR, PRIVATE_DIRS, WorkspaceLayout,
+    private_directory, redact_private_diagnostic,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
-LAYOUT = SettLayout(ROOT)
-PRIVATE_TERMS = Path(".sett-private/never-share.txt")
+LAYOUT = WorkspaceLayout(ROOT)
+PRIVATE_TERMS = Path(".workspace-private/never-share.txt")
 SENTINEL = LAYOUT.physical_rel("workspace/00_meta/.uninitialised")
 RETIRED_STORE = "tools/scrub-terms.txt"
-SKIP_DIRS = {
-    ".git", ".sett-private", ".venv", "venv", "__pycache__",
-    "node_modules", ".mypy_cache", ".sett-cache", "work", "artifacts",
+SKIP_DIRS = set(PRIVATE_DIRS) | {
+    ".git", ".venv", "venv", "__pycache__",
+    "node_modules", ".mypy_cache", ".workspace-cache", "work", "artifacts",
 }
 
 
@@ -72,14 +75,14 @@ def index_blob(root: Path, oid: str):
     return proc.stdout if proc.returncode == 0 else None
 
 
-def private_rule_active(text: str):
+def private_rule_active(text: str, directory=PRIVATE_DIR):
     """Require one auditable root ignore rule in the selected snapshot."""
     active = False
     for raw in text.splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
-        if line in {".sett-private/", "/.sett-private/"}:
+        if line in {f"{directory}/", f"/{directory}/"}:
             active = True
         elif active and line.startswith("!"):
             active = False
@@ -87,13 +90,15 @@ def private_rule_active(text: str):
 
 
 def load_terms(root: Path, template_mode: bool):
-    path = root / PRIVATE_TERMS
+    private = private_directory(root, warn=False)
+    path = private / PRIVATE_TERMS.name
+    rel = path.relative_to(root.resolve())
     try:
         text = path.read_text(encoding="utf-8")
     except FileNotFoundError:
         # An explicit human choice may declare that no literal terms exist.
         # It never overrides a present but invalid/empty active list.
-        none = root / ".sett-private/no-private-terms.json"
+        none = private / "no-private-terms.json"
         if none.exists():
             try:
                 choice = json.loads(none.read_text(encoding="utf-8"))
@@ -101,12 +106,12 @@ def load_terms(root: Path, template_mode: bool):
                     return [], None
             except (OSError, ValueError):
                 pass
-            return None, "invalid explicit no-private-terms declaration"
+            return None, redact_private_diagnostic(root, "invalid explicit no-private-terms declaration")
         if template_mode:
             return [], None
-        return None, f"missing ignored {PRIVATE_TERMS}"
+        return None, redact_private_diagnostic(root, f"missing ignored {rel}")
     except (OSError, UnicodeDecodeError):
-        return None, f"cannot read ignored {PRIVATE_TERMS}"
+        return None, redact_private_diagnostic(root, f"cannot read ignored {rel}")
 
     terms = []
     for line_no, raw in enumerate(text.splitlines(), start=1):
@@ -116,14 +121,14 @@ def load_terms(root: Path, template_mode: bool):
         if len(term) < 3 or term.casefold() in {
             "none", "n/a", "tbd", "todo", "unknown",
         }:
-            return None, (
-                f"{PRIVATE_TERMS}:{line_no}: unusable never-share term "
+            return None, redact_private_diagnostic(root, (
+                f"{rel}:{line_no}: unusable never-share term "
                 "(value redacted)"
-            )
+            ))
         terms.append(term)
     terms = list(dict.fromkeys(terms))
     if not terms and not template_mode:
-        return None, f"{PRIVATE_TERMS} declares zero terms"
+        return None, redact_private_diagnostic(root, f"{rel} declares zero terms")
     return terms, None
 
 
@@ -201,6 +206,8 @@ def scan_items(items, terms):
 
 
 def scan(root: Path, staged: bool = False):
+    root = Path(root).resolve()
+    private = private_directory(root)
     if staged:
         preliminary_terms, preliminary_error = load_terms(root, True)
         if preliminary_error:
@@ -216,9 +223,9 @@ def scan(root: Path, staged: bool = False):
             ))
             return 2
         if any(
-            rel == PRIVATE_TERMS.as_posix()
-            or rel.startswith(".sett-private/")
+            rel == directory or rel.startswith(directory + "/")
             for rel in entries
+            for directory in PRIVATE_DIRS
         ):
             sys.stderr.write(redact_text(
                 f"scrub_check: {PRIVATE_TERMS} must not be tracked; "
@@ -239,10 +246,10 @@ def scan(root: Path, staged: bool = False):
             ignore_text = ignore.decode("utf-8") if ignore is not None else ""
         except UnicodeDecodeError:
             ignore_text = ""
-        if not private_rule_active(ignore_text):
+        if not private_rule_active(ignore_text, private.name):
             sys.stderr.write(redact_text(
                 "scrub_check: .gitignore in the Git index must contain an "
-                "effective `.sett-private/` rule with no later negation.\n",
+                f"effective `{private.name}/` rule with no later negation.\n",
                 preliminary_patterns,
             ))
             return 1
@@ -253,11 +260,11 @@ def scan(root: Path, staged: bool = False):
             ignore_text = (root / ".gitignore").read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             ignore_text = ""
-        if not private_rule_active(ignore_text):
-            sys.stderr.write(
+        if not private_rule_active(ignore_text, private.name):
+            sys.stderr.write(redact_private_diagnostic(root,
                 "scrub_check: .gitignore must contain an effective "
-                "`.sett-private/` rule with no later negation.\n"
-            )
+                f"`{private.name}/` rule with no later negation.\n"
+            ))
             return 1
         template_mode = (root / SENTINEL).is_file()
         items = worktree_items(root)
@@ -273,7 +280,7 @@ def selftest():
     import tempfile
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
-        (root / ".gitignore").write_text(".sett-private/\n", encoding="utf-8")
+        (root / ".gitignore").write_text(".workspace-private/\n", encoding="utf-8")
         (root / "workspace/00_meta").mkdir(parents=True)
         (root / SENTINEL).touch()
         assert scan(root) == 0, "an uninitialised template needs no values"

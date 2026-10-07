@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Block mutation of existing `30_memory/journal/` entries; allow new entries.
-Also blocks any agent write to `.sett-private/` — humans edit that store
+Also blocks any agent write to `.workspace-private/` — humans edit that store
 outside the runtime; agents never touch it.
 
 Neutral stdin contract:
@@ -9,7 +9,7 @@ Neutral stdin contract:
      "path": "<file>", "command": "<shell line>"}
 
 `modify` and `create-or-overwrite` require `path`; `shell` requires `command`.
-Exit: 0 allow, 2 block, 1 guard failure (fail open). Root: `$SETT_ROOT` or repo.
+Exit: 0 allow, 2 block, 1 guard failure (fail open). Root: `$WORKSPACE_ROOT` or repo.
 Use `--selftest`; runtime payload translation belongs in `tools/hooks/shim.py`.
 """
 import json
@@ -20,15 +20,15 @@ import sys
 from pathlib import Path
 
 sys.dont_write_bytecode = True
-from sett_layout import SettLayout
+from workspace_layout import PRIVATE_DIRS, WorkspaceLayout
 
-ROOT = Path(os.environ.get("SETT_ROOT") or Path(__file__).resolve().parents[1])
-LAYOUT = SettLayout(ROOT)
+ROOT = Path(os.environ.get("WORKSPACE_ROOT") or Path(__file__).resolve().parents[1])
+LAYOUT = WorkspaceLayout(ROOT)
 JOURNAL_ROOT = Path(LAYOUT.physical_rel("workspace/30_memory/journal"))
 
 STRUCTURE = {"INDEX.md", "README.md", ".gitkeep"}
 
-PRIVATE_ROOT = Path(".sett-private")
+PRIVATE_ROOTS = tuple(Path(name) for name in PRIVATE_DIRS)
 
 # The enforcement layer is not workspace content. An agent that can edit the
 # gates, the constitution, or the onboarding sentinel can edit its way out of
@@ -38,14 +38,15 @@ SEALED = ("tools", "workspace/AGENTS.md", "workspace/00_meta/.uninitialised",
           "workspace/00_meta/.initializing", "workspace/00_meta/ready.json")
 
 JOURNAL_PATH_RE = re.compile(r"30_memory/journal")
-PRIVATE_PATH_RE = re.compile(r"\.sett-private")
+PRIVATE_PATH_PATTERN = "(?:" + "|".join(re.escape(name) for name in PRIVATE_DIRS) + ")"
+PRIVATE_PATH_RE = re.compile(PRIVATE_PATH_PATTERN)
 SEALED_PATH_RE = re.compile(r"(?:^|[\s/'\"])tools/|AGENTS\.md|\.uninitialised")
 DESTRUCTIVE_CMD_RE = (
     re.compile(r"\b(rm|mv|cp|dd|truncate|shred|rsync|install|ln|sed)\b"),
     re.compile(r"\btee\b"),
 )
 JOURNAL_OVERWRITE_RE = re.compile(r"(?<!>)>(?!>)\s*[^|&;]*30_memory/journal")  # '>>' is fine
-PRIVATE_OVERWRITE_RE = re.compile(r">>?\s*[^|&;]*\.sett-private")  # any redirect blocks
+PRIVATE_OVERWRITE_RE = re.compile(r">>?\s*[^|&;]*" + PRIVATE_PATH_PATTERN)  # any redirect blocks
 
 
 def is_journal_entry(path: str) -> bool:
@@ -63,15 +64,14 @@ def is_journal_entry(path: str) -> bool:
 
 
 def is_private_path(path: str) -> bool:
-    """True if `path` resolves inside the human-only `.sett-private/` store."""
+    """True if `path` resolves inside the human-only `.workspace-private/` store."""
     raw = Path(path).expanduser()
     p = raw if raw.is_absolute() else ROOT / raw
     try:
         rel = p.resolve().relative_to(ROOT.resolve())
-        rel.relative_to(PRIVATE_ROOT)
     except ValueError:
         return False
-    return True
+    return any(rel == private or private in rel.parents for private in PRIVATE_ROOTS)
 
 
 def is_sealed_path(path: str) -> bool:
@@ -105,7 +105,7 @@ def verdict(data: dict):
 
     if op in ("modify", "create-or-overwrite"):
         if path and is_private_path(path):
-            return (f".sett-private/ is human-only; an agent tool never writes there "
+            return (f"Private term stores are human-only; an agent tool never writes there "
                     f"({path}).")
         if path and is_sealed_path(path):
             return (f"The gates, the entrance and the onboarding sentinel are "
@@ -121,7 +121,7 @@ def verdict(data: dict):
         if PRIVATE_PATH_RE.search(command) and (
                 any(r.search(command) for r in DESTRUCTIVE_CMD_RE)
                 or PRIVATE_OVERWRITE_RE.search(command)):
-            return ".sett-private/ is human-only; refusing a shell command that writes there."
+            return "Private term stores are human-only; refusing a shell command that writes there."
         if SEALED_PATH_RE.search(command) and (
                 any(r.search(command) for r in DESTRUCTIVE_CMD_RE)
                 or re.search(r">>?\s*[^|&;]*(tools/|AGENTS\.md|\.uninitialised)",
@@ -180,12 +180,12 @@ def selftest():
     assert verdict({"op": "create-or-overwrite", "path": j}) is None
     assert verdict({"op": "shell", "command": "rm workspace/30_memory/journal/a.md"})
     assert verdict({"op": "shell", "command": "echo x >> workspace/30_memory/journal/a.md"}) is None
-    assert is_private_path(".sett-private/never-share.txt")
+    assert is_private_path(".workspace-private/never-share.txt")
     assert not is_private_path("workspace/AGENTS.md")
-    assert verdict({"op": "modify", "path": ".sett-private/never-share.txt"})
-    assert verdict({"op": "create-or-overwrite", "path": ".sett-private/x.txt"})
-    assert verdict({"op": "shell", "command": "echo x >> .sett-private/never-share.txt"})
-    assert verdict({"op": "shell", "command": "cat .sett-private/never-share.txt"}) is None
+    assert verdict({"op": "modify", "path": ".workspace-private/never-share.txt"})
+    assert verdict({"op": "create-or-overwrite", "path": ".workspace-private/x.txt"})
+    assert verdict({"op": "shell", "command": "echo x >> .workspace-private/never-share.txt"})
+    assert verdict({"op": "shell", "command": "cat .workspace-private/never-share.txt"}) is None
     assert is_sealed_path("tools/build_catalog.py")
     assert is_sealed_path("workspace/AGENTS.md")
     assert is_sealed_path("workspace/00_meta/.uninitialised")

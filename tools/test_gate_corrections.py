@@ -17,7 +17,7 @@ from test_gates import CLEAN, TOOLS, build, run
 
 
 FAKE_TERM = "zz-private-correction-term"
-PRIVATE_TERMS = ".sett-private/never-share.txt"
+PRIVATE_TERMS = ".workspace-private/never-share.txt"
 SOURCE_ROOT = Path(__file__).resolve().parents[1]
 FAMILY_SOURCE = (SOURCE_ROOT / "workspace/AGENTS.md").is_file()
 OPTIONAL_SOURCE = all(
@@ -61,7 +61,7 @@ def init_repo(root):
     assert git(root, "init", "-q").returncode == 0
     assert git(root, "config", "user.email", "gate@example.invalid").returncode == 0
     assert git(root, "config", "user.name", "Gate Test").returncode == 0
-    write(root, ".gitignore", ".sett-private/\n")
+    write(root, ".gitignore", ".workspace-private/\n")
     write(root, PRIVATE_TERMS, FAKE_TERM + "\n")
     assert git(root, "add", ".").returncode == 0
     committed = git(root, "commit", "-qm", "fixture")
@@ -128,19 +128,144 @@ class GateCorrections(unittest.TestCase):
         code, out = run(self.tmp, "scrub_check.py", "--staged")
         self.assertEqual(code, 1, out)
 
+    def test_scrub_falls_back_to_legacy_private_directory(self):
+        # Removing legacy fallback would silently stop checking old instances.
+        self.build_git_fixture()
+        Path(self.tmp, ".workspace-private").rename(
+            Path(self.tmp, ".sett-private")
+        )
+        write(self.tmp, ".gitignore", ".workspace-private/\n.sett-private/\n")
+        self.assertEqual(git(self.tmp, "add", ".gitignore").returncode, 0)
+        for args in ((), ("--staged",)):
+            code, out = run(self.tmp, "scrub_check.py", *args)
+            self.assertEqual(code, 0, out)
+        write(self.tmp, "notes.md", f"contains {FAKE_TERM}\n")
+        self.assertEqual(git(self.tmp, "add", "notes.md").returncode, 0)
+        for args in ((), ("--staged",)):
+            code, out = run(self.tmp, "scrub_check.py", *args)
+            self.assertEqual(code, 1, out)
+            self.assertIn("never-share term", out)
+            self.assertNotIn(FAKE_TERM, out)
+
+    def test_scrub_prefers_new_private_directory_and_warns(self):
+        # The new store must win even when the old store has different terms.
+        self.build_git_fixture()
+        legacy_term = "zz-legacy-private-term"
+        write(self.tmp, ".sett-private/never-share.txt", legacy_term + "\n")
+        write(self.tmp, ".gitignore", ".workspace-private/\n.sett-private/\n")
+        write(self.tmp, "notes.md", legacy_term + "\n")
+        self.assertEqual(git(self.tmp, "add", ".gitignore", "notes.md").returncode, 0)
+        for args in ((), ("--staged",)):
+            code, out = run(self.tmp, "scrub_check.py", *args)
+            self.assertEqual(code, 0, out)
+            self.assertIn("warning", out.lower())
+            self.assertIn(".workspace-private", out)
+        write(self.tmp, "notes.md", FAKE_TERM + "\n")
+        self.assertEqual(git(self.tmp, "add", "notes.md").returncode, 0)
+        code, out = run(self.tmp, "scrub_check.py", "--staged")
+        self.assertEqual(code, 1, out)
+        self.assertNotIn(FAKE_TERM, out)
+
+    def test_scrub_reads_legacy_no_private_terms_declaration(self):
+        self.build_git_fixture()
+        Path(self.tmp, PRIVATE_TERMS).unlink()
+        Path(self.tmp, ".workspace-private").rename(Path(self.tmp, ".sett-private"))
+        write(self.tmp, ".sett-private/no-private-terms.json", '{"version":1,"confirmed":true}\n')
+        write(self.tmp, ".gitignore", ".sett-private/\n")
+        self.assertEqual(git(self.tmp, "add", ".gitignore").returncode, 0)
+        code, out = run(self.tmp, "scrub_check.py", "--staged")
+        self.assertEqual(code, 0, out)
+
+    def test_staged_scrub_rejects_tracked_legacy_private_store(self):
+        self.build_git_fixture()
+        write(self.tmp, ".sett-private/never-share.txt", FAKE_TERM + "\n")
+        write(self.tmp, ".gitignore", ".workspace-private/\n.sett-private/\n")
+        self.assertEqual(git(self.tmp, "add", ".gitignore").returncode, 0)
+        self.assertEqual(git(self.tmp, "add", "-f", ".sett-private/never-share.txt").returncode, 0)
+        code, out = run(self.tmp, "scrub_check.py", "--staged")
+        self.assertEqual(code, 1, out)
+        self.assertIn("must not be tracked", out)
+        self.assertNotIn(FAKE_TERM, out)
+
+    def test_context_fingerprint_reads_legacy_private_directory(self):
+        # Changing legacy private rules must invalidate cached scrub results.
+        import context as routing
+        previous_root = routing.ROOT
+        routing.ROOT = Path(self.tmp)
+        try:
+            write(self.tmp, ".sett-private/never-share.txt", "zz-first-private-term\n")
+            before = routing.fingerprint()
+            write(self.tmp, ".sett-private/never-share.txt", "zz-second-private-term\n")
+            self.assertNotEqual(routing.fingerprint(), before)
+        finally:
+            routing.ROOT = previous_root
+
+    def test_legacy_tool_imports_keep_working(self):
+        # Existing callers can keep the old module, class and helper names.
+        proc = subprocess.run(
+            [sys.executable, "-c", (
+                "import sett_setup, workspace_setup, sett_layout, workspace_layout; "
+                "assert sett_setup.SetupError is workspace_setup.SetupError; "
+                "assert sett_setup.first_sett_ancestor is workspace_setup.first_workspace_ancestor; "
+                "assert sett_setup.contains_sett_root is workspace_setup.contains_workspace_root; "
+                "layout = sett_layout.SettLayout('.'); "
+                "assert isinstance(layout, workspace_layout.WorkspaceLayout); "
+                "assert layout.is_sett_root == layout.is_workspace_root"
+            )],
+            cwd=SOURCE_ROOT / "tools", capture_output=True, text=True,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
+    def test_doctor_warns_when_both_private_directories_exist(self):
+        self.build_git_fixture()
+        shutil.copy(Path(TOOLS, "doctor.py"), Path(self.tmp, "tools"))
+        write(self.tmp, ".sett-private/never-share.txt", "zz-legacy-private-term\n")
+        write(self.tmp, ".gitignore", ".workspace-private/\n.sett-private/\n")
+        _, out = run(self.tmp, "doctor.py")
+        self.assertIn("warning", out.lower())
+        self.assertIn("using .workspace-private/", out)
+        self.assertNotIn(FAKE_TERM, out)
+
+    def test_private_conflict_warning_redacts_terms_matching_directory_names(self):
+        # Even public path names must be redacted when configured as private.
+        import contextlib
+        import io
+        import context as routing
+        self.build_git_fixture()
+        shutil.copy(Path(TOOLS, "doctor.py"), Path(self.tmp, "tools"))
+        write(self.tmp, ".sett-private/never-share.txt", "zz-legacy-private-term\n")
+        previous_root = routing.ROOT
+        routing.ROOT = Path(self.tmp)
+        try:
+            for terms in (".workspace-private\n", "xx\n.workspace-private\n"):
+                with self.subTest(terms=terms):
+                    write(self.tmp, PRIVATE_TERMS, terms)
+                    captured = io.StringIO()
+                    with contextlib.redirect_stderr(captured):
+                        routing.fingerprint()
+                    _, doctor_output = run(self.tmp, "doctor.py")
+                    _, scrub_output = run(self.tmp, "scrub_check.py")
+                    _, staged_output = run(self.tmp, "scrub_check.py", "--staged")
+                    for output in (captured.getvalue(), doctor_output, scrub_output, staged_output):
+                        self.assertIn("warning", output.lower())
+                        self.assertNotIn(".workspace-private", output)
+                        self.assertIn("<redacted-term>", output)
+        finally:
+            routing.ROOT = previous_root
+
     def test_staged_scrub_reads_staged_ignore_configuration(self):
         # Staged ignore rules, not later worktree edits, define commit safety.
         self.build_git_fixture()
         write(self.tmp, ".gitignore", "")
         self.assertEqual(git(self.tmp, "add", ".gitignore").returncode, 0)
-        write(self.tmp, ".gitignore", ".sett-private/\n")
+        write(self.tmp, ".gitignore", ".workspace-private/\n")
         code, out = run(self.tmp, "scrub_check.py", "--staged")
         self.assertEqual(code, 1, out)
         self.assertIn(".gitignore", out)
 
-        write(self.tmp, ".gitignore", ".sett-private/\n!*\n")
+        write(self.tmp, ".gitignore", ".workspace-private/\n!*\n")
         self.assertEqual(git(self.tmp, "add", ".gitignore").returncode, 0)
-        write(self.tmp, ".gitignore", ".sett-private/\n")
+        write(self.tmp, ".gitignore", ".workspace-private/\n")
         code, out = run(self.tmp, "scrub_check.py", "--staged")
         self.assertEqual(code, 1, out)
         self.assertIn(".gitignore", out)
@@ -268,13 +393,14 @@ class GateCorrections(unittest.TestCase):
             )
             return proc.returncode, proc.stdout + proc.stderr
 
-        for op in ("modify", "create-or-overwrite"):
-            code, out = ask({"op": op, "path": PRIVATE_TERMS})
-            self.assertEqual(code, 2, out)
-            self.assertIn(".sett-private", out)
+        for private_terms in (PRIVATE_TERMS, ".sett-private/never-share.txt"):
+            for op in ("modify", "create-or-overwrite"):
+                code, out = ask({"op": op, "path": private_terms})
+                self.assertEqual(code, 2, out)
+                self.assertIn("human-only", out)
 
-        code, out = ask({"op": "shell", "command": f"echo leak >> {PRIVATE_TERMS}"})
-        self.assertEqual(code, 2, out)
+            code, out = ask({"op": "shell", "command": f"echo leak >> {private_terms}"})
+            self.assertEqual(code, 2, out)
 
         code, out = ask({"op": "create-or-overwrite", "path": "notes.md"})
         self.assertEqual(code, 0, out)
@@ -367,7 +493,7 @@ class GateCorrections(unittest.TestCase):
 
     def test_runtime_scan_excludes_only_git_ignored_scratch(self):
         self.build_git_fixture()
-        write(self.tmp, ".gitignore", ".sett-private/\n.local-scratch/\n")
+        write(self.tmp, ".gitignore", ".workspace-private/\n.local-scratch/\n")
         write(
             self.tmp, ".local-scratch/review.diff",
             "mentions " + "cla" "ude" + "\n",
@@ -896,7 +1022,7 @@ updated: 2026-08-24
                 self.assertEqual(code, 1, out)
                 self.assertIn("missing ignored", out)
 
-    def test_catalog_references_cannot_escape_the_sett_root(self):
+    def test_catalog_references_cannot_escape_the_workspace_root(self):
         files = dict(CLEAN)
         build(self.tmp, files)
         outside = Path(self.tmp).parent / (Path(self.tmp).name + "-outside.md")
@@ -916,7 +1042,7 @@ updated: 2026-08-24
                 )
                 code, out = run(self.tmp, "build_catalog.py", "--check")
                 self.assertEqual(code, 1, out)
-                self.assertIn("outside the sett root", out)
+                self.assertIn("outside the workspace root", out)
 
         spaced = outside.with_name(outside.stem + " spaced.md")
         spaced.write_text("outside\n", encoding="utf-8")
@@ -927,7 +1053,7 @@ updated: 2026-08-24
         )
         code, out = run(self.tmp, "build_catalog.py", "--check")
         self.assertEqual(code, 1, out)
-        self.assertIn("outside the sett root", out)
+        self.assertIn("outside the workspace root", out)
 
         escape = Path(self.tmp, "workspace/70_seams/escape.txt")
         escape.symlink_to(outside)
@@ -937,7 +1063,7 @@ updated: 2026-08-24
         )
         code, out = run(self.tmp, "build_catalog.py", "--check")
         self.assertEqual(code, 1, out)
-        self.assertIn("outside the sett root", out)
+        self.assertIn("outside the workspace root", out)
 
         outside_id = outside.with_name(outside.stem + "-id.md")
         outside_id.write_text(
@@ -973,9 +1099,9 @@ Everything.
         )
         code, out = run(self.tmp, "build_catalog.py", "--check")
         self.assertEqual(code, 1, out)
-        self.assertIn("outside the sett root", out)
+        self.assertIn("outside the workspace root", out)
 
-    def test_loop_links_cannot_escape_the_sett_root(self):
+    def test_loop_links_cannot_escape_the_workspace_root(self):
         files = dict(CLEAN)
         build(self.tmp, files)
         outside = Path(self.tmp).parent / (Path(self.tmp).name + "-loop.md")
@@ -990,19 +1116,19 @@ Everything.
                 )
                 code, out = run(self.tmp, "check_loop.py")
                 self.assertEqual(code, 1, out)
-                self.assertIn("outside the sett root", out)
+                self.assertIn("outside the workspace root", out)
 
         escape = Path(self.tmp, "library/escape.txt")
         escape.symlink_to(outside)
         library.write_text(original + "\n[escape](escape.txt)\n", encoding="utf-8")
         code, out = run(self.tmp, "check_loop.py")
         self.assertEqual(code, 1, out)
-        self.assertIn("outside the sett root", out)
+        self.assertIn("outside the workspace root", out)
 
     def test_tracked_binary_content_is_rejected_without_echoing_bytes(self):
         files = dict(CLEAN)
         build(self.tmp, files)
-        write(self.tmp, ".gitignore", ".sett-private/\n")
+        write(self.tmp, ".gitignore", ".workspace-private/\n")
         Path(self.tmp, "workspace/00_meta/.uninitialised").touch()
         Path(self.tmp, "library/media.png").write_bytes(
             b"\x89PNG\r\n\x1a\n\x00private-binary-payload\xff"
@@ -1549,7 +1675,7 @@ expiry: 2026-08-25
         media_path = root / "library/doctrine/media-and-rights.md"
         if media_path.is_file():
             media = media_path.read_text(encoding="utf-8")
-            self.assertIn("tracked sett content is text-only", media.lower())
+            self.assertIn("tracked workspace content is text-only", media.lower())
 
     def test_schema_drives_type_to_chamber_routing(self):
         build(self.tmp, dict(CLEAN))

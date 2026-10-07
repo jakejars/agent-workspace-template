@@ -7,7 +7,7 @@ load: always
 scope: workspace
 precedence: protected
 owner: human
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: see_also
     ref: workspace/70_seams/shared-context.md
@@ -22,7 +22,7 @@ traverse `shared-context/` from here.
 - Reviewed shared facts apply within shared scope. Current user instructions
   and verified corrections are not overridden by an old shared summary. Record
   disagreements as correction candidates; never silently rewrite the source.
-- No shared principal facts are bound in the template. An instantiated sett
+- No shared principal facts are bound in the template. An instantiated workspace
   may replace this line with a compact, human-approved view.
 
 Open [`shared-context.md`](shared-context.md) only when linking, refreshing,

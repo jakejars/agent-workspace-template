@@ -5,7 +5,7 @@ status: draft
 description: Closed intents. Use when checking completed, abandoned, or superseded wants. Not for active intents (see ../active/README.md).
 load: drill
 scope: workspace
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: canonical
     ref: workspace/20_intent/INDEX.md
@@ -19,7 +19,7 @@ file's `lifecycle:` field says which:
 | `lifecycle:` | Means | Must also carry |
 |---|---|---|
 | `satisfied` | The success definition was met | The evidence — what was produced, where it is |
-| `abandoned` | Deliberately dropped | Why. An abandoned intent is a finding about what this sett does not do |
+| `abandoned` | Deliberately dropped | Why. An abandoned intent is a finding about what this workspace does not do |
 | `superseded` | Replaced by a later intent | `superseded_by:` naming that intent's id |
 
 ## Rules
@@ -34,7 +34,7 @@ file's `lifecycle:` field says which:
    never bulk-read at boot, never swept into context "for background".
 4. **Abandoned entries are the valuable ones.** They are the closest
    thing this chamber has to a dead-end record: before capturing a new
-   want, check whether this sett already tried it and stopped. Verified
+   want, check whether this workspace already tried it and stopped. Verified
    dead ends themselves live in `30_memory/dead-ends/`; this drawer
    holds why the *want* was dropped, which is a different fact.
 5. **Never prune.** The drawer grows. Its cost is disk; its value is

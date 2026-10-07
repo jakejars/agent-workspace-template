@@ -3,7 +3,7 @@ id: namespace
 type: doctrine
 status: draft
 description: Reserved family paths. Use when checking whether a path has a meaning. Not for graph mechanics (see LOOP.md).
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: see_also
     ref: doctrine/filing.md
@@ -14,11 +14,11 @@ related:
 # Namespace
 
 Reserved names are not required structure. Create a path only when content
-needs it. The sett root is the nearest ancestor containing this file. Marks:
+needs it. The workspace root is the nearest ancestor containing this file. Marks:
 `[c]` content, `[s]` reserved/optional, `[g]` generated/ignored.
 
 ```text
-sett/
+agent-workspace-template/
 ├── README.md  LOOP.md  NAMESPACE.md  AGENTS.md         [c]
 ├── CLAUDE.md  GEMINI.md  LICENSE  .gitignore          [c]
 ├── CATALOG.md  CATALOG.json                           [g]
@@ -38,15 +38,15 @@ sett/
 ├── .github/workflows/gates.yml                             [c] CI
 │
 ├── tools/                                                  [c]
-│   ├── build_catalog.py  check_loop.py  journal_guard.py  sett_layout.py
-│   ├── scrub_check.py  agnostic_check.py  instantiate.py  sett_setup.py
+│   ├── build_catalog.py  check_loop.py  journal_guard.py  workspace_layout.py
+│   ├── scrub_check.py  agnostic_check.py  instantiate.py  workspace_setup.py
 │   ├── new.py  doctor.py  lifecycle.py  context.py  check_staged.py
 │   ├── test_gates.py  test_gate_corrections.py  test_instance.py
 │   ├── test_context.py  test_staged.py  test_onboarding.py  test_hooks.py
 │   ├── test_new.py
 │   └── hooks/{shim.py,settings-example.json,install.py}
 │
-├── workspace/                    THE SETT — the instantiable member
+├── workspace/                    THE WORKSPACE — the instantiable member
 │   ├── AGENTS.md                 [c] the entrance: constitution + boot
 │   ├── CLAUDE.md  GEMINI.md      [c] pinned pointers
 │   ├── 00_meta/                  instantiation state
@@ -102,8 +102,8 @@ sett/
     └── inbox/README.md           [c] + <slug>.md [s] captures, 60-second rule
 ```
 
-Ignored: `.sett-private/never-share.txt` holds literal terms; never tracked.
-`.sett-cache/` holds derived context/graph and lifecycle receipts. Root or
+Ignored: `.workspace-private/never-share.txt` holds literal terms; never tracked.
+`.workspace-cache/` holds derived context/graph and lifecycle receipts. Root or
 run-level `work/` and `artifacts/` hold ignored arbitrary-format outputs.
 
 ## Required spine

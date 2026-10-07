@@ -5,7 +5,7 @@ status: draft
 description: External references. Use when citing a document or specification. Not for copying source content (see workspace/70_seams/world.md).
 scope: workspace
 owner: agent
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: canonical
     ref: workspace/40_knowledge/INDEX.md
@@ -59,7 +59,7 @@ used_by: [<id>, ...]             # what in this workspace rests on it
 1. **Provenance stays honest.** A mirrored page silently becomes a
    local claim with no clock; the original moves on and no one knows.
 2. **The copy is not ours.** Copyright and licence live with the
-   source; the sett keeps the address.
+   source; the workspace keeps the address.
 3. **Verified knowledge belongs in canon anyway.** When this workspace
    has confirmed something an external source says, that becomes a
    canon file in this workspace's own words, citing this reference.

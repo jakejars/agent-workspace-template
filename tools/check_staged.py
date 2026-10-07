@@ -63,7 +63,7 @@ def main():
         p=subprocess.run([sys.executable,str(ROOT/'tools'/name),*args],cwd=ROOT)
         if p.returncode: return 1
     try:
-        with tempfile.TemporaryDirectory(prefix='sett-index-') as tmp:
+        with tempfile.TemporaryDirectory(prefix='workspace-index-') as tmp:
             root=Path(tmp)
             snapshot(root)
             env=os.environ.copy()

@@ -4,7 +4,7 @@ type: doctrine
 status: draft
 description: Neutral lifecycle commands. Use when installing hooks or finding task context. Not for gate semantics (see doctrine/gates.md).
 owner: human
-updated: 2026-09-06
+updated: 2026-10-07
 related:
   - type: composes_with
     ref: doctrine/disclosure.md
@@ -15,7 +15,7 @@ related:
 # Lifecycle and context
 
 Every agent can use the same local commands. No runtime, daemon, account,
-network service, or model API is required. Run from the sett root.
+network service, or model API is required. Run from the workspace root.
 
 ```sh
 python3 tools/hooks/install.py          # local Git hook installation
@@ -80,8 +80,8 @@ becomes injected authority. Optional family stores are entered through seams.
 
 ## Cache and artifacts
 
-`.sett-cache/context.json` contains validated metadata and graph edges;
-`.sett-cache/lifecycle.json` stores only latest event receipts. Both are ignored,
+`.workspace-cache/context.json` contains validated metadata and graph edges;
+`.workspace-cache/lifecycle.json` stores only latest event receipts. Both are ignored,
 replaceable derived data. No prompts or transcripts are persisted in receipts.
 The source graph and dates determine validity; deleting the cache is safe.
 Validation failure never serves the previous cache as current.

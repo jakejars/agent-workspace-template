@@ -28,11 +28,11 @@ class HookTests(unittest.TestCase):
         self.git('add','-A')
         p=self.git('commit','-qm','fixture')
         self.assertEqual(p.returncode,0,p.stdout+p.stderr)
-        data=json.loads((self.root/'.sett-cache/lifecycle.json').read_text())
+        data=json.loads((self.root/'.workspace-cache/lifecycle.json').read_text())
         self.assertEqual(data['commit']['exit_code'],0)
         p=self.git('checkout','-qb','check-hooks')
         self.assertEqual(p.returncode,0,p.stdout+p.stderr)
-        data=json.loads((self.root/'.sett-cache/lifecycle.json').read_text())
+        data=json.loads((self.root/'.workspace-cache/lifecycle.json').read_text())
         self.assertEqual(data['checkout']['exit_code'],0)
         p=self.root/'workspace/70_seams/SHARED.md'
         p.write_text(p.read_text()+'\nA verified fixture note.\n')
@@ -42,7 +42,7 @@ class HookTests(unittest.TestCase):
         self.assertEqual(self.git('checkout','-').returncode,0)
         result=self.git('merge','--ff-only','check-hooks')
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
-        data=json.loads((self.root/'.sett-cache/lifecycle.json').read_text())
+        data=json.loads((self.root/'.workspace-cache/lifecycle.json').read_text())
         self.assertEqual(data['merge']['exit_code'],0)
 
 
@@ -63,7 +63,7 @@ class HookTests(unittest.TestCase):
         p=send('Stop')
         self.assertEqual(p.returncode,0,p.stderr)
         self.assertEqual(p.stdout.strip(),'')
-        self.assertIn('close',json.loads((self.root/'.sett-cache/lifecycle.json').read_text()))
+        self.assertIn('close',json.loads((self.root/'.workspace-cache/lifecycle.json').read_text()))
 
     def test_adapter_intervals_and_failure_diagnostics(self):
         shim = self.root/'tools/hooks/shim.py'
@@ -80,7 +80,7 @@ class HookTests(unittest.TestCase):
                 self.assertIn(event, settings['hooks'])
                 result = send(event)
                 self.assertEqual(result.returncode, 0, result.stderr)
-                receipts = json.loads((self.root/'.sett-cache/lifecycle.json').read_text())
+                receipts = json.loads((self.root/'.workspace-cache/lifecycle.json').read_text())
                 self.assertEqual(receipts[neutral]['exit_code'], 0)
                 if event in {'SessionStart','UserPromptSubmit'}:
                     self.assertEqual(json.loads(result.stdout)['hookSpecificOutput']['hookEventName'], event)
@@ -93,7 +93,7 @@ class HookTests(unittest.TestCase):
         result = send('UserPromptSubmit')
         self.assertEqual(result.returncode, 0)
         self.assertIn('validation failed', json.loads(result.stdout)['hookSpecificOutput']['additionalContext'])
-        receipts = json.loads((self.root/'.sett-cache/lifecycle.json').read_text())
+        receipts = json.loads((self.root/'.workspace-cache/lifecycle.json').read_text())
         self.assertEqual(receipts['close']['exit_code'], 1)
 
 if __name__=='__main__': unittest.main()

@@ -3,7 +3,7 @@ id: doctrine-index
 type: doctrine
 status: draft
 description: Doctrine map. Use when locating the rule behind a convention. Not for system flows (see LOOP.md).
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: see_also
     ref: LOOP.md
@@ -12,7 +12,7 @@ related:
 # Doctrine
 
 Shared mechanics. [`schema.json`](schema.json) is executable; prose owns only
-semantics. Members address doctrine from the sett root and copy the required
+semantics. Members address doctrine from the workspace root and copy the required
 subset when extracted ([migrations](migrations.md)).
 
 | File | Owns the question |

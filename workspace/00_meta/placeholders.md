@@ -6,7 +6,7 @@ description: Instantiation token registry. Use when filling or adding a token. N
 scope: workspace
 owner: human
 tokens: true
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: composes_with
     ref: workspace/00_meta/ONBOARDING.md
@@ -23,14 +23,14 @@ those files, and the validator rejects unflagged use.
 
 | Token | Fills | Supplied by | Example | Appears in |
 |---|---|---|---|---|
-| `<<PRINCIPAL_NAME>>` | The human this sett serves — the name used in prose and in handovers | Supplied or asked if needed | `Jane Okoro` | `10_identity/`, `shared-context/**`, `_templates/preference.md` |
-| `<<PRINCIPAL_LEGAL_NAME>>` | Optional never-share match value; omit if withheld or identical to the public working name | Supplied or asked if needed | `Jane Adaeze Okoro` | ignored `.sett-private/never-share.txt` only |
+| `<<PRINCIPAL_NAME>>` | The human this workspace serves — the name used in prose and in handovers | Supplied or asked if needed | `Jane Okoro` | `10_identity/`, `shared-context/**`, `_templates/preference.md` |
+| `<<PRINCIPAL_LEGAL_NAME>>` | Optional never-share match value; omit if withheld or identical to the public working name | Supplied or asked if needed | `Jane Adaeze Okoro` | ignored `.workspace-private/never-share.txt` only |
 | `<<PRINCIPAL_EMAIL>>` | The principal's identifying address — attribution and filtering only, never a send target | Supplied or asked if needed | `jane@example.com` | `10_identity/principal.md` |
-| `<<ORG_NAME>>` | The organisation whose work this sett does; `—` if purely personal | Supplied or asked if needed | `Example Ltd` | `10_identity/organisation.md` |
-| `<<CLIENT_CODENAME>>` | Optional never-share match value for client work; omit when unused | Supplied or asked if needed | `bluebird` | ignored `.sett-private/never-share.txt` only |
-| `<<MACHINE_FILE>>` | Absolute path to this machine's truth file (hardware, toolchain, installed apps) — referenced, never copied. Must resolve **outside the sett root**, or the gates treat it as contract-bound content | Supplied if configured; verify existence | `/Users/jane/MAC.md` | `10_identity/machines.md`, `10_identity/INDEX.md` |
+| `<<ORG_NAME>>` | The organisation whose work this workspace does; `—` if purely personal | Supplied or asked if needed | `Example Ltd` | `10_identity/organisation.md` |
+| `<<CLIENT_CODENAME>>` | Optional never-share match value for client work; omit when unused | Supplied or asked if needed | `bluebird` | ignored `.workspace-private/never-share.txt` only |
+| `<<MACHINE_FILE>>` | Absolute path to this machine's truth file (hardware, toolchain, installed apps) — referenced, never copied. Must resolve **outside the workspace root**, or the gates treat it as contract-bound content | Supplied if configured; verify existence | `/Users/jane/MAC.md` | `10_identity/machines.md`, `10_identity/INDEX.md` |
 | `<<WORKSPACE_ID>>` | The kebab-case name this workspace is known by in the commons roster and changelog | Supplied or asked if needed | `okoro-consulting` | `shared-context/roster.md`, `shared-context/CHANGES.md` |
-| `<<WORKSPACE_PATH>>` | Absolute path to this workspace, as the commons records it | Supplied if configured; verify existence | `/Users/jane/sett/workspace` | `shared-context/roster.md` |
+| `<<WORKSPACE_PATH>>` | Absolute path to this workspace, as the commons records it | Supplied if configured; verify existence | `/Users/jane/workspaces/my-workspace` | `shared-context/roster.md` |
 | `<<SHARED_CONTEXT_PATH>>` | Absolute path to the commons this workspace refreshes from; empty = unlinked | Supplied or asked if needed | `/Users/jane/shared-context` | `70_seams/shared-context.md`, `shared-context/SHARED.md`, `shared-context/roster.md` |
 | `<<REGISTRY_PATH>>` | Absolute path to the capability toolshed; empty = no registry linked | Supplied or asked if needed | `/Users/jane/registry` | `70_seams/registry.md` |
 | `<<LIBRARY_PATH>>` | Absolute path to a linked external knowledge library; empty = no library linked | Optional; default empty | `/Users/jane/library` | `70_seams/library.md` |
@@ -44,7 +44,7 @@ use. Corrections append another row for the same token; newest wins.
 Member paths — SHARED_CONTEXT_PATH, REGISTRY_PATH, LIBRARY_PATH — may point
 to a bundled family member when operating in the family-style layout, or to
 an extracted or external member by absolute path. Unlike MACHINE_FILE they
-are not required to resolve outside the sett root. For a new standalone
+are not required to resolve outside the workspace root. For a new standalone
 workspace they stay empty and their seams closed; do not open them merely
 because the template source contains optional packs.
 
@@ -61,7 +61,7 @@ green while it no longer tests anything. `tools/` is never a consumer.
 
 1. Reuse supplied facts; ask only for required gaps. Write non-secret answers to
    `00_meta/values.json` as `{"TOKEN":"value"}`.
-2. From the sett root, grep, replace, and re-grep one exact token at a time —
+2. From the workspace root, grep, replace, and re-grep one exact token at a time —
    **only in files declaring `tokens: true`**. Nothing else is a consumer.
    This file is the one exception: it declares the flag because it displays
    every token, and filling it would delete the registry it is.

@@ -2,9 +2,9 @@
 id: meta-index
 type: doctrine
 status: draft
-description: Instance-metadata map. Use when a sett is fresh or a token needs work. Not for principal identity (see workspace/10_identity/INDEX.md).
+description: Instance-metadata map. Use when a workspace is fresh or a token needs work. Not for principal identity (see workspace/10_identity/INDEX.md).
 scope: workspace
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: canonical
     ref: workspace/AGENTS.md
@@ -12,8 +12,8 @@ related:
 
 # 00_meta — instantiation state
 
-This chamber answers one question: **is this sett a template or a home
-yet, and what is still blank?** It holds no knowledge about the
+This chamber answers one question: **has this workspace finished setup,
+and what is still blank?** It holds no knowledge about the
 principal, the work, or the world — only the machinery that turns a
 clone into an inhabited workspace.
 
@@ -26,7 +26,7 @@ session runs `ONBOARDING.md`; ordinary work starts only after deletion.
 |---|---|
 | [`ONBOARDING.md`](ONBOARDING.md) | The instantiation walk: interview, fill, link, verify, delete the sentinel |
 | [`placeholders.md`](placeholders.md) | The registry of every `<<TOKEN>>` used anywhere in the family, and the fill mechanism |
-| `.uninitialised` | Sentinel — named, never linked: its deletion is the point, and a link to it would dead-link every instantiated sett. Present = not yet instantiated; deleted by the last step of onboarding, never earlier |
+| `.uninitialised` | Sentinel — named, never linked: its deletion is the point, and a link to it would dead-link every instantiated workspace. Present = not yet instantiated; deleted by the last step of onboarding, never earlier |
 
 ## Rules
 

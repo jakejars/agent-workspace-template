@@ -13,10 +13,10 @@ import sys
 from pathlib import Path
 
 sys.dont_write_bytecode = True
-from sett_layout import SettLayout
+from workspace_layout import WorkspaceLayout
 
 ROOT = Path(__file__).resolve().parents[1]
-LAYOUT = SettLayout(ROOT)
+LAYOUT = WorkspaceLayout(ROOT)
 
 POINTERS = {
     "CLAUDE.md", "GEMINI.md", "workspace/CLAUDE.md", "workspace/GEMINI.md",

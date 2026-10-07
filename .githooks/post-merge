@@ -2,5 +2,5 @@
 # Refresh derived context after Git changes; never undo a completed Git action.
 root=$(git rev-parse --show-toplevel) || exit 0
 cd "$root" || exit 0
-python3 tools/lifecycle.py merge || echo "Sett context refresh failed; inspect lifecycle status before continuing." >&2
+python3 tools/lifecycle.py merge || echo "Workspace context refresh failed; inspect lifecycle status before continuing." >&2
 exit 0

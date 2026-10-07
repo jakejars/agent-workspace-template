@@ -2,11 +2,11 @@
 id: principal
 type: identity
 status: draft
-description: The human this sett serves. Use when addressing the principal, attributing work. Not for their organisation (see organisation.md).
+description: The human this workspace serves. Use when addressing the principal, attributing work. Not for their organisation (see organisation.md).
 scope: workspace
 owner: human
 tokens: true
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: canonical
     ref: workspace/10_identity/INDEX.md

@@ -2,7 +2,7 @@
 """Fill, resume and finalize a workspace without inventing user answers.
 
 Usage:
-  python3 tools/instantiate.py              fill this sett from values.json
+  python3 tools/instantiate.py              fill this workspace from values.json
   python3 tools/instantiate.py --check      audit an instance; change nothing
   python3 tools/instantiate.py --finalize --hooks portable  validate readiness
   python3 tools/instantiate.py --date D     stamp D (YYYY-MM-DD) instead of today
@@ -36,7 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from build_catalog import (ROOT, LAYOUT, PLACEHOLDERS,  # noqa: E402
                            content_files, parse_frontmatter, read_text,
                            token_registry)
-from sett_layout import refuse_unknown  # noqa: E402
+from workspace_layout import refuse_unknown  # noqa: E402
 
 # Policy per placeholders.md. Asserted against the registry below, so a token
 # added there without a decision here is an error rather than a silent skip.
@@ -132,7 +132,7 @@ def load_values(problems):
             problems.append("MACHINE_FILE must be an existing absolute file path")
         resolved = os.path.realpath(os.path.expanduser(machine))
         if resolved.startswith(os.path.realpath(ROOT) + os.sep):
-            problems.append("MACHINE_FILE must resolve outside the sett root; "
+            problems.append("MACHINE_FILE must resolve outside the workspace root; "
                             "machine truth is referenced, never copied")
     for name in ("WORKSPACE_PATH",) + tuple(CLOSES_A_SEAM):
         supplied = str(values.get(name, "")).strip()
@@ -227,7 +227,7 @@ def birth_journal(values, today, changed):
         handle.write(
             f"---\ndate: {today}T{minute[:2]}:{minute[2:]}\nkind: event\n"
             "refs: [00_meta/values.json]\n---\n\n"
-            f"Sett instantiated as `{values['WORKSPACE_ID']}` from the answers "
+            f"Workspace instantiated as `{values['WORKSPACE_ID']}` from the answers "
             f"in `00_meta/values.json`. Linked: "
             f"{', '.join(linked) if linked else 'no optional members'}. "
             "The first intent and the runtime hook are the walk's remaining "
@@ -247,7 +247,7 @@ def survivors():
 
 
 def audit(values, problems, require_finalized=True):
-    """What `--check` proves about a sett that claims to be instantiated."""
+    """What `--check` proves about a workspace that claims to be instantiated."""
     if require_finalized and os.path.isfile(path_of(SENTINEL)):
         problems.append(f"{LAYOUT.physical_rel(SENTINEL)} is still present — run --finalize after the first intent and hook choice")
     if require_finalized and os.path.isfile(path_of(INITIALIZING)):

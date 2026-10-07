@@ -6,7 +6,7 @@ description: Workspace organisation. Use when work belongs to an entity rather t
 scope: workspace
 owner: human
 tokens: true
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: canonical
     ref: workspace/10_identity/INDEX.md
@@ -21,15 +21,15 @@ related:
 | Name | `<<ORG_NAME>>` |
 | Principal's role | *unfilled* |
 | Entity kind | *unfilled — company, sole trader, project, none* |
-| Public presence | *unfilled — sites, handles this sett may be asked to produce for* |
+| Public presence | *unfilled — sites, handles this workspace may be asked to produce for* |
 
-If this sett does purely personal work, `<<ORG_NAME>>` is `—` and the
+If this workspace does purely personal work, `<<ORG_NAME>>` is `—` and the
 rest of this file stays unfilled. An empty organisation is a real
 answer; a guessed one is a liability.
 
 ## The org/personal line
 
-Every artefact this sett produces belongs to exactly one side of the
+Every artefact this workspace produces belongs to exactly one side of the
 line, and the side is decided **before** the work, not at publication:
 
 | | Organisational | Personal |
@@ -44,8 +44,8 @@ after it leaves.
 
 ## What never crosses
 
-Organisational identity is a name this sett may write; it is not
-authority this sett may exercise. No agent in this sett may sign,
+Organisational identity is a name this workspace may write; it is not
+authority this workspace may exercise. No agent in this workspace may sign,
 contract, invoice, represent, or publish **as** `<<ORG_NAME>>` without
 a recorded approval naming that specific act. Never-share terms in
 `80_governance/boundaries.md` bind regardless of which side of the

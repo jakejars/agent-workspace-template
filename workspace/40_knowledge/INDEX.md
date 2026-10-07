@@ -5,7 +5,7 @@ status: draft
 description: Knowledge chamber map. Use when locating settled knowledge. Not for raw capture (see workspace/30_memory/INDEX.md).
 scope: workspace
 owner: agent
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: canonical
     ref: LOOP.md
@@ -30,7 +30,7 @@ work stays here. What would help the next workspace too — a technique,
 a norm, a taste reference — crosses out through
 [`../70_seams/library.md`](../70_seams/library.md) as a capture, never
 as a promotion: the library's own ladder decides what becomes citable
-there. Knowledge only one sett holds is knowledge that rots.
+there. Knowledge only one workspace holds is knowledge that rots.
 
 ## The ladder
 
@@ -49,7 +49,7 @@ Status gates citation, everywhere in this chamber: `reserved` and
 Facts can be superseded by the world; preferences yield; procedures
 get rewritten. A decision is the one record that says *a human chose
 this, knowing these options, for these reasons, at this date* — which
-is why it is supersede-only and why nothing else in the sett is
+is why it is supersede-only and why nothing else in the workspace is
 allowed to overwrite one. Institutional trust is the ability to ask
 "why is it this way?" six months later and get an answer that has not
 been edited since. That answer lives in `decisions/`.

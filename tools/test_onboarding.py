@@ -16,8 +16,8 @@ import test_instance  # noqa: E402
 
 class OnboardingLifecycleTests(unittest.TestCase):
     def setUp(self):
-        self.home = tempfile.mkdtemp(prefix="sett-onboarding-")
-        self.root = os.path.join(self.home, "my-sett")
+        self.home = tempfile.mkdtemp(prefix="workspace-onboarding-")
+        self.root = os.path.join(self.home, "my-workspace")
         os.makedirs(self.root)
         test_instance.clone_source(self.root)
         test_instance.answer_interview(self.root, self.home)
@@ -101,8 +101,8 @@ class OnboardingLifecycleTests(unittest.TestCase):
         test_instance.seed_journal(self.root)
         test_instance.file_every_kit(self.root)
         test_instance.work_a_session(self.root)
-        Path(self.root, ".sett-private/never-share.txt").unlink()
-        Path(self.root, ".sett-private/no-private-terms.json").write_text('{"version":1,"confirmed":true}\n')
+        Path(self.root, ".workspace-private/never-share.txt").unlink()
+        Path(self.root, ".workspace-private/no-private-terms.json").write_text('{"version":1,"confirmed":true}\n')
         code,out=self.run_instantiation("--finalize","--hooks","portable")
         self.assertEqual(code,0,out)
         code,out=self.run_instantiation("--check")

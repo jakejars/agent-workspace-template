@@ -5,7 +5,7 @@ status: draft
 description: Instance setup walk. Use when `.uninitialised` exists. Not for token definitions (see placeholders.md).
 scope: workspace
 owner: human
-updated: 2026-09-06
+updated: 2026-10-07
 related:
   - type: canonical
     ref: workspace/00_meta/placeholders.md
@@ -35,12 +35,12 @@ Write non-secret answers to `00_meta/values.json`. The
 Never place credentials, private literal terms, or other never-share values
 in it. Names and values
 that must never leave belong only in the ignored private store, never JSON.
-The human configures `.sett-private/never-share.txt` locally, or explicitly
+The human configures `.workspace-private/never-share.txt` locally, or explicitly
 records no literal terms as described in `80_governance/boundaries.md`; an agent may
 explain the format but must not ask for secrets in a model conversation. An
 explanation may be given in conversation. If a durable local procedure is
 needed, file it under `30_memory/procedures/`; never write explanatory content
-into `.sett-private/`, which holds only the ignored private configuration
+into `.workspace-private/`, which holds only the ignored private configuration
 itself.
 
 ## 2. Mechanical fill
@@ -58,7 +58,7 @@ answers mid-fill. A completed fill is not readiness.
 
 Capture the first intent using `_templates/intent.md`, including a short current
 checkpoint. Finalization requires a first active intent: during onboarding,
-capture the user's first real objective, not "set up Sett" housekeeping. The
+capture the user's first real objective, not "set up the workspace" housekeeping. The
 housekeeping-first prohibition does not block this required capture; it
 prevents setup chores from replacing the user's actual objective.
 Use the user's actual objective, constraints, and authorization.

@@ -7,7 +7,7 @@ scope: shared
 precedence: protected
 owner: human
 provenance: authored
-updated: 2026-08-24
+updated: 2026-10-07
 ---
 
 # Never share
@@ -17,5 +17,5 @@ updated: 2026-08-24
 - Any value in a linked workspace's ignored private term list.
 
 Literal terms never enter this store. Each workspace keeps them only
-in ignored `.sett-private/never-share.txt`. Proposed category changes
+in ignored `.workspace-private/never-share.txt`. Proposed category changes
 go to [`../calibration/README.md`](../calibration/README.md).

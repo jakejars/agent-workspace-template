@@ -4,7 +4,7 @@ type: doctrine
 status: draft
 description: Consumer contract. Use when building a non-agent reader or shim. Not for seam mechanics (see doctrine/seams.md).
 owner: human
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: composes_with
     ref: doctrine/installation.md
@@ -38,7 +38,7 @@ promotes, and every caller can bypass it to read source cold.
 
 | Switch | Level | Meaning |
 |---|---|---|
-| Root listed in `~/.sett/roots` | Machine | This sett is discoverable at all |
+| Root listed in `~/.workspace/roots` | Machine | This workspace is discoverable at all |
 | `70_seams/<consumer>.md` open (`draft`+) | Workspace | This consumer may read this workspace |
 
 Both default closed and remain independently reversible.

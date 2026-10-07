@@ -23,7 +23,7 @@ class ContextTests(unittest.TestCase):
         for p in SOURCE.glob('*.py'):
             shutil.copy2(p, self.root / 'tools' / p.name)
         (self.root/'workspace/00_meta/.uninitialised').touch()
-        (self.root / '.gitignore').write_text('.sett-private/\n.sett-cache/\nwork/\nartifacts/\n')
+        (self.root / '.gitignore').write_text('.workspace-private/\n.workspace-cache/\nwork/\nartifacts/\n')
 
     def run_tool(self, name, *args, data=None):
         p = subprocess.run([sys.executable, str(self.root/'tools'/name), *args],
@@ -90,14 +90,14 @@ Next: reproduce the miss.
         self.task()
         code,out=self.run_tool('context.py','refresh')
         self.assertEqual(code,0,out)
-        data=json.loads((self.root/'.sett-cache/context.json').read_text())
+        data=json.loads((self.root/'.workspace-cache/context.json').read_text())
         self.assertEqual(data['boot']['dynamic'],0)
         self.assertEqual(data['boot']['dynamic_source'],'none')
 
     def test_refresh_writes_verified_graph_and_reuses_unchanged_cache(self):
         code, out = self.run_tool('context.py','refresh')
         self.assertEqual(code,0,out)
-        p=self.root/'.sett-cache/context.json'
+        p=self.root/'.workspace-cache/context.json'
         first=json.loads(p.read_text())
         self.assertIn('workspace/AGENTS.md',first['edges'])
         stamp=p.stat().st_mtime_ns
@@ -170,7 +170,7 @@ Next: reproduce the miss.
     def test_private_rule_change_invalidates_previously_clean_cache(self):
         self.knowledge('cache-evidence')
         self.assertEqual(self.run_tool('context.py','refresh')[0],0)
-        private=self.root/'.sett-private/never-share.txt'
+        private=self.root/'.workspace-private/never-share.txt'
         private.parent.mkdir()
         private.write_text('cache-evidence\n')
         code,out=self.run_tool('context.py','show','--query','build cache')
@@ -191,7 +191,7 @@ Next: reproduce the miss.
     def test_lifecycle_start_close_and_dirty_hint_have_real_receipts(self):
         code,out=self.run_tool('lifecycle.py','start')
         self.assertEqual(code,0,out)
-        p=self.root/'.sett-cache/context.json'
+        p=self.root/'.workspace-cache/context.json'
         stamp=p.stat().st_mtime_ns
         code,out=self.run_tool('lifecycle.py','changed')
         self.assertEqual(code,0,out)

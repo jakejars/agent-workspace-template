@@ -7,13 +7,13 @@ scope: workspace
 owner: human
 provenance: authored
 precedence: protected
-updated: 2026-08-24
+updated: 2026-10-07
 ---
 
 # Boundaries — what never leaves
 
 This policy defines categories, not literal values. Real never-share
-terms exist only in ignored `.sett-private/never-share.txt`, one per
+terms exist only in ignored `.workspace-private/never-share.txt`, one per
 line. This file is human-owned; loosening it is class C.
 
 ## Tier 1 — never leaves the machine
@@ -56,7 +56,7 @@ template may have no real terms.
 ## Changing the list
 
 The list is untracked: no Git history, no tamper evidence.
-`tools/journal_guard.py` blocks agent writes to `.sett-private/`.
+`tools/journal_guard.py` blocks agent writes to `.workspace-private/`.
 Editing the list is class C — a human act outside the runtime.
 
 ## What the gate cannot catch
@@ -64,12 +64,12 @@ Editing the list is class C — a human act outside the runtime.
 Paraphrase, inference, and identifying combinations. The gate is a
 floor; class C still governs ambiguous disclosure.
 
-Derived `.sett-cache/` and ignored working artifacts are not a distribution
+Derived `.workspace-cache/` and ignored working artifacts are not a distribution
 channel. Context routing scrubs source before producing suggestions. Artifacts
 require separate review before export; never assume ignore rules permit egress.
 
 If the human explicitly has no literal terms to configure, they may write
-`{"version":1,"confirmed":true}` to ignored `.sett-private/no-private-terms.json`
+`{"version":1,"confirmed":true}` to ignored `.workspace-private/no-private-terms.json`
 and omit the list. Missing configuration is never interpreted as this choice.
 This disables literal matching only; confidentiality and authorization rules
 still apply. A present list takes precedence, and an invalid list still fails.

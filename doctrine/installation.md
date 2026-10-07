@@ -2,9 +2,9 @@
 id: installation
 type: doctrine
 status: draft
-description: Sett installation and discovery. Use when installing or locating a sett. Not for instance setup (see workspace/00_meta/ONBOARDING.md).
+description: Workspace installation and discovery. Use when installing or locating a workspace. Not for instance setup (see workspace/00_meta/ONBOARDING.md).
 owner: human
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: composes_with
     ref: doctrine/migrations.md
@@ -17,9 +17,9 @@ related:
 The root is the nearest ancestor containing `NAMESPACE.md`; conventions below
 aid discovery without constraining location.
 
-## Where setts live
+## Where workspaces live
 
-- Suggested family path: `~/setts/<kebab-name>/`.
+- Suggested workspace path: `~/workspaces/my-workspace/`.
 - One commons per principal, linked by absolute path.
 - A project-specific workspace may live at the project root.
 
@@ -27,26 +27,26 @@ Other locations are valid.
 
 ## Unsupported locations
 
-A Sett root is the nearest ancestor containing `NAMESPACE.md`. Therefore:
+A workspace root is the nearest ancestor containing `NAMESPACE.md`. Therefore:
 
-- do not nest one Sett root inside another;
-- do not create an instance inside the Sett template/source checkout;
-- a directory that merely contains several sibling Setts is not itself a Sett;
-- sibling Setts under a normal container such as `~/setts/` are valid;
-- project-specific Setts may live at a project root when that root is itself
-  the Sett.
+- do not nest one workspace root inside another;
+- do not create an instance inside the Agent Workspace Template source checkout;
+- a directory that merely contains several sibling workspaces is not itself a workspace;
+- sibling workspaces under a normal container such as `~/workspaces/` are valid;
+- project-specific workspaces may live at a project root when that root is itself
+  the workspace.
 
 ## Discovery
 
 1. Inside a tree, walk upward to `NAMESPACE.md`.
-2. Otherwise, optionally read `~/.sett/roots`: one absolute root per line;
+2. Otherwise, optionally read `~/.workspace/roots`: one absolute root per line;
    `#` comments; stale entries skipped. Listing is explicit local disclosure.
 
 No daemon, service, environment variable, or lockfile. Consumers validate
 source, generate catalogs on demand, read data without execution, and write only
 through seams.
 
-## Import — data that predates the sett
+## Import — data that predates the workspace
 
 Try in order:
 

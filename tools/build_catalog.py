@@ -20,10 +20,10 @@ import re
 import sys
 
 sys.dont_write_bytecode = True
-from sett_layout import SettLayout, refuse_unknown
+from workspace_layout import WorkspaceLayout, refuse_unknown
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LAYOUT = SettLayout(ROOT)
+LAYOUT = WorkspaceLayout(ROOT)
 SKIP_DIRS = {".git", "__pycache__", ".venv", "node_modules", "outputs", "work", "artifacts"}
 SCHEMA_PATH = os.path.join(ROOT, "doctrine", "schema.json")
 
@@ -636,7 +636,7 @@ def check_journal(errors, ids=()):
     """The journal's own contract (30_memory/journal/README.md).
 
     Entries are exempt from OKF, not from shape. The journal is the only
-    truth in the sett and every other memory file is a projection of it, so
+    truth in the workspace and every other memory file is a projection of it, so
     an entry that cannot be dated, classified, or traced is worse than no
     entry: the projection rebuilds from it silently. Doors keep the OKF
     contract and are checked as ordinary content.
@@ -727,7 +727,7 @@ def check_sentinel(errors):
             pass
     if entries:
         errors.append(f"{meta_rel}/.uninitialised: the sentinel is back in an "
-                      f"instantiated sett ({len(entries)} journal entr"
+                      f"instantiated workspace ({len(entries)} journal entr"
                       f"{'y' if len(entries) == 1 else 'ies'}) — onboarding is "
                       "over; delete it (00_meta/ONBOARDING.md step 7)")
 
@@ -1267,7 +1267,7 @@ def validate(records, errors, warnings):
             errors.append(f"{rel}: {label} '{ref}' does not resolve")
         elif form == "unsafe":
             errors.append(
-                f"{rel}: {label} '{ref}' resolves outside the sett root"
+                f"{rel}: {label} '{ref}' resolves outside the workspace root"
             )
         elif form == "text":
             # Free text naming something outside the repo (a superseded
@@ -1314,7 +1314,7 @@ def validate(records, errors, warnings):
             if route_form == "unsafe":
                 errors.append(
                     f"{rel}: description route '{route_ref}' resolves outside "
-                    "the sett root"
+                    "the workspace root"
                 )
             elif route_form not in allowed_forms:
                 errors.append(

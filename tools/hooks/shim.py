@@ -69,7 +69,7 @@ def lifecycle(data):
             return 2
         if event in {"SessionStart", "UserPromptSubmit"}:
             print(json.dumps({"hookSpecificOutput": {"hookEventName": event,
-                  "additionalContext": "Sett context validation failed; do not use stale cached context. " + message}}))
+                  "additionalContext": "Workspace context validation failed; do not use stale cached context. " + message}}))
         else:
             sys.stderr.write(message)
         return 0

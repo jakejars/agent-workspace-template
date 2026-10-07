@@ -1,9 +1,11 @@
 __pycache__/
 .DS_Store
+.workspace-private/
 .sett-private/
 /CATALOG.md
 /CATALOG.json
 
+/.workspace-cache/
 /.sett-cache/
 /work/
 /artifacts/

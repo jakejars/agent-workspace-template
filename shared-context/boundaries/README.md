@@ -7,7 +7,7 @@ scope: shared
 precedence: protected
 owner: human
 provenance: authored
-updated: 2026-08-24
+updated: 2026-10-07
 tokens: true
 ---
 
@@ -29,7 +29,7 @@ Silence is not permission.
 ## Where the gate reads
 
 Only the linked workspace's ignored
-`.sett-private/never-share.txt`. Values are neither copied here nor
+`.workspace-private/never-share.txt`. Values are neither copied here nor
 tracked anywhere.
 
 ## What files live here

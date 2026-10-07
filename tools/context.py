@@ -23,10 +23,10 @@ sys.dont_write_bytecode = True
 import build_catalog as catalog
 import check_loop as graph
 import scrub_check as scrub
-from sett_layout import refuse_unknown
+from workspace_layout import private_directory, refuse_unknown
 
 ROOT = Path(catalog.ROOT)
-CACHE = ROOT / '.sett-cache' / 'context.json'
+CACHE = ROOT / '.workspace-cache' / 'context.json'
 TERMINAL = {'satisfied', 'abandoned', 'superseded'}
 STOP_WORDS = {'the','a','an','to','of','for','and','in','is','it','when','use','not','see','please','can','you','this','that','with'}
 
@@ -56,8 +56,9 @@ def fingerprint():
     for invalidation. Skip generated artifacts, runtime settings and cache.
     """
     digest = hashlib.sha256(datetime.date.today().isoformat().encode())
+    private_root = private_directory(ROOT)
     for private_name in ('never-share.txt', 'no-private-terms.json'):
-        private = ROOT/'.sett-private'/private_name
+        private = private_root/private_name
         digest.update(private_name.encode())
         if private.exists(): digest.update(private.read_bytes())
     for directory, dirs, files in os.walk(ROOT):

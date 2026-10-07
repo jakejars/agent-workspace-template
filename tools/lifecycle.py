@@ -17,11 +17,11 @@ import sys
 
 sys.dont_write_bytecode=True
 import context as routing
-from sett_layout import refuse_unknown
+from workspace_layout import refuse_unknown
 
 ROOT=routing.ROOT
-RECEIPTS=ROOT/'.sett-cache/lifecycle.json'
-DIRTY=ROOT/'.sett-cache/dirty'
+RECEIPTS=ROOT/'.workspace-cache/lifecycle.json'
+DIRTY=ROOT/'.workspace-cache/dirty'
 
 
 def receipts():

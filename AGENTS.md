@@ -4,7 +4,7 @@ type: doctrine
 status: draft
 description: Family-maintenance entrance. Use when changing this template repository. Not for instance work (see workspace/AGENTS.md).
 owner: human
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: canonical
     ref: doctrine/INDEX.md
@@ -12,9 +12,9 @@ related:
     ref: workspace/AGENTS.md
 ---
 
-# Maintaining Sett
+# Maintaining Agent Workspace Template
 
-This is the Sett template family: the template/source repository, not an
+This is the template family: the template/source repository, not an
 instantiated workspace. Do not onboard it as an instance, and do not run the
 workspace boot, onboarding, journal, or handover sequence here. To create a
 user workspace, run `python3 tools/new.py` with a destination outside this

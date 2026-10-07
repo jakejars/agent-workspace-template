@@ -4,7 +4,7 @@ type: doctrine
 status: draft
 description: Intent chamber map. Use when capturing or checking authorised work. Not for standing rules (see workspace/80_governance/policies.md).
 scope: workspace
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: canonical
     ref: workspace/AGENTS.md
@@ -59,6 +59,6 @@ never delete.
 3. `status` is trust; `lifecycle` is process state.
 4. Each run cites exactly one intent; capture non-housekeeping work first.
    Onboarding's required first intent is the user's first real objective, not
-   a "set up Sett" task; setup housekeeping never becomes the first intent.
+   a "set up the workspace" task; setup housekeeping never becomes the first intent.
 5. Approval binds content and scope at approval time; widening needs approval.
 6. Record terminal state and evidence/reason in the checkpoint. Journal consequential outcomes or audit-profile work.

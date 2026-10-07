@@ -1,7 +1,7 @@
-# Sett
+# Agent Workspace Template
 
-Sett gives AI agents a durable local workspace for tasks, memory, knowledge,
-decisions and boundaries.
+The template gives AI agents a durable local workspace for tasks, memory,
+knowledge, decisions and boundaries.
 
 It is plain Markdown and stdlib Python. No daemon, no service, no account.
 
@@ -13,12 +13,12 @@ It is plain Markdown and stdlib Python. No daemon, no service, no account.
 ## Quick start
 
 ```sh
-git clone https://github.com/jakejars/sett.git
-cd sett
-python3 tools/new.py ~/setts/my-workspace
+git clone https://github.com/jakejars/agent-workspace-template.git
+cd agent-workspace-template
+python3 tools/new.py ~/workspaces/my-workspace
 ```
 
-Then open `~/setts/my-workspace` in your AI agent and say:
+Then open `~/workspaces/my-workspace` in your AI agent and say:
 
 > Read `AGENTS.md` and help me with my current task.
 
@@ -27,13 +27,14 @@ your agent should call you, the workspace name, your first objective, and
 whether any private terms must never leave the machine — then fills, checks,
 and finalizes the workspace for you.
 
-**The cloned `sett` repository is the template/source.** Do not onboard or use
-it as your personal workspace; `tools/new.py` creates a standalone workspace
-elsewhere, and the wizard refuses a destination inside the checkout. Prefer
+**The cloned `agent-workspace-template` repository is the template/source.**
+Do not onboard or use it as your personal workspace; `tools/new.py` creates a
+standalone workspace elsewhere, and the wizard refuses a destination inside
+the checkout. Prefer
 manual, interrupted, or agent-led setup? The walk lives in
 [`workspace/00_meta/ONBOARDING.md`](workspace/00_meta/ONBOARDING.md).
 
-## How Sett works
+## How the template works
 
 One entrance, typed files, progressive disclosure, append-only history,
 governed seams, and reachability that is mechanically checked rather than
@@ -90,7 +91,7 @@ See [lifecycle](doctrine/lifecycle.md) for precise intervals and observed receip
 
 | Member | Purpose |
 |---|---|
-| [`workspace/`](workspace/AGENTS.md) | The sett itself — ten chambers, from identity to runs |
+| [`workspace/`](workspace/AGENTS.md) | The instantiable workspace — ten chambers, from identity to runs |
 | [`shared-context/`](shared-context/SHARED.md) | Optional governed commons, shared across workspaces |
 | [`registry/`](registry/README.md) | Optional checksummed capabilities |
 | [`library/`](library/LIBRARY.md) | Optional reference shelf: knowledge and taste |
@@ -123,7 +124,7 @@ Health-check any workspace — the source checkout or a generated one:
 python3 tools/doctor.py
 ```
 
-## Developing the Sett template
+## Developing the template
 
 Maintaining the template itself starts at the repo-root
 [`AGENTS.md`](AGENTS.md), never at the workspace entrance. The two modes do not

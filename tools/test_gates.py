@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Self-check for the gate suite. `python3 tools/test_gates.py` — silent = pass.
 
-Builds a throwaway sett in a temp dir, runs the gates against it as
+Builds a throwaway workspace in a temp dir, runs the gates against it as
 subprocesses, and asserts each planted violation is caught and a clean tree
 passes. The negative tests are the point: a gate that cannot fail is
 decoration. No framework, no fixtures.
@@ -53,7 +53,7 @@ updated: 2026-08-24
 
 | Token | Fills |
 |---|---|
-| `<<PRINCIPAL_NAME>>` | The human this sett serves |
+| `<<PRINCIPAL_NAME>>` | The human this workspace serves |
 """,
     "workspace/70_seams/INDEX.md": """---
 id: seams-index
@@ -491,7 +491,7 @@ def build(tmp, files):
             fh.write(text)
     os.makedirs(os.path.join(tmp, "tools"), exist_ok=True)
     for tool in ("build_catalog.py", "check_loop.py", "scrub_check.py",
-                 "agnostic_check.py", "sett_layout.py", "check_staged.py", "journal_guard.py"):
+                 "agnostic_check.py", "workspace_layout.py", "check_staged.py", "journal_guard.py"):
         shutil.copy(os.path.join(TOOLS, tool), os.path.join(tmp, "tools", tool))
     schema_dir = os.path.join(tmp, "doctrine")
     os.makedirs(schema_dir, exist_ok=True)
@@ -705,7 +705,7 @@ updated: 2026-08-24
     try:
         build(tmp, dict(CLEAN, **SCRUB_TREE))
         open(os.path.join(tmp, ".gitignore"), "w", encoding="utf-8").write(
-            ".sett-private/\n"
+            ".workspace-private/\n"
         )
         sentinel = os.path.join(tmp, "workspace/00_meta/.uninitialised")
         os.makedirs(os.path.dirname(sentinel), exist_ok=True)
@@ -718,7 +718,7 @@ updated: 2026-08-24
         assert code == 1 and "missing ignored" in out, \
             f"an instance with no private list must fail closed:\n{out}"
 
-        terms = os.path.join(tmp, ".sett-private/never-share.txt")
+        terms = os.path.join(tmp, ".workspace-private/never-share.txt")
         os.makedirs(os.path.dirname(terms), exist_ok=True)
         open(terms, "w", encoding="utf-8").write("zz-leak-token\n")
         code, out = run(tmp, "scrub_check.py")

@@ -5,7 +5,7 @@ status: draft
 description: Identity chamber map. Use when routing identity or attribution. Not for current intent (see workspace/20_intent/INDEX.md).
 scope: workspace
 tokens: true
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: canonical
     ref: workspace/AGENTS.md
@@ -13,14 +13,14 @@ related:
 
 # 10_identity — who
 
-Four files, one subject each. Everything else in the sett references
+Four files, one subject each. Everything else in the workspace references
 these and repeats none of them.
 
 | File | Answers |
 |---|---|
-| [`principal.md`](principal.md) | Who this sett serves; how to address and contact them |
+| [`principal.md`](principal.md) | Who this workspace serves; how to address and contact them |
 | [`organisation.md`](organisation.md) | Whose work this is; what is org and what is personal |
-| [`machines.md`](machines.md) | Which machines this sett runs on, and where each machine's truth lives |
+| [`machines.md`](machines.md) | Which machines this workspace runs on, and where each machine's truth lives |
 | [`agents.md`](agents.md) | Which agent identities work here, with what remit and autonomy ceiling |
 
 ## Rules

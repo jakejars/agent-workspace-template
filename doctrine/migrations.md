@@ -3,7 +3,7 @@ id: migrations
 type: doctrine
 status: draft
 description: Moving things without breaking them. Use when refiling, renaming, replacing. Not for choosing the destination chamber (see doctrine/filing.md).
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: depends_on
     ref: doctrine/naming.md
@@ -12,6 +12,15 @@ related:
 ---
 
 # Migrations
+
+## Agent Workspace Template rename
+
+When adopting the updated toolset and `.gitignore`, an existing workspace
+renames `.sett-private/` to `.workspace-private/`,
+`tools/sett_layout.py` to `tools/workspace_layout.py`, and
+`tools/sett_setup.py` to `tools/workspace_setup.py`. Nothing else is required.
+The old directory and module names continue to work through compatibility.
+If both private directories exist, `.workspace-private/` wins and tools warn.
 
 ## The git-mv contract
 
@@ -64,15 +73,15 @@ prerequisite for ordinary use.
 ## Extracting a member
 
 Members are independently extractable: no direct sibling links; cross only
-through `70_seams/`. Family paths resolve from the sett root. Optional packs
+through `70_seams/`. Family paths resolve from the workspace root. Optional packs
 accept family-prefixed or extracted-root self-refs.
 
 To extract:
 
 ```sh
 git subtree split -P workspace/ -b extract-workspace
-git init ../my-sett && cd ../my-sett
-git pull ../sett extract-workspace
+git init ../my-workspace && cd ../my-workspace
+git pull ../agent-workspace-template extract-workspace
 ```
 
 Then:

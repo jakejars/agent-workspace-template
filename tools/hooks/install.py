@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Install or inspect project-local, runtime-neutral Git lifecycle hooks.
 
-No account settings are changed. An existing non-Sett hooksPath is preserved.
+No account settings are changed. An existing custom hooksPath is preserved.
 Run lifecycle.py status separately for evidence of actual event invocation.
 """
 import argparse
@@ -18,12 +18,12 @@ def main():
     args=parser.parse_args()
     p=subprocess.run(['git','rev-parse','--show-toplevel'],cwd=ROOT,capture_output=True,text=True)
     if p.returncode or Path(p.stdout.strip()).resolve()!=ROOT:
-        print('Run from a Sett Git root; no configuration changed.',file=sys.stderr)
+        print('Run from a workspace Git root; no configuration changed.',file=sys.stderr)
         return 1
     p=subprocess.run(['git','config','--get','core.hooksPath'],cwd=ROOT,capture_output=True,text=True)
     existing=p.stdout.strip()
     if existing and Path(existing if Path(existing).is_absolute() else ROOT/existing).resolve()!=ROOT/'.githooks':
-        print('Another hooks directory is configured; preserve it and chain the Sett commands manually.',file=sys.stderr)
+        print('Another hooks directory is configured; preserve it and chain the workspace commands manually.',file=sys.stderr)
         return 1
     missing=[n for n in NAMES if not (ROOT/'.githooks'/n).is_file()]
     if missing:

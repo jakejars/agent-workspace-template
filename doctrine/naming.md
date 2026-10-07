@@ -3,7 +3,7 @@ id: naming
 type: doctrine
 status: draft
 description: Naming. Use when creating any file or minting an id. Not for which chamber a file belongs to (see doctrine/filing.md).
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: see_also
     ref: doctrine/filing.md
@@ -37,13 +37,13 @@ retain underscores.
 ## The machine-read subset
 
 Machine syntax: inline Markdown links; `related`/`supersedes` refs; restricted
-frontmatter; private-list line terms (`.sett-private/never-share.txt`);
+frontmatter; private-list line terms (`.workspace-private/never-share.txt`);
 `lists` and ledger comments; `<<TOKEN>>` and `{{marker}}`. Reference-style
 links confer no edge.
 
 ## Where the root is
 
-The sett root is the nearest ancestor containing `NAMESPACE.md`. Bare paths
+The workspace root is the nearest ancestor containing `NAMESPACE.md`. Bare paths
 resolve there; `./` and `../` resolve from the source. Members never link into
 siblings except through `70_seams/`; family-level files are not siblings.
 

@@ -19,7 +19,7 @@ class StagedTests(unittest.TestCase):
         for name in ('check_staged.py','journal_guard.py'):
             p=Path(__file__).parent/name
             if p.exists(): shutil.copy2(p,self.root/'tools'/name)
-        (self.root/'.gitignore').write_text('.sett-private/\n')
+        (self.root/'.gitignore').write_text('.workspace-private/\n')
         (self.root/'workspace/00_meta/.uninitialised').touch()
         self.git('init','-q')
         self.git('config','user.name','Gate Fixture')
