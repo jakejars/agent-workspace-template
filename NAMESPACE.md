@@ -30,7 +30,7 @@ agent-workspace-template/
 │   └── seams.md  migrations.md  installation.md  gates.md  consumers.md
 │
 ├── _templates/                                             [c]
-│   ├── README.md  intent.md  run/README.md  handover.md  seam.md
+│   ├── README.md  intent.md  run/README.md  skill/README.md  handover.md  seam.md
 │   ├── decision.md  dead-end.md  procedure.md  board.md
 │   └── memory-fact.md  preference.md  approval.md  capability.md
 │       topic.md  specimen.md  capture.md
@@ -40,10 +40,10 @@ agent-workspace-template/
 ├── tools/                                                  [c]
 │   ├── build_catalog.py  check_loop.py  journal_guard.py  workspace_layout.py
 │   ├── scrub_check.py  agnostic_check.py  instantiate.py  workspace_setup.py
-│   ├── new.py  doctor.py  lifecycle.py  context.py  check_staged.py
+│   ├── new.py  doctor.py  lifecycle.py  context.py  check_staged.py  skills.py
 │   ├── test_gates.py  test_gate_corrections.py  test_instance.py
 │   ├── test_context.py  test_staged.py  test_onboarding.py  test_hooks.py
-│   ├── test_new.py
+│   ├── test_new.py  test_skills.py
 │   └── hooks/{shim.py,settings-example.json,install.py}
 │
 ├── workspace/                    THE WORKSPACE — the instantiable member
@@ -67,7 +67,8 @@ agent-workspace-template/
 │   │   ├── INDEX.md  decision-queue.md  open-loops.md  tensions.md  risks.md [c]
 │   │   └── boards/               [s] rendered views; never a source of truth
 │   ├── 60_capabilities/          what it can do
-│   │   └── INDEX.md  installed.md [c] the lockfile
+│   │   ├── INDEX.md  installed.md [c] the lockfile
+│   │   └── skills/README.md [c] · <name>/SKILL.md [s] · scripts/ references/ assets/ [s]
 │   ├── 70_seams/                 what it touches
 │   │   ├── INDEX.md  SHARED.md  shared-context.md  registry.md  library.md [c]
 │   │   ├── harness.md            [s] the seam whose subject is the runtime

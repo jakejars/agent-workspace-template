@@ -126,6 +126,10 @@ def load_schema():
                     re.compile(rule[key])
                 except re.error as exc:
                     return f"{label}.{key} is invalid ({exc})"
+        if "max_length" in rule:
+            value = rule["max_length"]
+            if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+                return f"{label}.max_length must be a positive integer"
         return None
 
     for name, rule in schema["fields"].items():
@@ -781,7 +785,8 @@ def check_registry(errors):
     Per manifest.yml: `name` equals the folder name, `version` is an integer,
     every `files[].src` exists under `files/`, every file under `files/`
     appears exactly once in `files[]`, every `target` is workspace-relative,
-    and every `sha256` matches the bytes at `files/<src>`.
+    and every `sha256` matches the bytes at `files/<src>`. A skill preserves
+    its native package shape under `60_capabilities/skills/<name>/`.
     """
     standalone = standalone_member() == "registry"
     reg = ROOT if standalone else os.path.join(ROOT, "registry")
@@ -806,24 +811,67 @@ def check_registry(errors):
         if not str(man.get("version", "")).isdigit():
             errors.append(f"{mrel}: version '{man.get('version')}' is not an "
                           "integer (semver is rejected)")
+        kind = man.get("kind", "capability")
+        if kind not in ("capability", "skill"):
+            errors.append(f"{mrel}: kind '{kind}' must be capability or skill")
+        if kind == "skill":
+            check_rule_value(mrel, "name", name,
+                             type_field_rules("skill").get("name", {}), errors)
         entries = [e for e in (man.get("files") or []) if isinstance(e, dict)]
         if not entries:
             errors.append(f"{mrel}: files[] is empty — a capability carries a payload")
         files_dir = os.path.join(cap, "files")
         on_disk = set()
         for dirpath, dirnames, filenames in os.walk(files_dir):
-            dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+            if kind != "skill":
+                dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+            else:
+                for dname in dirnames:
+                    dpath = os.path.join(dirpath, dname)
+                    if os.path.islink(dpath):
+                        errors.append(f"{mrel}: skill payload cannot contain "
+                                      f"symlink '{os.path.relpath(dpath, files_dir)}'")
+                    if dirpath == files_dir and dname not in (
+                            "scripts", "references", "assets"):
+                        errors.append(f"{mrel}: skill payload root directory "
+                                      f"'{dname}' is not scripts, references or assets")
             for fname in filenames:
-                on_disk.add(os.path.relpath(os.path.join(dirpath, fname),
-                                            files_dir).replace(os.sep, "/"))
+                fpath = os.path.join(dirpath, fname)
+                src = os.path.relpath(fpath, files_dir).replace(os.sep, "/")
+                on_disk.add(src)
+                if kind == "skill":
+                    if os.path.islink(fpath):
+                        errors.append(f"{mrel}: skill payload cannot contain "
+                                      f"symlink '{src}'")
+                    if dirpath == files_dir and fname != "SKILL.md":
+                        errors.append(f"{mrel}: skill payload root file '{src}' "
+                                      "must be SKILL.md or inside an allowed subfolder")
+        if kind == "skill":
+            skill_path = os.path.join(files_dir, "SKILL.md")
+            if "SKILL.md" not in on_disk:
+                errors.append(f"{mrel}: skill payload is missing files/SKILL.md")
+            else:
+                skill_text = read_text(skill_path, errors, f"{mrel}: files/SKILL.md")
+                skill = parse_frontmatter(skill_text or "") or {}
+                if skill.get("name") != name or skill.get("type") != "skill":
+                    errors.append(f"{mrel}: files/SKILL.md must declare "
+                                  f"name: {name} and type: skill")
         claimed = []
         for entry in entries:
             src, target = entry.get("src", ""), entry.get("target", "")
             digest = entry.get("sha256", "")
             claimed.append(src)
+            if (not src or src.startswith(("/", "~")) or "\\" in src or
+                    any(part in ("", ".", "..") for part in src.split("/"))):
+                errors.append(f"{mrel}: files[].src '{src}' is not a safe "
+                              "payload-relative path")
+                continue
             if not target or target.startswith(("/", "~")) or ".." in target.split("/"):
                 errors.append(f"{mrel}: target '{target}' for '{src}' is not a "
                               "safe workspace-relative path")
+            if kind == "skill" and target != f"60_capabilities/skills/{name}/{src}":
+                errors.append(f"{mrel}: skill target '{target}' must preserve "
+                              f"60_capabilities/skills/{name}/{src}")
             fpath = os.path.normpath(os.path.join(files_dir, src))
             if not src or not os.path.isfile(fpath):
                 errors.append(f"{mrel}: files[].src '{src}' is missing under files/")
@@ -926,6 +974,9 @@ def check_rule_value(rel, key, val, rule, errors):
     pattern = rule.get("pattern")
     if pattern and not re.fullmatch(pattern, str(val)):
         errors.append(f"{rel}: {key} '{val}' does not match schema pattern")
+    maximum = rule.get("max_length")
+    if maximum and len(str(val)) > maximum:
+        errors.append(f"{rel}: {key} exceeds schema limit of {maximum} characters")
 
 
 def check_constraints(rel, fm, errors):

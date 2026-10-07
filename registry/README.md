@@ -5,7 +5,7 @@ status: draft
 description: Toolshed contract. Use when publishing or installing a capability. Not for installed-state history (see ledger.md).
 scope: shared
 owner: human
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: composes_with
     ref: registry/ledger.md
@@ -34,7 +34,7 @@ registry/
 One folder per capability; its name is identity, so rename creates a new
 capability. Fixed-shape folders have no local door and are pattern-listed here.
 
-<!-- lists: */files/* --> The worked example is [`example-capability/manifest.yml`](example-capability/manifest.yml)
+<!-- lists: */files/* --> <!-- lists: */files/scripts/* --> <!-- lists: */files/references/* --> <!-- lists: */files/assets/* --> The worked example is [`example-capability/manifest.yml`](example-capability/manifest.yml)
 with its payload [`example-capability/files/README.md`](example-capability/files/README.md);
 every event in this toolshed is a row in [`ledger.md`](ledger.md).
 
@@ -45,6 +45,7 @@ is ordinary frontmatter-bearing content.
 
 ```yaml
 name: kebab-case            # required; MUST equal the folder name
+kind: capability            # optional; capability (default) | skill
 version: 3                  # required; INTEGER, monotonic, +1 per pack
 description: >              # required; "Use when … Not for … (see …)"
 updated: YYYY-MM-DD         # required; ISO
@@ -59,6 +60,14 @@ Validator-enforced: folder/name equality; integer version shape (no semver); exa
 one-to-one `files[]` coverage; workspace-relative safe targets (no absolute,
 `..`, or `~`); matching sha256. A future installer must additionally
 check resolved targets and symlink ancestors.
+
+For `kind: skill`, the folder name follows the Agent Skills name rules
+(lowercase letters, digits and hyphens, at most 64 characters). The payload
+root contains `SKILL.md` with matching `name` and `type: skill`; optional
+`scripts/`, `references/` and `assets/` hold supporting files. Every target
+must be `60_capabilities/skills/<name>/<src>`, preserving this package shape.
+All payload bytes remain checksummed; a new install is `untrusted`, and
+agent-authored skill metadata remains `agent_proposed` until human promotion.
 
 ## Install flow (registry → workspace)
 
@@ -104,6 +113,8 @@ installable nor catalogued.
 Copy `_templates/capability.md` or `example-capability/`; replace payload,
 rewrite manifest at version 1, run the gate, append a ledger row. Publish
 `draft`; maturity is earned in use.
+Package a skill from the skill kit through the workspace's registry seam,
+using `kind: skill`; publication and installation grant no trust.
 
 Install/pack flows and their flags above are a consumer contract, not shipped
 commands. No installer or packer is included. Version monotonicity and no-op

@@ -5,7 +5,7 @@ status: draft
 description: Capability lockfile. Use when invoking, installing, or updating a capability. Not for registry crossing rules (see workspace/70_seams/registry.md).
 scope: workspace
 owner: agent
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: canonical
     ref: workspace/60_capabilities/INDEX.md
@@ -16,9 +16,9 @@ related:
 # Installed capabilities (lockfile)
 
 This file is the answer to "what is actually here, and can I trust
-it?". It is a ledger, not a config: nothing reads it to decide
-behaviour, but nothing is believed about a capability that this file
-does not say.
+it?". It is a ledger: skill export reads its newest row to select trusted
+output, but a row never grants execution permission. Nothing is believed
+about a capability that this file does not say.
 
 ## Row fields
 

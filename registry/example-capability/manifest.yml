@@ -2,13 +2,14 @@
 # rules a tool enforces on every field. Data file: no OKF frontmatter.
 
 name: example-capability      # MUST equal the folder name
+kind: capability             # optional; capability (default) | skill
 version: 1                    # integer, monotonic, +1 per pack
 description: >
   The worked example of a registry capability, carrying one payload
   file that documents its own shape. Use when learning the capability
   folder, manifest, and install flow. Not for the registry rules
   themselves (see registry/README.md).
-updated: 2026-08-24
+updated: 2026-10-07
 
 files:
   - src: README.md                                   # relative to files/

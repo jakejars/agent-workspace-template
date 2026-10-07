@@ -23,6 +23,7 @@ sys.dont_write_bytecode = True
 import build_catalog as catalog
 import check_loop as graph
 import scrub_check as scrub
+import skills
 from workspace_layout import private_directory, refuse_unknown
 
 ROOT = Path(catalog.ROOT)
@@ -114,6 +115,7 @@ def refresh(force=False):
     records = catalog.scan(errors, warnings)
     boot = catalog.validate(records, errors, warnings)
     catalog.check_registry(errors)
+    skills.check_skills(errors)
     catalog.check_journal(errors, {r['fm'].get('id') for r in records})
     catalog.check_run_journal(errors)
     catalog.check_sentinel(errors)

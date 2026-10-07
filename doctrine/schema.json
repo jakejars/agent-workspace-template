@@ -59,6 +59,7 @@
     "decision",
     "register",
     "capability",
+    "skill",
     "policy",
     "approval",
     "seam",
@@ -291,6 +292,20 @@
     "provenance"
    ]
   },
+  "skill": {
+   "required_all": [
+    "name",
+    "owner",
+    "provenance"
+   ],
+   "fields": {
+    "name": {
+     "kind": "string",
+     "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+     "max_length": 64
+    }
+   }
+  },
   "dead-end": {
    "required": [
     "provenance"
@@ -339,6 +354,7 @@
    "knowledge": "40_knowledge",
    "decision": "40_knowledge",
    "capability": "60_capabilities",
+   "skill": "60_capabilities",
    "seam": "70_seams",
    "policy": "80_governance",
    "approval": "80_governance",
@@ -363,6 +379,7 @@
   },
   "registry_allowed_types": [
    "capability",
+   "skill",
    "doctrine",
    "register"
   ],

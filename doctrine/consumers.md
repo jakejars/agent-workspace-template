@@ -4,6 +4,7 @@ type: doctrine
 status: draft
 description: Consumer contract. Use when building a non-agent reader or shim. Not for seam mechanics (see doctrine/seams.md).
 owner: human
+runtime_subject: true
 updated: 2026-10-07
 related:
   - type: composes_with
@@ -53,3 +54,36 @@ view. Derived indexes key on `(id, mtime)` and remain disposable.
 
 Never hold the sole copy, write outside drop zones, serve stale views as current,
 execute content, bypass egress scrub, or treat discovery as permission.
+
+## Optional skills export
+
+Neutral skills live behind the
+[skills door](workspace/60_capabilities/skills/README.md). A human chooses the
+runtime output directory; for example, Claude Code uses `.claude/skills`,
+while Codex can use `.agents/skills`:
+
+```sh
+python3 tools/skills.py check
+python3 tools/skills.py export --to .claude/skills --trusted-only
+python3 tools/skills.py export --to .agents/skills --trusted-only
+```
+
+Export copies files, never symlinks, and prints copied and skipped skills.
+The selected payload passes the existing egress scrub before any write;
+distribution remains text-only, including supporting files.
+It never writes into workspace source chambers or edits runtime or account
+settings. Each created skill directory carries an ownership marker; export
+refuses to overwrite an existing directory without its own valid marker.
+User files elsewhere in the destination remain untouched.
+Re-export replaces owned copies. With `--trusted-only`, it also removes
+previously owned copies from this source that no longer qualify, so withdrawn
+skills do not remain discoverable in that output directory.
+
+`--trusted-only` selects `trusted` skills using each capability's newest
+[lockfile](workspace/60_capabilities/installed.md) row; it does not infer trust
+from provenance and requires the referenced class-B promotion approval.
+This filter reads trust state; the registry install contract and existing
+lockfile drift audit still govern checksum verification. Without the filter,
+export also copies untrusted skills for explicit
+use. Export is neither promotion nor permission to invoke automatically;
+the existing capability trust ladder and effect approvals still apply.
