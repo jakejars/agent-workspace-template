@@ -372,6 +372,34 @@ def test_pipeline_symlink_sources_are_refused_before_reading(home, base):
     return 2
 
 
+def test_final_stage_entries_must_be_directories(home, base):
+    for replacement in ("dangling-symlink", "regular-file", "directory-symlink"):
+        for operation in ("check", "start"):
+            tree = Path(home, "final-stage-" + replacement + "-" + operation)
+            shutil.copytree(base, tree)
+            stage = tree / PIPELINES / SLUG / STAGES[-1]
+            if replacement == "directory-symlink":
+                target = tree / "tools/final-stage-target"
+                stage.rename(target)
+                stage.symlink_to(target, target_is_directory=True)
+            else:
+                shutil.rmtree(stage)
+                if replacement == "regular-file":
+                    stage.write_text("A stage must be a directory.\n", encoding="utf-8")
+                else:
+                    stage.symlink_to("missing-stage", target_is_directory=True)
+            before = snapshot(tree)
+            args = ("check",) if operation == "check" else (
+                "start", "--pipeline", SLUG, "--run", RUN_ID,
+                "--intent", "intent-pipeline-probe")
+            diagnostic = "directory" if replacement == "regular-file" else "symlink"
+            require_failure(tree, *args, contains=(STAGES[-1], diagnostic))
+            assert before == snapshot(tree), "refused stage substitution changed source"
+            assert not (tree / "workspace/90_runs" / RUN_ID).exists(), \
+                "refused stage substitution created a run"
+    return 6
+
+
 def main():
     checks = 0
     with tempfile.TemporaryDirectory(prefix="workspace-pipeline-") as home:
@@ -388,7 +416,8 @@ def main():
                            test_ordinary_contained_symlink_passes_pipeline_context_and_staged,
                            test_partial_journal_write_rolls_back_new_trace_and_run,
                            test_journal_creation_race_preserves_preexisting_trace,
-                           test_pipeline_symlink_sources_are_refused_before_reading):
+                           test_pipeline_symlink_sources_are_refused_before_reading,
+                           test_final_stage_entries_must_be_directories):
             checks += regression(home, base)
 
         with_skill = Path(home, "with-skill")

@@ -128,6 +128,51 @@ class GateCorrections(unittest.TestCase):
         code, out = run(self.tmp, "scrub_check.py", "--staged")
         self.assertEqual(code, 1, out)
 
+    def test_scrub_rejects_unreadable_source_directory(self):
+        # Dropping os.walk errors must not turn an unscanned subtree clean.
+        build(self.tmp, {".gitignore": ".workspace-private/\n",
+                         PRIVATE_TERMS: FAKE_TERM + "\n"})
+        identity = {}
+        if os.geteuid() == 0:
+            # Root bypasses mode bits; run the real scan without that privilege.
+            identity = {"user": 65534, "group": 65534, "extra_groups": ()}
+            Path(self.tmp).chmod(0o755)
+            for path in Path(self.tmp).rglob("*"):
+                path.chmod(0o755 if path.is_dir() else 0o644)
+        for name in ("locked", FAKE_TERM + "-locked"):
+            with self.subTest(directory=name):
+                blocked = Path(self.tmp, name)
+                write(self.tmp, name + "/notes.md", FAKE_TERM + "\n")
+                blocked.chmod(0)
+                try:
+                    probe = subprocess.run(
+                        [sys.executable, "-c", (
+                            "import os, sys\n"
+                            "try:\n"
+                            "    with os.scandir(sys.argv[1]) as entries:\n"
+                            "        list(entries)\n"
+                            "except PermissionError:\n"
+                            "    pass\n"
+                            "else:\n"
+                            "    raise SystemExit('fixture directory is readable')\n"
+                        ), str(blocked)], capture_output=True, text=True,
+                        **identity,
+                    )
+                    self.assertEqual(probe.returncode, 0, probe.stdout + probe.stderr)
+                    proc = subprocess.run(
+                        [sys.executable, str(Path(self.tmp, "tools/scrub_check.py"))],
+                        capture_output=True, text=True, env=isolated_git_env(),
+                        **identity,
+                    )
+                    out = proc.stdout + proc.stderr
+                    self.assertEqual(proc.returncode, 1, out)
+                    self.assertIn("unreadable directory", out)
+                    self.assertNotIn("Traceback", out)
+                    self.assertNotIn(FAKE_TERM, out)
+                finally:
+                    blocked.chmod(0o755)
+                    shutil.rmtree(blocked)
+
     def test_scrub_falls_back_to_legacy_private_directory(self):
         # Removing legacy fallback would silently stop checking old instances.
         self.build_git_fixture()

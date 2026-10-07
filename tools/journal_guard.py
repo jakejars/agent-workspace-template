@@ -18,7 +18,7 @@ import os
 import re
 import subprocess
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 sys.dont_write_bytecode = True
 from workspace_layout import PRIVATE_DIRS, WorkspaceLayout
@@ -150,6 +150,8 @@ def staged_verdict(root: Path):
         sys.stderr.write("[journal_guard] could not read the Git index\n")
         return 1
     fields = proc.stdout.split("\0")
+    journals = (PurePosixPath("workspace/30_memory/journal"),
+                PurePosixPath("30_memory/journal"))
     blocked = []
     i = 0
     while i < len(fields) and fields[i]:
@@ -159,7 +161,10 @@ def staged_verdict(root: Path):
         paths = fields[i:i + count]
         i += count
         for path in paths:
-            if is_journal_entry(path):
+            # Git paths use the family or extracted root, regardless of worktree.
+            rel = PurePosixPath(path)
+            if (rel.name not in STRUCTURE
+                    and any(journal in rel.parents for journal in journals)):
                 blocked.append(path)
     if not blocked:
         return 0

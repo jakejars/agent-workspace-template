@@ -8,7 +8,7 @@ import sys
 import tempfile
 import unittest
 sys.dont_write_bytecode=True
-from test_gates import CLEAN, build
+from test_gates import CLEAN, ENTRY, JOURNAL_TREE, build
 
 class StagedTests(unittest.TestCase):
     def setUp(self):
@@ -124,6 +124,54 @@ Inspect the staged snapshot.
         p.write_text(p.read_text().replace('status: mature','status: broken'))
         result=self.gate()
         self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+
+    def test_staged_journal_edit_cannot_hide_behind_unstaged_symlink(self):
+        build(self.tmp.name,JOURNAL_TREE)
+        (self.root/'workspace/00_meta/.uninitialised').unlink()
+        private=self.root/'.workspace-private'
+        private.mkdir()
+        (private/'never-share.txt').write_text('fixture-private-literal\n')
+        entrance=self.root/'workspace/AGENTS.md'
+        entrance.write_text(entrance.read_text()+
+                            '\n[Memory](30_memory/INDEX.md). [Runs](90_runs/INDEX.md).\n')
+        self.git('add','-A')
+        self.git('-c','core.hooksPath=/dev/null','commit','-qm','journal')
+        result=self.gate()
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+
+        record=self.root/ENTRY
+        record.write_text(record.read_text()+'\nChanged committed event.\n')
+        self.git('add',ENTRY)
+        record.unlink()
+        record.symlink_to(self.root/'workspace/70_seams/SHARED.md')
+        result=self.gate()
+        self.assertNotEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertIn('staged mutation',result.stdout+result.stderr)
+        self.assertIn(ENTRY,result.stdout+result.stderr)
+
+    def test_staged_extracted_journal_edit_ignores_unstaged_entrance_symlink(self):
+        build(self.tmp.name,JOURNAL_TREE)
+        workspace=self.root/'workspace'
+        for path in workspace.iterdir():
+            path.rename(self.root/path.name)
+        workspace.rmdir()
+        self.git('add','-A')
+        self.git('-c','core.hooksPath=/dev/null','commit','-qm','extracted journal')
+
+        entry=ENTRY.split('/',1)[1]
+        record=self.root/entry
+        record.write_text(record.read_text()+'\nChanged committed event.\n')
+        self.git('add',entry)
+        command=[sys.executable,str(self.root/'tools/journal_guard.py'),'--staged']
+        result=subprocess.run(command,cwd=self.root,text=True,capture_output=True)
+        self.assertEqual(result.returncode,2,result.stdout+result.stderr)
+
+        entrance=self.root/'AGENTS.md'
+        entrance.unlink()
+        entrance.symlink_to('absent-entrance.md')
+        result=subprocess.run(command,cwd=self.root,text=True,capture_output=True)
+        self.assertEqual(result.returncode,2,result.stdout+result.stderr)
+        self.assertIn(entry,result.stdout+result.stderr)
 
     def test_staged_symlink_cannot_escape_snapshot(self):
         (self.root/'escape').symlink_to('../outside')

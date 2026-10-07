@@ -149,7 +149,8 @@ def word_pattern(term: str):
 
 
 def worktree_items(root: Path):
-    for dirpath, dirnames, filenames in os.walk(root):
+    walk_errors = []
+    for dirpath, dirnames, filenames in os.walk(root, onerror=walk_errors.append):
         dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
         for name in sorted(filenames):
             path = Path(dirpath, name)
@@ -160,6 +161,9 @@ def worktree_items(root: Path):
                 yield rel, path.read_bytes(), None
             except OSError:
                 yield rel, None, "unreadable file"
+    for error in walk_errors:
+        rel = Path(error.filename or root).relative_to(root).as_posix()
+        yield rel, None, "unreadable directory"
 
 
 def staged_items(root: Path, entries):

@@ -120,9 +120,12 @@ def load_pipeline(slug):
     if cap > catalog.SCHEMA["limits"]["boot_dynamic_chars"]:
         raise ValueError("doctrine/schema.json: stage_chars exceeds the dynamic disclosure budget")
     for child in sorted(folder.iterdir()):
-        if not child.is_dir():
-            continue
+        safe_path(child)
         match = STAGE.fullmatch(child.name)
+        if not child.is_dir():
+            if match:
+                raise ValueError(f"{child.relative_to(ROOT)}: stage must be a directory")
+            continue
         if not match or int(match.group(1)) != len(stages) + 1:
             raise ValueError(f"{child.relative_to(ROOT)}: stage numbering must be contiguous from 01")
         contract = child / "STAGE.md"
