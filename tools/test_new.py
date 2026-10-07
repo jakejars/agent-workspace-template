@@ -136,6 +136,7 @@ class NewWorkspaceTests(unittest.TestCase):
 
     def test_gates_and_doctor_pass_inside_the_instance(self):
         for tool, args in (("build_catalog.py", ("--check",)),
+                           ("skills.py", ("check",)),
                            ("check_loop.py", ()),
                            ("scrub_check.py", ()),
                            ("agnostic_check.py", ()),

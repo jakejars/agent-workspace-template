@@ -3,7 +3,7 @@ id: frontmatter-spec
 type: doctrine
 status: draft
 description: OKF v0.2 metadata contract. Use when authoring or validating content. Not for filing paths (see doctrine/filing.md).
-updated: 2026-08-24
+updated: 2026-10-07
 ---
 
 # Frontmatter — OKF v0.2
@@ -38,6 +38,22 @@ meaningful token use, a declared runtime subject, dates, or reserved status.
 
 The workspace entrance alone declares ordinary boot inputs and caps. An
 extracted optional-pack entrance may declare its token names locally.
+
+## Agent Skills
+
+`type: skill` packages reusable behaviour in
+`workspace/60_capabilities/skills/<name>/SKILL.md`. It carries the ordinary
+required fields plus `name`, `owner`, and `provenance`, even at reserved/stub
+status. `name` equals the directory name: 1–64 lowercase ASCII letters,
+digits, and single separating hyphens, with no leading or trailing hyphen.
+The ordinary 180-character cue description remains required; it also fits
+the Agent Skills 1024-character limit. Optional `scripts/`, `references/`,
+and `assets/` are loaded on demand; Markdown there remains ordinary governed
+content. See the [skill kit](../_templates/skill/README.md).
+
+Skills use the capability trust ladder. Agent-authored skills begin
+`draft` / `agent_proposed` and `untrusted`; packaging and export grant no
+promotion or permission.
 
 ## Edge fields
 

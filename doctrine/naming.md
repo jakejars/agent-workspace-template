@@ -31,7 +31,7 @@ shared-context/calibration/2026-08-24-tone.md        yes  (an event)
 ```
 
 Exceptions: `AGENTS.md`, pointer files, `README.md`, `INDEX.md`, `LOOP.md`,
-`NAMESPACE.md`, `CATALOG.md`, `SHARED.md`, `LICENSE`; numeric chamber directories
+`NAMESPACE.md`, `CATALOG.md`, `SHARED.md`, `SKILL.md`, `LICENSE`; numeric chamber directories
 retain underscores.
 
 ## The machine-read subset

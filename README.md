@@ -85,7 +85,15 @@ See [lifecycle](doctrine/lifecycle.md) for precise intervals and observed receip
 | [`NAMESPACE.md`](NAMESPACE.md) | Reserved paths and the root marker |
 | [`doctrine/`](doctrine/INDEX.md) | Mechanics |
 | [`_templates/`](_templates/README.md) | Record kits |
+| [`workspace/60_capabilities/skills/`](workspace/60_capabilities/skills/README.md) | Reusable behaviour in the open Agent Skills format |
 | [`tools/`](tools/) | Validators, regressions, the fill, the wizard |
+
+Skills package reusable behaviour as `<name>/SKILL.md`, with optional scripts
+and references. Start from the [skill kit](_templates/skill/README.md), then
+run `python3 tools/skills.py check`. Use
+`python3 tools/skills.py export --to <dir> [--trusted-only]` to copy skills into
+a user-chosen runtime directory; source stays neutral and trust follows the
+capability ladder. The [consumer contract](doctrine/consumers.md) explains export.
 
 ## Optional shared memory, registry, library
 

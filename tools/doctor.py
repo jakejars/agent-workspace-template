@@ -158,6 +158,9 @@ def check(values_rel, active_rel):
         "build_catalog.py --check": ("metadata",
             "metadata validation failed; run "
             "`python3 tools/build_catalog.py --check` for the exact findings."),
+        "skills.py check": ("skills",
+            "skill validation failed; run "
+            "`python3 tools/skills.py check` for the exact findings."),
         "check_loop.py": ("reachability",
             "reachability failed; run `python3 tools/check_loop.py` for the "
             "orphaned or dead links."),

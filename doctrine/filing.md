@@ -3,7 +3,7 @@ id: filing
 type: doctrine
 status: draft
 description: Deterministic filing. Use when you have something to write down and do not know where it goes. Not for what the frontmatter must say (see doctrine/frontmatter-spec.md).
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: depends_on
     ref: doctrine/frontmatter-spec.md
@@ -59,6 +59,7 @@ sixty seconds twice; never re-argue a row, supersede it.
 | Ambiguity | Goes to | Because |
 |---|---|---|
 | Tool vs instructions | executable manifest+checksum → `capability`; performed sequence → `procedure` | distribute one; follow the other |
+| Runtime-loadable behaviour | `skill` → `60_capabilities/skills/<name>/SKILL.md` | optional packaging of reused procedures; capability trust still applies |
 | Principal preference | commons candidate if cross-workspace; local preference if workspace-only; identity if factual | shared truth must not become a silent local override |
 | Choice | journal event; decision only if future-binding; queue if unsettled | event and authority differ |
 | Failed approach | dead-end only with evidence, paid cost, and reopen condition; else journal | avoid unsupported permanent blocks |

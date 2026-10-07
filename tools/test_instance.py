@@ -120,6 +120,7 @@ def append(root, rel, text):
 def gates_pass(root, stage):
     """The session-close suite, in the order doctrine/gates.md runs it."""
     for tool, args in (("scrub_check.py", ()), ("build_catalog.py", ("--check",)),
+                       ("skills.py", ("check",)),
                        ("check_loop.py", ()), ("agnostic_check.py", ()),
                        ("journal_guard.py", ("--selftest",))):
         code, out = run(root, tool, *args)
@@ -323,6 +324,8 @@ def file_every_kit(root):
             # A second intent so the kit's `<other>` neighbour is a real file.
             place(root, kit, record, destination,
                   {"INTENT_SLUG": SECOND_INTENT, "INTENT_TITLE": "Second example"})
+    assert any(kit.endswith("skill/README.md") and target.endswith("/SKILL.md")
+               for kit, target in filed), "the skill kit must file a native SKILL.md"
     return filed
 
 
@@ -393,7 +396,7 @@ def commit_through_hooks(root):
 
 def suites_pass_inside_the_instance(root):
     """The shipped regressions must run from where they are shipped to."""
-    for suite in ("test_gates.py", "test_gate_corrections.py"):
+    for suite in ("test_gates.py", "test_gate_corrections.py", "test_skills.py"):
         code, out = run(root, suite)
         assert code == 0, f"{suite} does not pass inside an instance:\n{out[-3000:]}"
 

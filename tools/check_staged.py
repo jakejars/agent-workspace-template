@@ -3,7 +3,7 @@
 
 Scrub and immutable-journal checks run against the original index first. Then
 materialize that same index in an isolated temporary repository and run the
-metadata, graph, and neutrality gates there. No private store is copied.
+metadata, graph, skill, and neutrality gates there. No private store is copied.
 """
 import os
 from pathlib import Path, PurePosixPath
@@ -69,7 +69,7 @@ def main():
             env=os.environ.copy()
             for name in LOCATION_VARS: env.pop(name,None)
             subprocess.run(['git','init','-q'],cwd=root,env=env,check=True,capture_output=True)
-            for name,args in [('build_catalog.py',['--check']),('check_loop.py',[]),('agnostic_check.py',[])]:
+            for name,args in [('build_catalog.py',['--check']),('skills.py',['check']),('check_loop.py',[]),('agnostic_check.py',[])]:
                 tool=root/'tools'/name
                 if not tool.is_file():
                     raise ValueError('A required gate is absent from the staged snapshot.')

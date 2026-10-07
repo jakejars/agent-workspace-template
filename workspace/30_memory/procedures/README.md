@@ -5,7 +5,7 @@ status: draft
 description: Procedures. Use when a proven sequence should not be re-derived. Not for executable capabilities (see workspace/60_capabilities/INDEX.md).
 scope: workspace
 owner: agent
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: canonical
     ref: workspace/30_memory/INDEX.md
@@ -67,6 +67,11 @@ not approval.
 
 Procedures are instructions; capabilities are checksummed installable artifacts
 arriving through the registry seam. Repeated automation becomes a capability.
+
+Package a proven procedure as an [Agent Skill](workspace/60_capabilities/skills/README.md)
+when it is reused, its trigger is recognisable from the task, and runtime-native
+loading helps. Procedures remain valid; skills are optional. The
+[skill kit](_templates/skill/README.md) supplies the format and trust rules.
 
 Agent-proposed factual evidence may guide reversible work provisionally after
 checking its source, scope, and freshness. It grants no policy or permissions.
