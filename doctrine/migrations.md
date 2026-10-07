@@ -24,7 +24,7 @@ workspace root containing `NAMESPACE.md`, then run this block:
 (
     set -e
     cp -R "$TEMPLATE/tools/." "$INSTANCE/tools/"
-    cp "$TEMPLATE/.gitignore" "$INSTANCE/.gitignore"
+    grep -vxF -f "$INSTANCE/.gitignore" "$TEMPLATE/.gitignore" >> "$INSTANCE/.gitignore" || true
     cp "$TEMPLATE/doctrine/schema.json" "$INSTANCE/doctrine/schema.json"
     cd "$INSTANCE"
     python3 tools/build_catalog.py --check
