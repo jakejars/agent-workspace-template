@@ -3,7 +3,7 @@ id: gates
 type: doctrine
 status: draft
 description: Gate-suite contract. Use when a gate fails or when wiring hooks or CI. Not for executable metadata rules (see doctrine/schema.json).
-updated: 2026-09-06
+updated: 2026-10-07
 related:
   - type: depends_on
     ref: LOOP.md
@@ -20,6 +20,7 @@ clean completion claim or commit. Runtime tripwires are identified separately.
 |---|---|
 | `tools/build_catalog.py --check` | Metadata, filing, IDs/refs, tokens, budgets, journal shape, run traces |
 | `tools/check_loop.py` | Per-member graph reachability, dead links, directory coverage |
+| `tools/pipeline.py check` | Pipeline metadata, contiguous stages, contracts, executors, and stage budgets |
 | `tools/scrub_check.py --staged` | Private literal terms and text-only distribution against Git index |
 | `tools/journal_guard.py --staged` | Existing journal mutation against Git index |
 | `tools/agnostic_check.py` | Runtime names remain in declared adapter/reference boundaries |
@@ -65,8 +66,8 @@ is a drift detector, not a security boundary.
 ## Regression suites
 
 `tools/test_gates.py`, `tools/test_gate_corrections.py`, `tools/test_context.py`,
-`tools/test_staged.py`, `tools/test_onboarding.py`, `tools/test_hooks.py`, and
-`tools/test_new.py`
+`tools/test_staged.py`, `tools/test_onboarding.py`, `tools/test_hooks.py`,
+`tools/test_new.py`, and `tools/test_pipeline.py`
 exercise real failures. `tools/test_instance.py` fills a fresh instance, files
 all kits, finalizes, works a session, and commits through the actual hooks.
 Run suites when changing the template or making a release; ordinary commits

@@ -5,7 +5,7 @@ status: draft
 description: Capabilities chamber map. Use when adding or verifying installed tools. Not for registry access (see workspace/70_seams/registry.md).
 scope: workspace
 owner: agent
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: depends_on
     ref: workspace/70_seams/registry.md
@@ -21,6 +21,7 @@ in this workspace, and is recorded in the lockfile.
 | File | Holds |
 |---|---|
 | [installed.md](installed.md) | The install lockfile: capability, version, sha256, date, trust state |
+| [pipelines/README.md](pipelines/README.md) | Reusable staged processes and their small contracts |
 
 ## Three rules
 

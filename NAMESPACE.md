@@ -27,10 +27,12 @@ agent-workspace-template/
 ├── doctrine/                                               [c]
 │   ├── INDEX.md  schema.json
 │   ├── frontmatter-spec.md  filing.md  naming.md  disclosure.md  lifecycle.md
+│   ├── execution.md
 │   └── seams.md  migrations.md  installation.md  gates.md  consumers.md
 │
 ├── _templates/                                             [c]
 │   ├── README.md  intent.md  run/README.md  handover.md  seam.md
+│   ├── pipeline/README.md
 │   ├── decision.md  dead-end.md  procedure.md  board.md
 │   └── memory-fact.md  preference.md  approval.md  capability.md
 │       topic.md  specimen.md  capture.md
@@ -44,6 +46,7 @@ agent-workspace-template/
 │   ├── test_gates.py  test_gate_corrections.py  test_instance.py
 │   ├── test_context.py  test_staged.py  test_onboarding.py  test_hooks.py
 │   ├── test_new.py
+│   ├── pipeline.py  test_pipeline.py
 │   └── hooks/{shim.py,settings-example.json,install.py}
 │
 ├── workspace/                    THE WORKSPACE — the instantiable member
@@ -67,7 +70,9 @@ agent-workspace-template/
 │   │   ├── INDEX.md  decision-queue.md  open-loops.md  tensions.md  risks.md [c]
 │   │   └── boards/               [s] rendered views; never a source of truth
 │   ├── 60_capabilities/          what it can do
-│   │   └── INDEX.md  installed.md [c] the lockfile
+│   │   ├── INDEX.md  installed.md [c] the lockfile
+│   │   └── pipelines/README.md [c] · <slug>/PIPELINE.md [s]
+│   │       └── <slug>/NN_<stage>/STAGE.md [s] ordered stage contracts
 │   ├── 70_seams/                 what it touches
 │   │   ├── INDEX.md  SHARED.md  shared-context.md  registry.md  library.md [c]
 │   │   ├── harness.md            [s] the seam whose subject is the runtime
@@ -78,7 +83,8 @@ agent-workspace-template/
 │   │   └── approvals/<slug>.md   [s] one per approval, scoped, expiring
 │   └── 90_runs/                  what it did
 │       ├── INDEX.md              [c]
-│       └── <run-id>/run.md  handover.md  [s] cites one intent · on continue
+│       ├── <run-id>/run.md  handover.md  [s] cites one intent · on continue
+│       └── <run-id>/NN_<stage>/artifacts/ [g] outputs · checkpoint.json [s] beside artifacts/
 │
 ├── shared-context/               THE COMMONS — a governed store
 │   ├── SHARED.md                 [c] the member entrance

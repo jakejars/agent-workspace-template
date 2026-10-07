@@ -3,7 +3,7 @@ id: frontmatter-spec
 type: doctrine
 status: draft
 description: OKF v0.2 metadata contract. Use when authoring or validating content. Not for filing paths (see doctrine/filing.md).
-updated: 2026-08-24
+updated: 2026-10-07
 ---
 
 # Frontmatter — OKF v0.2
@@ -38,6 +38,18 @@ meaningful token use, a declared runtime subject, dates, or reserved status.
 
 The workspace entrance alone declares ordinary boot inputs and caps. An
 extracted optional-pack entrance may declare its token names locally.
+
+## Pipeline contracts
+
+`pipeline` defines a versioned process in `60_capabilities/pipelines/`; `stage`
+defines one numbered contract beneath it. Stages declare `executor`, `output`,
+and `checkpoint`; a script also declares `command`. Each contract is capped at
+3,000 characters including frontmatter, matching the dynamic disclosure budget.
+`tools/pipeline.py check` enforces the schema fields and stage shape.
+
+A pipeline execution remains type `run`. Its `pipeline`, `pipeline_version`,
+`pipeline_digest`, and `pipeline_stages` record the definition and stage plan
+used at start. Output and checkpoint receipts are evidence, never permissions.
 
 ## Edge fields
 

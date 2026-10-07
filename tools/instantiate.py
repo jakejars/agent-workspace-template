@@ -303,6 +303,7 @@ def finalize(values, hooks, today):
         print("ERROR finalization gate: "+error)
         return 1
     for tool, args in (("build_catalog.py", ["--check"]), ("check_loop.py", []),
+                       ("pipeline.py", ["check"]),
                        ("scrub_check.py", []), ("agnostic_check.py", [])):
         result = subprocess.run([sys.executable, str(Path(ROOT)/"tools"/tool), *args],
                                 cwd=ROOT, text=True, capture_output=True)

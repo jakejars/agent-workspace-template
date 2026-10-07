@@ -69,7 +69,7 @@ def main():
             env=os.environ.copy()
             for name in LOCATION_VARS: env.pop(name,None)
             subprocess.run(['git','init','-q'],cwd=root,env=env,check=True,capture_output=True)
-            for name,args in [('build_catalog.py',['--check']),('check_loop.py',[]),('agnostic_check.py',[])]:
+            for name,args in [('build_catalog.py',['--check']),('check_loop.py',[]),('pipeline.py',['check']),('agnostic_check.py',[])]:
                 tool=root/'tools'/name
                 if not tool.is_file():
                     raise ValueError('A required gate is absent from the staged snapshot.')

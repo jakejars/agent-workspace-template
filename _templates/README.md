@@ -4,7 +4,7 @@ type: doctrine
 status: draft
 description: The kit shelf. Use when creating any new record and you want its required fields. Not for what the fields mean (see doctrine/frontmatter-spec.md).
 owner: human
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: depends_on
     ref: doctrine/frontmatter-spec.md
@@ -40,6 +40,7 @@ promotes them.
 | [`memory-fact.md`](memory-fact.md) | `memory-fact` | `30_memory/facts/` |
 | [`preference.md`](preference.md) | `preference` | `30_memory/preferences/` |
 | [`procedure.md`](procedure.md) | `procedure` | `30_memory/procedures/` |
+| [`pipeline/README.md`](pipeline/README.md) | `pipeline` + `stage` | `60_capabilities/pipelines/<slug>/` |
 | [`dead-end.md`](dead-end.md) | `dead-end` | `30_memory/dead-ends/` |
 | [`decision.md`](decision.md) | `decision` | `40_knowledge/decisions/` |
 | [`board.md`](board.md) | `board` | `50_registers/boards/` |

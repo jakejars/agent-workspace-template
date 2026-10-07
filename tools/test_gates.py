@@ -491,7 +491,7 @@ def build(tmp, files):
             fh.write(text)
     os.makedirs(os.path.join(tmp, "tools"), exist_ok=True)
     for tool in ("build_catalog.py", "check_loop.py", "scrub_check.py",
-                 "agnostic_check.py", "workspace_layout.py", "check_staged.py", "journal_guard.py"):
+                 "agnostic_check.py", "workspace_layout.py", "check_staged.py", "journal_guard.py", "pipeline.py"):
         shutil.copy(os.path.join(TOOLS, tool), os.path.join(tmp, "tools", tool))
     schema_dir = os.path.join(tmp, "doctrine")
     os.makedirs(schema_dir, exist_ok=True)

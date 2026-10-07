@@ -5,7 +5,7 @@ status: mature
 description: Kit for a run folder. Use when recording an audit or consequential execution. Not for what is wanted (see ../intent.md).
 load: drill
 owner: human
-updated: 2026-08-24
+updated: 2026-10-07
 related:
   - type: depends_on
     ref: doctrine/frontmatter-spec.md
@@ -90,6 +90,23 @@ New durable records:
 - Decisions: <ref or "none">
 - Handover: `90_runs/{{RUN_ID}}/handover.md` or "none — work complete"
 ```
+
+## Optional pipeline run
+
+Start a [pipeline](../pipeline/README.md) with
+`python3 tools/pipeline.py start --pipeline <slug> --run YYYY-MM-DD-<slug>`.
+Add `--intent <id-or-slug>` when the active intent is not unique. This creates
+the ordinary run and its journal trace; it refuses an existing run folder.
+
+The run records `pipeline`, `pipeline_version`, `pipeline_digest`, and the
+ordered `pipeline_stages` plan (stage, output, checkpoint). Stage artifacts
+live at `<run-id>/01_<stage>/artifacts/<filename>`, then `02_<stage>/`, and so
+on. Log each stage's actual Reference and Working load set in Context loaded.
+Review/edit an output on disk before continuing; a required human checkpoint
+uses the receipt format in the [pipeline door](workspace/60_capabilities/pipelines/README.md).
+`python3 tools/pipeline.py status --run <run-id>` reconstructs output,
+checkpoint, and next-stage state without running commands or advancing work.
+A changed definition cannot be resumed silently under the recorded version.
 
 ## Rules
 

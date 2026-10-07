@@ -161,6 +161,9 @@ def check(values_rel, active_rel):
         "check_loop.py": ("reachability",
             "reachability failed; run `python3 tools/check_loop.py` for the "
             "orphaned or dead links."),
+        "pipeline.py check": ("pipeline contracts",
+            "pipeline validation failed; run `python3 tools/pipeline.py check` "
+            "for the exact findings."),
         "scrub_check.py": ("privacy scan",
             "the privacy scan found never-share terms in tracked content; "
             "run `python3 tools/scrub_check.py` for locations (values stay "

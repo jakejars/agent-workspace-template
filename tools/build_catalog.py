@@ -75,7 +75,7 @@ def load_schema():
     for key in (
         "description_chars", "prose_lines", "prose_chars",
         "boot_static_chars", "boot_dynamic_chars", "boot_total_chars",
-        "handover_chars",
+        "handover_chars", "stage_chars",
     ):
         value = schema["limits"].get(key)
         if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
@@ -376,6 +376,7 @@ BOOT_STATIC_CHARS = int(SCHEMA.get("limits", {}).get("boot_static_chars", 0))
 BOOT_DYNAMIC_CHARS = int(SCHEMA.get("limits", {}).get("boot_dynamic_chars", 0))
 BOOT_TOTAL_CHARS = int(SCHEMA.get("limits", {}).get("boot_total_chars", 0))
 HANDOVER_CHARS = int(SCHEMA.get("limits", {}).get("handover_chars", 0))
+STAGE_CHARS = int(SCHEMA.get("limits", {}).get("stage_chars", 0))
 UNCAPPED_TYPES = set(SCHEMA.get("uncapped", {}).get("types", ()))
 UNCAPPED_PATHS = tuple(SCHEMA.get("uncapped", {}).get("path_fragments", ()))
 
@@ -1513,6 +1514,9 @@ def scan(errors, warnings):
                               "body lines — reserved scaffolding is one line max")
 
         n_lines = text.count("\n") + 1                              # rule 7
+        if ftype == "stage" and len(text) > STAGE_CHARS:
+            errors.append(f"{rel}: stage contract is {len(text)} chars; "
+                          f"schema limit is {STAGE_CHARS}")
         capped = (ftype not in UNCAPPED_TYPES
                   and not any(p in rel for p in UNCAPPED_PATHS))
         if capped and (n_lines > PROSE_LINES or len(text) > PROSE_CHARS):
