@@ -18,8 +18,7 @@ related:
 **Copy to:** `workspace/60_capabilities/pipelines/{{SLUG}}/PIPELINE.md`
 **Markers:** `{{SLUG}}` `{{TODAY}}`
 
-Copy the first fence to PIPELINE.md and the next two to their named stage folders.
-Fill for the actual process and link from the [pipeline door](workspace/60_capabilities/pipelines/README.md); this fenced example is not installed.
+Copy the first fence to PIPELINE.md and the next two to their named stage folders. Fill for the actual process and link from the [pipeline door](workspace/60_capabilities/pipelines/README.md); this fenced example is not installed.
 
 ```markdown
 ---
@@ -95,6 +94,7 @@ owner: agent
 provenance: agent_proposed
 executor: model
 checkpoint: true
+revision_limit: 2
 output: artifacts/deliverable.md
 updated: {{TODAY}}
 ---
@@ -132,7 +132,7 @@ Fix failed criteria in this stage's output and evaluate again.
 
 ### Stop
 
-Stop when every criterion passes, or after 2 revisions. At the bound, record unresolved failures and pause for the human checkpoint.
+Stop when every criterion passes, or when `revision_limit` is reached. At the bound, record unresolved failures and pause for the human checkpoint.
 ```
 
 ## Rules
@@ -145,5 +145,5 @@ Stop when every criterion passes, or after 2 revisions. At the bound, record unr
   Tools validate but never execute commands. Follow [execution guidance](doctrine/execution.md).
 - `output` names one safe file under `artifacts/` in the stage's run folder; finish it before continuing.
   A human may inspect/edit it. `checkpoint: true` requires review, including after the final stage.
-- Optional Evaluation has Evaluator, Revise, and Stop subsections with success criteria and a finite bound.
+- Optional Evaluation has Evaluator, Revise, and Stop subsections with success criteria and a positive integer `revision_limit` in frontmatter.
   Failed evaluation pauses. Execute through the [ordinary run kit](../run/README.md).

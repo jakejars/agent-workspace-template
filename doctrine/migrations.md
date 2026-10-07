@@ -15,12 +15,36 @@ related:
 
 ## Agent Workspace Template rename
 
-When adopting the updated toolset and `.gitignore`, an existing workspace
-renames `.sett-private/` to `.workspace-private/`,
-`tools/sett_layout.py` to `tools/workspace_layout.py`, and
-`tools/sett_setup.py` to `tools/workspace_setup.py`. Nothing else is required.
-The old directory and module names continue to work through compatibility.
-If both private directories exist, `.workspace-private/` wins and tools warn.
+Upgrade tools and `doctrine/schema.json` together: the old schema lacks
+`limits.stage_chars` and the skill/pipeline fields. From an updated template
+checkout, set `TEMPLATE` to its absolute path and `INSTANCE` to the existing
+workspace root containing `NAMESPACE.md`, then run this block:
+
+```sh
+(
+    set -e
+    cp -R "$TEMPLATE/tools/." "$INSTANCE/tools/"
+    cp "$TEMPLATE/.gitignore" "$INSTANCE/.gitignore"
+    cp "$TEMPLATE/doctrine/schema.json" "$INSTANCE/doctrine/schema.json"
+    cd "$INSTANCE"
+    python3 tools/build_catalog.py --check
+    python3 tools/skills.py check
+    python3 tools/pipeline.py check
+    python3 tools/check_loop.py
+    python3 tools/context.py refresh
+)
+```
+
+Merge local tool, ignore, or schema customizations before replacing support files.
+Preserve instance content, readiness receipts, and immutable journals; no refill
+or onboarding is required. Keep `.sett-private/` in place: tools enforce its terms,
+and `SETT_ROOT` remains a fallback after `WORKSPACE_ROOT`. Renaming it to
+`.workspace-private/` is optional; if both exist, the new directory wins and tools warn.
+Updated tools include `workspace_layout.py`, `workspace_setup.py`, and their legacy
+compatibility imports. Both `.sett-cache/` and `.workspace-cache/` remain disposable.
+
+`tools/test_upgrade.py` builds a finalized last-Sett-release instance and executes this block,
+exercising gates, scrub, write protection, context, and feature checks.
 
 ## The git-mv contract
 

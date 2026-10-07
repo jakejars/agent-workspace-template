@@ -79,6 +79,9 @@ def load_schema():
     ):
         value = schema["limits"].get(key)
         if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+            if key == "stage_chars" and key not in schema["limits"]:
+                return problem("limits.stage_chars is missing — upgrade tools and "
+                               "doctrine/schema.json together (see doctrine/migrations.md)")
             return problem(f"limits.{key} must be a positive integer")
 
     for name, rule in schema["formats"].items():

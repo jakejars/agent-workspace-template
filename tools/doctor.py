@@ -23,7 +23,7 @@ from workspace_layout import (  # noqa: E402
     WorkspaceLayout, private_directory, redact_private_diagnostic, refuse_unknown)
 import scrub_check  # noqa: E402
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = str(Path(__file__).resolve().parents[1])
 LAYOUT = WorkspaceLayout(ROOT)
 
 REQUIRED_VALUES = ("PRINCIPAL_NAME", "WORKSPACE_ID")

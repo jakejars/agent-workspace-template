@@ -16,6 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -48,6 +50,9 @@ jobs:
 
       - name: Build and exercise a fresh instance
         run: python3 tools/test_instance.py
+
+      - name: Upgrade an existing Sett instance
+        run: python3 tools/test_upgrade.py
 
       - name: Report aging context
         run: python3 tools/build_catalog.py --stale

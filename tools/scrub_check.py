@@ -30,7 +30,7 @@ SENTINEL = LAYOUT.physical_rel("workspace/00_meta/.uninitialised")
 RETIRED_STORE = "tools/scrub-terms.txt"
 SKIP_DIRS = set(PRIVATE_DIRS) | {
     ".git", ".venv", "venv", "__pycache__",
-    "node_modules", ".mypy_cache", ".workspace-cache", "work", "artifacts",
+    "node_modules", ".mypy_cache", ".workspace-cache", ".sett-cache", "work", "artifacts",
 }
 
 

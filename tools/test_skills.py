@@ -215,6 +215,77 @@ class SkillTests(unittest.TestCase):
         self.assertFalse((exported / "stale.txt").exists())
         self.assertTrue((exported / "scripts/run.py").is_file())
 
+    def test_failed_export_replacement_preserves_owned_directory(self):
+        skill = self.skill()
+        code, out = self.run_tool("export", "--to", str(self.output))
+        self.assertEqual(code, 0, out)
+        exported = self.output / skill.name
+        before = {path.relative_to(exported): path.read_bytes()
+                  for path in exported.rglob("*") if path.is_file()}
+        (skill / "SKILL.md").write_text((skill / "SKILL.md").read_text() + "Updated\n")
+        script = """from pathlib import Path
+from unittest.mock import patch
+import skills
+
+rename = Path.rename
+def fail_install(path, target):
+    if path.parent.name.startswith('.awt-export-') and path.name == 'sample-skill':
+        raise PermissionError('replacement installation denied')
+    return rename(path, target)
+
+with patch.object(Path, 'rename', fail_install):
+    raise SystemExit(skills.export(%r))
+""" % str(self.output)
+        result = subprocess.run([sys.executable, "-c", script],
+                                cwd=self.root / "tools", capture_output=True, text=True)
+        out = result.stdout + result.stderr
+        self.assertEqual(result.returncode, 1, out)
+        self.assertIn("PermissionError", out)
+        self.assertTrue(exported.is_dir(), out)
+        after = {path.relative_to(exported): path.read_bytes()
+                 for path in exported.rglob("*") if path.is_file()}
+        self.assertEqual(after, before)
+        self.assertEqual(sorted(path.name for path in self.output.iterdir()), [skill.name])
+
+    def test_unreadable_payload_refuses_export_before_replacing_owned_directory(self):
+        skill = self.skill()
+        scripts = skill / "scripts"
+        scripts.mkdir()
+        (scripts / "run.py").write_text("print('ready')\n")
+        code, out = self.run_tool("export", "--to", str(self.output))
+        self.assertEqual(code, 0, out)
+        exported = self.output / skill.name
+        before = {path.relative_to(exported): path.read_bytes()
+                  for path in exported.rglob("*") if path.is_file()}
+        (skill / "SKILL.md").write_text((skill / "SKILL.md").read_text() + "Updated\n")
+        script = """import os
+from pathlib import Path
+from unittest.mock import patch
+import skills
+
+scandir = os.scandir
+def fail_scan(path):
+    if not isinstance(path, int) and Path(path) == Path(%r):
+        raise PermissionError('payload directory denied')
+    return scandir(path)
+
+with patch.object(os, 'scandir', fail_scan):
+    errors = []
+    skills.check_skills(errors)
+    code = skills.export(%r)
+    print('\\n'.join(errors))
+    raise SystemExit(code)
+""" % (str(scripts), str(self.output))
+        result = subprocess.run([sys.executable, "-c", script],
+                                cwd=self.root / "tools", capture_output=True, text=True)
+        out = result.stdout + result.stderr
+        self.assertEqual(result.returncode, 1, out)
+        self.assertIn("unreadable skill (PermissionError)", out)
+        after = {path.relative_to(exported): path.read_bytes()
+                 for path in exported.rglob("*") if path.is_file()}
+        self.assertEqual(after, before)
+        self.assertEqual(sorted(path.name for path in self.output.iterdir()), [skill.name])
+
     def test_foreign_directory_is_preserved_without_partial_export(self):
         self.skill("first-skill")
         self.skill("foreign-skill")

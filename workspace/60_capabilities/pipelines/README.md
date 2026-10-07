@@ -41,7 +41,9 @@ and stage plan. Bump the version on definition changes; start a new run to
 use the changed definition.
 
 `python3 tools/pipeline.py status --run <run-id>` reconstructs output and
-checkpoint state without changing files or executing commands. Keep the
+checkpoint state without changing files or executing commands. It requires
+the recorded definition digest, version, and complete stage plan to match;
+restore the recorded definition before continuing if verification fails. Keep the
 [intent checkpoint](workspace/20_intent/INDEX.md) current for broader state.
 
 ## Human checkpoint

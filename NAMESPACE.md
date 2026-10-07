@@ -43,7 +43,7 @@ agent-workspace-template/
 │   ├── build_catalog.py  check_loop.py  journal_guard.py  workspace_layout.py
 │   ├── scrub_check.py  agnostic_check.py  instantiate.py  workspace_setup.py
 │   ├── new.py  doctor.py  lifecycle.py  context.py  check_staged.py  skills.py
-│   ├── test_gates.py  test_gate_corrections.py  test_instance.py
+│   ├── test_gates.py  test_gate_corrections.py  test_instance.py  test_upgrade.py
 │   ├── test_context.py  test_staged.py  test_onboarding.py  test_hooks.py
 │   ├── test_new.py  test_skills.py
 │   ├── pipeline.py  test_pipeline.py

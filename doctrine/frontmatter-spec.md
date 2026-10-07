@@ -61,7 +61,9 @@ promotion or permission.
 defines one numbered contract beneath it. Stages declare `executor`, `output`,
 and `checkpoint`; a script also declares `command`. Each contract is capped at
 3,000 characters including frontmatter, matching the dynamic disclosure budget.
-`tools/pipeline.py check` enforces the schema fields and stage shape.
+An Evaluation loop declares a positive integer `revision_limit`; its Stop
+section states when to stop within that bound. `tools/pipeline.py check`
+enforces the schema fields and stage shape.
 
 A pipeline execution remains type `run`. Its `pipeline`, `pipeline_version`,
 `pipeline_digest`, and `pipeline_stages` record the definition and stage plan

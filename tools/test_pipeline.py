@@ -144,6 +144,100 @@ def snapshot(root):
             and "__pycache__" not in path.parts}
 
 
+def test_recorded_checkpoint_matches_definition(home, base):
+    tree = Path(home, "altered-checkpoint")
+    shutil.copytree(base, tree)
+    write(tree, f"{PIPELINES}/{SLUG}/01_prepare/STAGE.md",
+          contract(STAGES[0], "script", True))
+    start(tree)
+    folder = tree / "workspace/90_runs" / RUN_ID
+    (folder / STAGES[0] / "artifacts/result.txt").write_text("Needs review.\n")
+    state = require_pass(tree, "status", "--run", RUN_ID)
+    assert "Next: human checkpoint for 01_prepare" in state, state
+    record = folder / "run.md"
+    record.write_text(record.read_text().replace("    checkpoint: true",
+                                                "    checkpoint: false", 1))
+    state = require_failure(tree, "status", "--run", RUN_ID,
+                            contains=("recorded", "stage plan", "definition"))
+    assert "Next: 02_review" not in state, state
+    return 1
+
+
+def test_recorded_version_matches_definition(home, base):
+    tree = Path(home, "altered-version")
+    shutil.copytree(base, tree)
+    start(tree)
+    record = tree / "workspace/90_runs" / RUN_ID / "run.md"
+    record.write_text(record.read_text().replace("pipeline_version: 1",
+                                                "pipeline_version: 2", 1))
+    state = require_failure(tree, "status", "--run", RUN_ID,
+                            contains=("recorded", "version", "definition"))
+    assert "Next: 01_prepare" not in state, state
+    return 1
+
+
+def test_recorded_stage_plan_matches_definition(home, base):
+    mutations = (
+        ("output", "    output: artifacts/result.txt", "    output: artifacts/other.txt"),
+        ("name", "  - stage: 01_prepare", "  - stage: 01_other"),
+        ("missing", "  - stage: 02_review\n    output: artifacts/result.txt\n"
+         "    checkpoint: false\n", ""),
+        ("extra-field", "  - stage: 01_prepare", "  - stage: 01_prepare\n    extra: yes"),
+    )
+    for name, before, after in mutations:
+        tree = Path(home, "altered-plan-" + name)
+        shutil.copytree(base, tree)
+        start(tree)
+        record = tree / "workspace/90_runs" / RUN_ID / "run.md"
+        record.write_text(record.read_text().replace(before, after, 1))
+        state = require_failure(tree, "status", "--run", RUN_ID,
+                                contains=("recorded", "stage plan", "definition"))
+        assert "Next: 01_" not in state, state
+    return len(mutations)
+
+
+def test_unverified_definition_requires_restoration(home, base):
+    for name in ("changed", "missing"):
+        tree = Path(home, "definition-" + name)
+        shutil.copytree(base, tree)
+        start(tree)
+        definition = tree / PIPELINES / SLUG / "PIPELINE.md"
+        if name == "changed":
+            definition.write_text(definition.read_text() + "\nChanged contract.\n")
+        else:
+            definition.unlink()
+        before = snapshot(tree)
+        state = require_failure(tree, "status", "--run", RUN_ID,
+                                contains=("definition", "restore"))
+        assert "Next: restore" in state, state
+        assert "Next: 01_prepare" not in state and "Next: 02_review" not in state, state
+        assert before == snapshot(tree), "failed definition verification changed source"
+    return 2
+
+
+def test_evaluation_requires_numeric_revision_limit(home, base):
+    tree = Path(home, "unlimited-revision")
+    shutil.copytree(base, tree)
+    path = tree / PIPELINES / SLUG / STAGES[1] / "STAGE.md"
+    text = contract(STAGES[1]) + ("\n## Evaluation\n\n### Evaluator\n\n"
+        "Check acceptance criterion 1.\n\n### Revise\n\nFix the failed criterion.\n\n"
+        "### Stop\n\nKeep revising until acceptance criterion 1 passes, "
+        "with no revision limit.\n")
+    path.write_text(text)
+    require_failure(tree, "check", contains=("revision_limit", "positive integer"))
+    # The bound is structured metadata; Stop prose need not carry a numeral.
+    bounded = text.replace("executor: model", "executor: model\nrevision_limit: 2")
+    bounded = bounded.replace("Keep revising until acceptance criterion 1 passes, "
+                              "with no revision limit.",
+                              "Stop when the criterion passes or revision_limit is reached.")
+    path.write_text(bounded)
+    require_pass(tree, "check")
+    for value in ("0", "-1", "unlimited", "[2]"):
+        path.write_text(bounded.replace("revision_limit: 2", "revision_limit: " + value))
+        require_failure(tree, "check", contains=("revision_limit",))
+    return 6
+
+
 def main():
     checks = 0
     with tempfile.TemporaryDirectory(prefix="workspace-pipeline-") as home:
@@ -151,6 +245,13 @@ def main():
         fixture(base)
         require_pass(base, "check")
         checks += 1
+
+        for regression in (test_recorded_checkpoint_matches_definition,
+                           test_recorded_version_matches_definition,
+                           test_recorded_stage_plan_matches_definition,
+                           test_unverified_definition_requires_restoration,
+                           test_evaluation_requires_numeric_revision_limit):
+            checks += regression(home, base)
 
         with_skill = Path(home, "with-skill")
         shutil.copytree(base, with_skill)

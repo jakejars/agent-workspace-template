@@ -94,6 +94,8 @@ def _skill(path, name, layout, errors):
         errors.append(f"{rel}: skill source has a symlink ancestor")
         return None
     payload = {}
+    def walk_error(exc):
+        raise exc
     try:
         for entry in sorted(path.iterdir()):
             if entry.name == "SKILL.md":
@@ -102,7 +104,7 @@ def _skill(path, name, layout, errors):
                 continue
             if entry.name not in PAYLOAD_DIRS or not entry.is_dir():
                 errors.append(f"{rel}/{entry.name}: only SKILL.md and scripts/, references/, assets/ are allowed")
-        for base, dirs, files in os.walk(path, followlinks=False):
+        for base, dirs, files in os.walk(path, followlinks=False, onerror=walk_error):
             for filename in sorted(dirs + files):
                 source = Path(base, filename)
                 mode = source.lstat().st_mode
@@ -358,8 +360,10 @@ def export(target, trusted_only=False, layout=None):
             target.mkdir(parents=True, exist_ok=True)
         for record in selected:
             output = target / record["name"]
-            with tempfile.TemporaryDirectory(prefix=".awt-export-", dir=target) as temporary:
-                staged = Path(temporary) / record["name"]
+            temporary = Path(tempfile.mkdtemp(prefix=".awt-export-", dir=target))
+            backup = temporary / ".previous"
+            try:
+                staged = temporary / record["name"]
                 staged.mkdir()
                 for rel, (data, mode) in record["payload"].items():
                     destination = staged / rel
@@ -368,8 +372,19 @@ def export(target, trusted_only=False, layout=None):
                     destination.chmod(mode)
                 (staged / MARKER).write_text(json.dumps(_marker(record, layout), sort_keys=True) + "\n", encoding="utf-8")
                 if output.exists():
-                    shutil.rmtree(output)
-                staged.rename(output)
+                    output.rename(backup)
+                try:
+                    staged.rename(output)
+                except OSError:
+                    if backup.exists():
+                        backup.rename(output)
+                    raise
+                if backup.exists():
+                    shutil.rmtree(backup)
+            finally:
+                # If restoring fails too, retain the backup for recovery.
+                if not backup.exists():
+                    shutil.rmtree(temporary)
             print(redact_private_diagnostic(layout.root, f"exported {record['name']} → {output}"))
         for output in removals:
             shutil.rmtree(output)

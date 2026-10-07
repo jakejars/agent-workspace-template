@@ -176,6 +176,23 @@ class GateCorrections(unittest.TestCase):
         code, out = run(self.tmp, "scrub_check.py", "--staged")
         self.assertEqual(code, 0, out)
 
+    def test_scrub_ignores_legacy_disposable_cache(self):
+        self.build_git_fixture()
+        write(self.tmp, ".gitignore",
+              ".workspace-private/\n.sett-cache/\n.workspace-cache/\n")
+        self.assertEqual(git(self.tmp, "add", ".gitignore").returncode, 0)
+        for cache in (".sett-cache", ".workspace-cache"):
+            write(self.tmp, f"{cache}/context.json", FAKE_TERM + "\n")
+        for args in ((), ("--staged",)):
+            code, out = run(self.tmp, "scrub_check.py", *args)
+            self.assertEqual(code, 0, out)
+
+        write(self.tmp, "notes.md", FAKE_TERM + "\n")
+        code, out = run(self.tmp, "scrub_check.py")
+        self.assertEqual(code, 1, out)
+        self.assertIn("notes.md", out)
+        self.assertNotIn(FAKE_TERM, out)
+
     def test_staged_scrub_rejects_tracked_legacy_private_store(self):
         self.build_git_fixture()
         write(self.tmp, ".sett-private/never-share.txt", FAKE_TERM + "\n")
@@ -225,6 +242,22 @@ class GateCorrections(unittest.TestCase):
         self.assertIn("warning", out.lower())
         self.assertIn("using .workspace-private/", out)
         self.assertNotIn(FAKE_TERM, out)
+
+    def test_doctor_accepts_a_symlinked_checkout_path(self):
+        self.build_git_fixture()
+        shutil.copy(Path(TOOLS, "doctor.py"), Path(self.tmp, "tools"))
+        Path(self.tmp, "workspace/00_meta/.uninitialised").touch()
+        with tempfile.TemporaryDirectory() as alias_home:
+            alias = Path(alias_home, "checkout")
+            alias.symlink_to(self.tmp, target_is_directory=True)
+            proc = subprocess.run(
+                [sys.executable, str(alias / "tools/doctor.py")], cwd=alias,
+                capture_output=True, text=True, env=isolated_git_env(),
+            )
+        out = proc.stdout + proc.stderr
+        self.assertEqual(proc.returncode, 0, out)
+        self.assertIn("privacy configuration", out)
+        self.assertNotIn("Traceback", out)
 
     def test_private_conflict_warning_redacts_terms_matching_directory_names(self):
         # Even public path names must be redacted when configured as private.
@@ -404,6 +437,62 @@ class GateCorrections(unittest.TestCase):
 
         code, out = ask({"op": "create-or-overwrite", "path": "notes.md"})
         self.assertEqual(code, 0, out)
+
+    def test_journal_guard_uses_legacy_root_for_private_stores(self):
+        build(self.tmp, CLEAN)
+        with tempfile.TemporaryDirectory() as workspace:
+            env = isolated_git_env()
+            env.pop("WORKSPACE_ROOT", None)
+            env["SETT_ROOT"] = workspace
+            for private in (".sett-private", ".workspace-private"):
+                path = Path(workspace, private, "never-share.txt")
+                path.parent.mkdir()
+                path.write_text("human-owned\n", encoding="utf-8")
+                for op in ("modify", "create-or-overwrite"):
+                    with self.subTest(private=private, op=op):
+                        proc = subprocess.run(
+                            [sys.executable, str(Path(self.tmp, "tools/journal_guard.py"))],
+                            cwd=self.tmp, input=json.dumps({"op": op, "path": str(path)}),
+                            capture_output=True, text=True, env=env,
+                        )
+                        self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+                        self.assertIn("human-only", proc.stderr)
+
+    def test_journal_guard_uses_legacy_root_for_existing_journals(self):
+        build(self.tmp, CLEAN)
+        with tempfile.TemporaryDirectory() as workspace:
+            write(workspace, "AGENTS.md", "# Entrance\n")
+            Path(workspace, "00_meta").mkdir()
+            Path(workspace, "70_seams").mkdir()
+            path = Path(workspace, "30_memory/journal/2026-08-24-1200-entry.md")
+            write(workspace, path.relative_to(workspace), "immutable\n")
+            env = isolated_git_env()
+            env.pop("WORKSPACE_ROOT", None)
+            env["SETT_ROOT"] = workspace
+            for op in ("modify", "create-or-overwrite"):
+                with self.subTest(op=op):
+                    proc = subprocess.run(
+                        [sys.executable, str(Path(self.tmp, "tools/journal_guard.py"))],
+                        cwd=self.tmp, input=json.dumps({"op": op, "path": str(path)}),
+                        capture_output=True, text=True, env=env,
+                    )
+                    self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+                    self.assertIn("immutable", proc.stderr)
+
+    def test_journal_guard_prefers_workspace_root_over_legacy_root(self):
+        build(self.tmp, CLEAN)
+        with tempfile.TemporaryDirectory() as workspace:
+            path = Path(workspace, ".sett-private/never-share.txt")
+            env = isolated_git_env()
+            env["WORKSPACE_ROOT"] = workspace
+            env["SETT_ROOT"] = self.tmp
+            proc = subprocess.run(
+                [sys.executable, str(Path(self.tmp, "tools/journal_guard.py"))],
+                cwd=self.tmp, input=json.dumps({"op": "modify", "path": str(path)}),
+                capture_output=True, text=True, env=env,
+            )
+            self.assertEqual(proc.returncode, 2, proc.stdout + proc.stderr)
+            self.assertIn("human-only", proc.stderr)
 
     def test_pointer_exceptions_are_bounded_and_structural(self):
         files = dict(CLEAN)

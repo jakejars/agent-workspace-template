@@ -159,8 +159,8 @@ def load_pipeline(slug):
             for heading in ("Evaluator", "Revise", "Stop"):
                 if not parts.get(heading):
                     raise ValueError(f"{contract.relative_to(ROOT)}: Evaluation requires {heading}")
-            if not re.search(r"\b[1-9][0-9]*\b", parts["Stop"]):
-                raise ValueError(f"{contract.relative_to(ROOT)}: Stop must name a finite revision bound")
+            if not re.fullmatch(r"[1-9][0-9]*", str(stage.get("revision_limit", ""))):
+                raise ValueError(f"{contract.relative_to(ROOT)}: Evaluation requires revision_limit as a positive integer")
         digest.update((child.name + "/STAGE.md\0").encode() + text.encode("utf-8"))
         stages.append({"stage": child.name, "output": stage["output"],
                        "checkpoint": stage["checkpoint"]})
@@ -311,11 +311,19 @@ def status(run_id):
             raise ValueError("invalid recorded stage plan")
     print(f"Run: {run_id} · pipeline {match.group(1)} version {version}")
     try:
-        _, _, digest = load_pipeline(match.group(1))
-        if digest != fm["pipeline_digest"]:
-            print("Definition changed: restore the recorded version before executing another stage.")
+        definition, verified_stages, digest = load_pipeline(match.group(1))
     except (OSError, ValueError):
         print("Definition unavailable or invalid: restore the recorded version before executing another stage.")
+        print("Next: restore the recorded pipeline definition")
+        return 1
+    if digest != fm["pipeline_digest"]:
+        print("Definition changed: restore the recorded version before executing another stage.")
+        print("Next: restore the recorded pipeline definition")
+        return 1
+    if version != str(definition["version"]):
+        raise ValueError("recorded pipeline version does not match the verified definition")
+    if stages != verified_stages:
+        raise ValueError("recorded stage plan does not match the verified definition")
     next_step = None
     for stage in stages:
         state = checkpoint_state(folder, stage)
@@ -325,6 +333,7 @@ def status(run_id):
         elif next_step is None and state == "output pending checkpoint":
             next_step = f"human checkpoint for {stage['stage']}"
     print(f"Next: {next_step or 'complete'}")
+    return 0
 
 
 def main(argv=None):
@@ -355,7 +364,7 @@ def main(argv=None):
         elif args.command == "start":
             start(args.pipeline, args.run, args.intent)
         else:
-            status(args.run)
+            return status(args.run)
     except (OSError, ValueError) as exc:
         print(f"pipeline: {exc}", file=sys.stderr)
         return 1

@@ -49,7 +49,8 @@ pipeline version. Each stage loads only its declared Reference and Working
 inputs, writes its named output to disk, and stops at a declared human
 checkpoint before the next stage. Reference rules stay unchanged; Working
 artifacts may be inspected and edited. Re-read the current artifact after
-review. A bounded evaluator/revise loop states its stopping condition.
+review. An evaluator/revise loop declares a positive integer `revision_limit`
+and states its stopping condition within that bound.
 
 ## Walk test
 

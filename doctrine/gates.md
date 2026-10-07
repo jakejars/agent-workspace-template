@@ -71,6 +71,11 @@ is a drift detector, not a security boundary.
 `tools/test_new.py`, `tools/test_skills.py`, and `tools/test_pipeline.py`
 exercise real failures. `tools/test_instance.py` fills a fresh instance, files
 all kits, finalizes, works a session, and commits through the actual hooks.
+`tools/test_upgrade.py` instantiates `main` with its own tools and executes the
+upgrade block in [migrations.md](migrations.md), preserving legacy privacy and
+journal protections while exercising context, skills, pipelines, and staged
+gates. It reports an explicit skip if `main` is unavailable; CI fetches full
+history and that ref so the upgrade runs.
 Run suites when changing the template or making a release; ordinary commits
 pay for integrity checks only. CI also reports `build_catalog.py --stale`.
 

@@ -7,6 +7,7 @@ passes. The negative tests are the point: a gate that cannot fail is
 decoration. No framework, no fixtures.
 """
 
+import json
 import os
 import shutil
 import subprocess
@@ -515,7 +516,30 @@ def run(tmp, tool, *args):
     return proc.returncode, proc.stdout + proc.stderr
 
 
+def test_legacy_schema_upgrade_requires_matching_schema():
+    """A tools-only upgrade diagnoses the missing schema upgrade, then passes."""
+    tmp = tempfile.mkdtemp()
+    try:
+        build(tmp, CLEAN)
+        schema_path = os.path.join(tmp, "doctrine", "schema.json")
+        with open(schema_path, encoding="utf-8") as handle:
+            schema = json.load(handle)
+        del schema["limits"]["stage_chars"]
+        with open(schema_path, "w", encoding="utf-8") as handle:
+            json.dump(schema, handle)
+        code, out = run(tmp, "build_catalog.py", "--check")
+        assert code == 1 and "limits.stage_chars" in out, out
+        assert "upgrade tools and doctrine/schema.json together" in out, out
+        shutil.copy(os.path.join(os.path.dirname(TOOLS), "doctrine", "schema.json"),
+                    schema_path)
+        code, out = run(tmp, "build_catalog.py", "--check")
+        assert code == 0, out
+    finally:
+        shutil.rmtree(tmp)
+
+
 def main():
+    test_legacy_schema_upgrade_requires_matching_schema()
     tmp = tempfile.mkdtemp()
     try:
         build(tmp, CLEAN)

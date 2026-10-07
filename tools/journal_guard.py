@@ -9,7 +9,8 @@ Neutral stdin contract:
      "path": "<file>", "command": "<shell line>"}
 
 `modify` and `create-or-overwrite` require `path`; `shell` requires `command`.
-Exit: 0 allow, 2 block, 1 guard failure (fail open). Root: `$WORKSPACE_ROOT` or repo.
+Exit: 0 allow, 2 block, 1 guard failure (fail open).
+Root: `$WORKSPACE_ROOT`, then legacy `$SETT_ROOT`, then the tool location.
 Use `--selftest`; runtime payload translation belongs in `tools/hooks/shim.py`.
 """
 import json
@@ -22,7 +23,8 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 from workspace_layout import PRIVATE_DIRS, WorkspaceLayout
 
-ROOT = Path(os.environ.get("WORKSPACE_ROOT") or Path(__file__).resolve().parents[1])
+ROOT = Path(os.environ.get("WORKSPACE_ROOT") or os.environ.get("SETT_ROOT")
+            or Path(__file__).resolve().parents[1])
 LAYOUT = WorkspaceLayout(ROOT)
 JOURNAL_ROOT = Path(LAYOUT.physical_rel("workspace/30_memory/journal"))
 

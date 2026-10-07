@@ -361,6 +361,10 @@
     "skill": {
      "kind": "string"
     },
+    "revision_limit": {
+     "kind": "number",
+     "pattern": "^[1-9][0-9]*$"
+    },
     "checkpoint": {
      "kind": "bool"
     },
