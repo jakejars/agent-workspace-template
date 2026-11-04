@@ -56,7 +56,7 @@ printf '# Thread: x\n\n## Goal\n' > "$A/memory/threads/nostate.md"; echo "| [nos
 no "thread without a State line fails" "(cd $A && scripts/check.sh)"
 rm "$A/memory/threads/nostate.md"; sed -i.bak '/nostate/d' "$A/memory/INDEX.md"; rm -f "$A/memory/INDEX.md.bak"
 printf '# Thread: old\nState: live. Updated: 2025-01-01.\n' > "$A/memory/threads/old.md"; echo "| [old](threads/old.md) | live | | 2025-01-01 |" >> "$A/memory/INDEX.md"
-ok "stale live thread warns but passes" "(cd $A && scripts/check.sh | grep -q 'WARN.*old.md' && scripts/check.sh)"
+ok "stale live thread warns but passes" "(cd $A && scripts/check.sh > $TMP/gate.out && grep -q 'WARN.*old.md' $TMP/gate.out)"
 rm "$A/memory/threads/old.md"; sed -i.bak '/threads\/old.md/d' "$A/memory/INDEX.md"; rm -f "$A/memory/INDEX.md.bak"
 mkdir -p "$A/memory/log/2026-11-04-first-run"
 no "log folder without run.md fails" "(cd $A && scripts/check.sh)"
