@@ -1,0 +1,7 @@
+{
+  "rust allow attributes": { "pattern": "#\\[allow\\(", "paths": ["*.rs"], "max": 0 },
+  "rust ignored tests": { "pattern": "#\\[ignore", "paths": ["*.rs"], "max": 0 },
+  "rust todo and unimplemented": { "pattern": "todo!\\(|unimplemented!\\(", "paths": ["*.rs", ":!*test*"], "max": 0 },
+  "ts ignore and any": { "pattern": "@ts-ignore|eslint-disable|: any\\b", "paths": ["*.ts", "*.svelte"], "max": 0 },
+  "todo markers": { "pattern": "TODO|FIXME|XXX", "paths": [".", ":!*.md", ":!scripts/ceilings*.json"], "max": 0 }
+}

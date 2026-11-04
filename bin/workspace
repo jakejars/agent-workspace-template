@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+# workspace: set up, check and upgrade folders made from the Agent Workspace Template.
+#   workspace init project <dir>       a code project: AGENTS.md, build-notes/, scripts/, git hooks
+#   workspace init assistant <dir>     the same plus memory/ (index, topics, append-only log)
+#   workspace status [dir] [--brief|--diff]
+#                                      which template version <dir> is on; if a newer one exists,
+#                                      what changed (from CHANGELOG.md) and which files it replaces
+#   workspace upgrade [dir] [--yes]    show the status, then with --yes replace the template's own
+#                                      files. Never touches AGENTS.md, build-notes/, memory/ or scripts/local/.
+#   workspace version                  this template's version
+set -euo pipefail
+TPL="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+LATEST="$(cat "$TPL/starter/scripts/TEMPLATE_VERSION")"
+die() { echo "workspace: $*" >&2; exit 1; }
+
+# The template's own files: replaced by upgrades. Everything else in a workspace belongs to it.
+owned_files() {
+  (cd "$TPL/starter" && find scripts .githooks -type f ! -path 'scripts/local/*' \
+     ! -name 'ceilings.example.json' | sort)
+}
+listed_files() {  # the owned files worth listing in a status (the version number always moves)
+  owned_files | grep -vx scripts/TEMPLATE_VERSION
+}
+old_layout() {  # the layout before 3.0 (once called Sett): ten numbered folders under workspace/
+  [[ -f "$1/workspace/AGENTS.md" || -f "$1/tools/sett_layout.py" || -d "$1/.sett-private" ||
+     -d "$1/.workspace-private" || -d "$1/20_intent" ]]
+}
+version_of() {  # prints the version, "pre" for a pre-versioning starter, or nothing
+  if [[ -f "$1/scripts/TEMPLATE_VERSION" ]]; then tr -d '[:space:]' < "$1/scripts/TEMPLATE_VERSION"
+  elif [[ -f "$1/scripts/check.sh" && -d "$1/build-notes" ]]; then echo pre
+  fi
+}
+newer() {  # newer <a> <b>: true when version a is newer than version b
+  [[ "$1" != "$2" && "$(printf '%s\n%s\n' "$1" "$2" | sort -V | tail -1)" == "$1" ]]
+}
+changes_since() {  # the CHANGELOG.md sections newer than <version>
+  awk -v cur="$1" '
+    function gt(a, b,   x, y, i) { split(a, x, "."); split(b, y, ".")
+      for (i = 1; i <= 3; i++) { if (x[i] + 0 > y[i] + 0) return 1; if (x[i] + 0 < y[i] + 0) return 0 }
+      return 0 }
+    /^## [0-9]/ { show = gt($2, cur) }
+    /^## / && !/^## [0-9]/ { show = 0 }
+    show' "$TPL/CHANGELOG.md"
+}
+
+copy_missing() {  # copy_missing <from> <to>: add files that are not there yet; never overwrite
+  local from="$1" to="$2" f
+  while IFS= read -r f; do
+    f="${f#./}"; [[ "$f" == */.gitkeep && -d "$to/$(dirname "$f")" ]] && continue
+    if [[ -e "$to/$f" ]]; then echo "  kept   $f (already there)"
+    else mkdir -p "$to/$(dirname "$f")"; cp -p "$from/$f" "$to/$f"; echo "  added  $f"; fi
+  done < <(cd "$from" && find . -type f | sort)
+}
+ignore_line() {  # ignore_line <dir> <pattern>: add a .gitignore line once
+  grep -qxF "$2" "$1/.gitignore" 2>/dev/null || echo "$2" >> "$1/.gitignore"
+}
+install_hooks() {  # install_hooks <dir>: merge the template's agent hooks into each agent's project config,
+  # replacing the template's earlier entries and keeping everything else the project has there
+  python3 -I - "$TPL/agents" "$1" <<'PY'
+import json, os, sys
+src, dst = sys.argv[1], sys.argv[2]
+targets = {"claude.json": ".claude/settings.json", "codex.json": ".codex/hooks.json", "agy.json": ".agents/hooks.json"}
+ours = lambda h: isinstance(h, dict) and "/scripts/hooks/" in str(h.get("command", "")) and "AGENT_HARNESS=" in str(h.get("command", ""))
+for name, rel in targets.items():
+    new = json.load(open(os.path.join(src, name)))
+    path = os.path.join(dst, rel)
+    try: cur = json.load(open(path))
+    except FileNotFoundError: cur = {}
+    except ValueError: print(f"  skipped {rel}: not valid JSON, fix it and re-run"); continue
+    if name == "agy.json":
+        cur = {k: v for k, v in cur.items() if not k.startswith("workspace-template-")}
+        cur.update(new)
+    else:
+        hooks = cur.setdefault("hooks", {})
+        for event, groups in list(hooks.items()):
+            kept = []
+            for g in groups:
+                g = dict(g); g["hooks"] = [h for h in g.get("hooks", []) if not ours(h)]
+                if g["hooks"]: kept.append(g)
+            if kept: hooks[event] = kept
+            else: del hooks[event]
+        for event, groups in new["hooks"].items():
+            hooks.setdefault(event, []).extend(groups)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f: json.dump(cur, f, indent=2); f.write("\n")
+    print(f"  hooks  {rel}")
+PY
+}
+
+cmd_init() {
+  local kind="${1:-}" dir="${2:-}"
+  [[ "$kind" == project || "$kind" == assistant ]] && [[ -n "$dir" ]] ||
+    die "usage: workspace init project|assistant <dir>"
+  mkdir -p "$dir"; dir="$(cd "$dir" && pwd)"
+  old_layout "$dir" && die "$dir has the old (pre-3.0) layout. Move it first: see $TPL/docs/moving.md"
+  [[ -d "$dir/.git" ]] || git -C "$dir" init -q -b main
+  echo "Setting up a $kind workspace in $dir (template $LATEST):"
+  copy_missing "$TPL/starter" "$dir"
+  if [[ "$kind" == assistant ]]; then
+    copy_missing "$TPL/assistant" "$dir"
+    ignore_line "$dir" ".scrub-patterns"
+    [[ -f "$dir/.scrub-patterns" ]] || {
+      printf '# Private terms: one per line. Any match in a file fails scripts/check.sh. Never commit this file.\n' \
+        > "$dir/.scrub-patterns"; echo "  added  .scrub-patterns (gitignored)"; }
+  fi
+  local where="$TPL"; [[ "$TPL" == "$HOME"/* ]] && where="\$HOME/${TPL#"$HOME"/}"
+  [[ -f "$dir/scripts/local/template.env" ]] ||
+    printf '# Where the Agent Workspace Template lives, for upgrade notices.\nTEMPLATE_DIR="%s"\n' "$where" \
+      > "$dir/scripts/local/template.env"
+  chmod +x "$dir"/scripts/*.sh "$dir"/scripts/hooks/*.sh "$dir"/.githooks/*
+  git -C "$dir" config core.hooksPath .githooks
+  install_hooks "$dir"
+  echo "Next: fill the <...> brackets in AGENTS.md and build-notes/, then run scripts/check.sh."
+}
+
+cmd_status() {
+  local dir="." mode=full a
+  for a in "$@"; do case "$a" in --brief) mode=brief;; --diff) mode=diff;; *) dir="$a";; esac; done
+  dir="$(cd "$dir" && pwd)"
+  if old_layout "$dir"; then
+    echo "Template: this workspace uses the old layout from before 3.0 (once called Sett). Version $LATEST is available."
+    [[ "$mode" == brief ]] && { echo "  Moving is a one-off with the workspace-setup skill; see $TPL/docs/moving.md"; return 0; }
+    changes_since 2.99.99; echo "To move: follow $TPL/docs/moving.md (old files are archived, not deleted)."; return 0
+  fi
+  local cur; cur="$(version_of "$dir")"
+  if [[ -z "$cur" ]]; then [[ "$mode" == brief ]] || echo "Template: $dir was not set up from the template."; return 0; fi
+  local since="$cur"; [[ "$cur" == pre ]] && since=0.0.0
+  if ! newer "$LATEST" "$since"; then [[ "$mode" == brief ]] || echo "Template: up to date ($cur)."; return 0; fi
+  echo "Template upgrade available: ${cur/pre/a pre-3.0 starter} -> $LATEST."
+  if [[ "$mode" == brief ]]; then echo "  See what changes: $TPL/bin/workspace status $dir"; return 0; fi
+  echo; echo "What changed:"; changes_since "$since"; echo "Files the upgrade would replace or add:"
+  local f n=0
+  while IFS= read -r f; do
+    if [[ ! -e "$dir/$f" ]]; then echo "  new      $f"; n=$((n + 1))
+    elif ! cmp -s "$TPL/starter/$f" "$dir/$f"; then echo "  changed  $f"; n=$((n + 1))
+      [[ "$mode" == diff ]] && { diff -u "$dir/$f" "$TPL/starter/$f" | sed 's/^/    /' || true; }
+    fi
+  done < <(listed_files)
+  (( n > 0 )) || echo "  none (only the version number moves)"
+  [[ "$mode" == diff ]] || echo "Line-by-line: $TPL/bin/workspace status $dir --diff. Apply: $TPL/bin/workspace upgrade $dir --yes"
+}
+
+cmd_upgrade() {
+  local dir="." yes="" a
+  for a in "$@"; do case "$a" in --yes) yes=1;; *) dir="$a";; esac; done
+  dir="$(cd "$dir" && pwd)"
+  old_layout "$dir" && die "the old layout is moved, not upgraded: see $TPL/docs/moving.md"
+  [[ -n "$(version_of "$dir")" ]] || die "$dir was not set up from the template (use: workspace init)"
+  cmd_status "$dir"
+  [[ -n "$yes" ]] || { echo; echo "Nothing changed. Re-run with --yes to apply."; return 0; }
+  local cur f kept=0; cur="$(version_of "$dir")"
+  while IFS= read -r f; do
+    [[ -e "$dir/$f" ]] && cmp -s "$TPL/starter/$f" "$dir/$f" && continue
+    # A file that differs from what its version shipped was edited here: keep that copy beside it.
+    if [[ -e "$dir/$f" ]] && ! git -C "$TPL" show "v$cur:starter/$f" 2>/dev/null | cmp -s - "$dir/$f"; then
+      cp -p "$dir/$f" "$dir/$f.before-$LATEST"; kept=1
+      echo "  kept your edited copy as $f.before-$LATEST"
+    fi
+    mkdir -p "$dir/$(dirname "$f")"; cp -p "$TPL/starter/$f" "$dir/$f"; echo "  updated $f"
+  done < <(owned_files)
+  chmod +x "$dir"/scripts/*.sh "$dir"/scripts/hooks/*.sh "$dir"/.githooks/*
+  install_hooks "$dir"
+  mkdir -p "$dir/scripts/local"
+  [[ -f "$dir/scripts/local/checks.sh" ]] || cp -p "$TPL/starter/scripts/local/checks.sh" "$dir/scripts/local/checks.sh"
+  [[ -f "$dir/scripts/local/limits.env" ]] || cp -p "$TPL/starter/scripts/local/limits.env" "$dir/scripts/local/limits.env"
+  git -C "$dir" config core.hooksPath .githooks
+  echo "Upgraded to $LATEST. AGENTS.md, build-notes/, memory/ and scripts/local/ were not touched."
+  (( kept == 0 )) || echo "Move any project-specific lines from the *.before-$LATEST copies into scripts/local/checks.sh, then delete those copies."
+  echo "Next: run scripts/check.sh full."
+}
+
+case "${1:-}" in
+  init) shift; cmd_init "$@";;
+  status) shift; cmd_status "$@";;
+  upgrade) shift; cmd_upgrade "$@";;
+  version) echo "$LATEST";;
+  *) sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'; [[ -n "${1:-}" ]] && exit 2 || exit 0;;
+esac

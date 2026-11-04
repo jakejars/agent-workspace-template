@@ -1,0 +1,8 @@
+{
+  "hooks": {
+    "SessionStart": [{"matcher": "startup|resume|clear|compact", "hooks": [{"type": "command", "timeout": 20, "command": "AGENT_HARNESS=codex sh -c 'exec \"$(git rev-parse --show-toplevel)/scripts/hooks/session-start.sh\"'"}]}],
+    "PreToolUse": [{"hooks": [{"type": "command", "timeout": 20, "command": "AGENT_HARNESS=codex sh -c 'exec \"$(git rev-parse --show-toplevel)/scripts/hooks/before-tool.sh\"'"}]}],
+    "PostToolUse": [{"hooks": [{"type": "command", "timeout": 20, "command": "AGENT_HARNESS=codex sh -c 'exec \"$(git rev-parse --show-toplevel)/scripts/hooks/after-edit.sh\"'"}]}],
+    "Stop": [{"hooks": [{"type": "command", "timeout": 20, "command": "AGENT_HARNESS=codex sh -c 'exec \"$(git rev-parse --show-toplevel)/scripts/hooks/before-stop.sh\"'"}]}]
+  }
+}

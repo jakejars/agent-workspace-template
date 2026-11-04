@@ -1,0 +1,8 @@
+{
+  "hooks": {
+    "SessionStart": [{"hooks": [{"type": "command", "command": "AGENT_HARNESS=claude \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/session-start.sh"}]}],
+    "PreToolUse": [{"matcher": "Bash|Edit|Write|MultiEdit|NotebookEdit", "hooks": [{"type": "command", "command": "AGENT_HARNESS=claude \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/before-tool.sh"}]}],
+    "PostToolUse": [{"matcher": "Edit|Write|MultiEdit|NotebookEdit", "hooks": [{"type": "command", "command": "AGENT_HARNESS=claude \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/after-edit.sh"}]}],
+    "Stop": [{"hooks": [{"type": "command", "command": "AGENT_HARNESS=claude \"$CLAUDE_PROJECT_DIR\"/scripts/hooks/before-stop.sh"}]}]
+  }
+}

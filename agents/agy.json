@@ -1,0 +1,12 @@
+{
+  "workspace-template-session": {
+    "SessionStart": [{"type": "command", "timeout": 20, "command": "AGENT_HARNESS=agy sh -c 'exec \"$(git rev-parse --show-toplevel)/scripts/hooks/session-start.sh\"'"}]
+  },
+  "workspace-template-guard": {
+    "PreToolUse": [{"matcher": "run_command|write_to_file|replace_file_content|multi_replace_file_content", "hooks": [{"type": "command", "timeout": 20, "command": "AGENT_HARNESS=agy sh -c 'exec \"$(git rev-parse --show-toplevel)/scripts/hooks/before-tool.sh\"'"}]}],
+    "PostToolUse": [{"matcher": "write_to_file|replace_file_content|multi_replace_file_content", "hooks": [{"type": "command", "timeout": 20, "command": "AGENT_HARNESS=agy sh -c 'exec \"$(git rev-parse --show-toplevel)/scripts/hooks/after-edit.sh\"'"}]}]
+  },
+  "workspace-template-stop": {
+    "Stop": [{"type": "command", "timeout": 20, "command": "AGENT_HARNESS=agy sh -c 'exec \"$(git rev-parse --show-toplevel)/scripts/hooks/before-stop.sh\"'"}]
+  }
+}

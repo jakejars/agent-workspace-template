@@ -1,8 +1,0 @@
-#!/bin/sh
-# Integrity checks read the exact staged snapshot. Regression suites belong in CI.
-root=$(git rev-parse --show-toplevel) || exit 1
-cd "$root" || exit 1
-python3 tools/check_staged.py || {
-    echo "pre-commit: staged integrity failed — commit refused."
-    exit 1
-}
