@@ -3,7 +3,7 @@
 Updated: <date>. Size: <Tiny | Small | Medium | Big>. Add-ons: <none | lanes | hermetic>.
 
 ## Shape
-<Jake's words, analogy included, one or two sentences.>
+<The owner's words, analogy included, one or two sentences.>
 
 ## Scope
 - **Needed:** <what finishing the job requires, including recovery>
@@ -15,7 +15,7 @@ Updated: <date>. Size: <Tiny | Small | Medium | Big>. Add-ons: <none | lanes | h
 
 ## Decisions
 Newest first. Replace a line when it is overturned.
-- <date>: <decision>, because <why>; rejected <alternative>. (<Jake | agent>)
+- <date>: <decision>, because <why>; rejected <alternative>. (<owner | agent>)
 
 ## Reuse
 | Candidate | Where | Licence | Verdict (depend / copy / reference / rejected) |

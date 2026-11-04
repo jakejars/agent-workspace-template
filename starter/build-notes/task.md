@@ -16,7 +16,7 @@ Review: <verdict and date, or "none">
 ## Next action
 <The single next thing to do.>
 
-## Queued from Jake
+## Queued from the owner
 <Notes waiting for a slot. Taste rules go to taste.md instead.>
 
 ## Open or risky

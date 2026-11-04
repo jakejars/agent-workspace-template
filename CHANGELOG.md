@@ -3,6 +3,16 @@
 One section per version, newest first. Each says what changed in plain words and what you need to do.
 `bin/workspace status` prints the sections newer than the version a workspace is on.
 
+## 3.0.1 (2026-11-04)
+
+Small fixes after a review.
+- The private-terms guard checks what an agent writes, not the shell commands it runs, so it can still
+  search for a term. The gate still checks every file.
+- Notes templates say "the owner" instead of a name.
+- README says what is needed (bash, git, python3) and which agents are seen to run the hooks.
+
+What to do: nothing; upgrade when convenient.
+
 ## 3.0.0 (2026-11-04)
 
 A rebuild: one small template with two ways to start, instead of the old ten-folder layout.

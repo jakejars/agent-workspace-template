@@ -1,7 +1,8 @@
 # Agent Workspace Template
 
 A small, plain starting point for folders that AI agents work in: one entrance file, three notes
-files, one check script and git hooks. Optional memory for assistant workspaces. Bash and git only.
+files, one check script and git hooks. Optional memory for assistant workspaces. Needs bash, git and
+python3 (the hooks and the ceilings check use it to read JSON); nothing to install.
 
 ## Two ways to start
 
@@ -31,6 +32,16 @@ Each workspace records its version in `scripts/TEMPLATE_VERSION`. `scripts/check
 newer one exists; `bin/workspace status <dir>` shows what changed (from `CHANGELOG.md`) and which files
 would be replaced; `bin/workspace upgrade <dir> --yes` applies it. Folders with the old layout from
 before 3.0 are moved once instead: `docs/moving.md`.
+
+## Agent hooks
+
+Setup also writes hook configs for Claude Code (`.claude/settings.json`), Codex (`.codex/hooks.json`) and
+Antigravity (`.agents/hooks.json`). They run `scripts/hooks/`: context at session start, guards before a
+tool runs (skipping the git hooks, force-push, hard reset, deleting outside the project, editing an old
+log entry or a template file, writing a private term), a check after each edit, and a reminder to run
+the gate before stopping. Claude Code and Antigravity are seen to run them. Codex 0.166 did not run
+project-level hooks in our tests; there the git hooks still hold the gate. Hooks are a convenience an
+agent can bypass; the gate and the receipt are the proof.
 
 ## More
 

@@ -2,7 +2,8 @@
 # Part of the Agent Workspace Template (version in scripts/TEMPLATE_VERSION). Upgrades replace it.
 # before-tool.sh: stops actions that break a workspace rule, before they run, and says why.
 # Shell: skipping the git hooks, force-push, hard reset, recursive delete outside the project.
-# Writes: editing an old memory log entry, editing a template-owned file, adding a private term.
+# Writes: editing an old memory log entry, editing a template-owned file, writing a private term.
+# Private terms are checked in what gets written, not in shell commands, so an agent can still search for one.
 . "$(dirname "$0")/lib.sh"
 if [[ "$KIND" == shell ]]; then
   grep -qE -- '(^|[[:space:]])--no-verify([[:space:]]|$)|git( [^|;&]*)? commit( [^|;&]*)? -[a-zA-Z]*n[a-zA-Z]*( |$)' <<<"$CMD" &&
@@ -26,7 +27,7 @@ elif [[ "$KIND" == write ]]; then
       block "Blocked: $r belongs to the template and upgrades replace it. Put project checks in scripts/local/checks.sh."
   done <<<"$FILES"
 fi
-if [[ "$KIND" != other ]]; then
+if [[ "$KIND" == write ]]; then
   hits="$(private_terms "$TEXTS")"
   [[ -z "$hits" ]] || block "Blocked: this contains a private term (.scrub-patterns line $(echo $hits)). Leave it out."
 fi
