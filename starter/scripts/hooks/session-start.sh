@@ -20,7 +20,7 @@ if [[ -x scripts/check.sh ]]; then
 fi
 [[ -x scripts/template-status.sh ]] && out+="$(scripts/template-status.sh --brief </dev/null)"$'\n'
 if [[ -f memory/INDEX.md ]]; then
-  rows="$(grep -E '^\| *[^ |-]' memory/INDEX.md | grep -vE '^\| *Topic *\|' | head -40)"
+  rows="$(grep -E '^\| *[^ |-]' memory/INDEX.md | grep -vE '^\| *(Topic|Thread) *\|' | head -40)"
   out+="Memory index (open a topic only when the task needs it):"$'\n'"${rows:-  (no topics yet)}"$'\n'
 fi
 say "${out%$'\n'}"

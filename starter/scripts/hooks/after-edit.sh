@@ -8,11 +8,12 @@ problems=""
 while IFS= read -r f; do
   r="$(rel "$f")"; [[ -n "$r" && -f "$r" ]] || continue
   case "$r" in
-    AGENTS.md|build-notes/project.md|build-notes/task.md|memory/INDEX.md|memory/topics/*.md)
+    AGENTS.md|build-notes/project.md|build-notes/task.md|memory/INDEX.md|memory/topics/*.md|memory/threads/*.md)
       out="$(scripts/check-lines.sh 2>&1)" || problems+="$(grep -F "$r " <<<"$out")"$'\n' ;;
   esac
-  [[ "$r" == memory/topics/*.md ]] && ! grep -qF "topics/${r##*/}" memory/INDEX.md 2>/dev/null &&
-    problems+="memory: add a row for topics/${r##*/} to memory/INDEX.md."$'\n'
+  case "$r" in memory/topics/*.md|memory/threads/*.md)
+    grep -qF "${r#memory/}" memory/INDEX.md 2>/dev/null || problems+="memory: add a row for ${r#memory/} to memory/INDEX.md."$'\n' ;;
+  esac
   hits="$(private_terms "$r")"
   [[ -z "$hits" ]] || problems+="$r contains a private term (.scrub-patterns line $(echo $hits)); remove it."$'\n'
 done <<<"$FILES"

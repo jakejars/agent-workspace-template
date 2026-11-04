@@ -2,7 +2,7 @@
 # Part of the Agent Workspace Template (version in scripts/TEMPLATE_VERSION). Upgrades replace it.
 # before-tool.sh: stops actions that break a workspace rule, before they run, and says why.
 # Shell: skipping the git hooks, force-push, hard reset, recursive delete outside the project.
-# Writes: editing an old memory log entry, editing a template-owned file, writing a private term.
+# Writes: editing a committed memory log entry (a run in progress may still edit its own uncommitted run.md), editing a template-owned file, writing a private term.
 # Private terms are checked in what gets written, not in shell commands, so an agent can still search for one.
 . "$(dirname "$0")/lib.sh"
 if [[ "$KIND" == shell ]]; then
@@ -21,8 +21,8 @@ if [[ "$KIND" == shell ]]; then
 elif [[ "$KIND" == write ]]; then
   while IFS= read -r f; do
     r="$(rel "$f")"; [[ -n "$r" ]] || continue
-    [[ "$r" == memory/log/* && -e "$r" ]] &&
-      block "Blocked: memory/log/ is append-only. Add a new log file instead of changing $r."
+    [[ "$r" == memory/log/* ]] && git ls-files --error-unmatch -- "$r" >/dev/null 2>&1 &&
+      block "Blocked: memory/log/ is append-only once committed. Add a new entry instead of changing $r."
     [[ "${TEMPLATE_DEV:-}" == 1 ]] || ! template_owned "$r" ||
       block "Blocked: $r belongs to the template and upgrades replace it. Put project checks in scripts/local/checks.sh."
   done <<<"$FILES"

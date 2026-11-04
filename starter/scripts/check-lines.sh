@@ -4,7 +4,7 @@
 # Overrides go in scripts/local/limits.env; raise one only with the reason in the same commit.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
-LINES_AGENTS=40 LINES_PROJECT=120 LINES_TASK=80 LINES_INDEX=150 LINES_TOPIC=150
+LINES_AGENTS=40 LINES_PROJECT=120 LINES_TASK=80 LINES_INDEX=150 LINES_TOPIC=150 LINES_THREAD=150
 [[ -f scripts/local/limits.env ]] && . scripts/local/limits.env
 
 fail=0
@@ -19,5 +19,6 @@ cap build-notes/task.md "$LINES_TASK"
 cap memory/INDEX.md "$LINES_INDEX"
 shopt -s nullglob
 for f in memory/topics/*.md; do cap "$f" "$LINES_TOPIC"; done
+for f in memory/threads/*.md; do cap "$f" "$LINES_THREAD"; done
 (( fail == 0 )) || echo "lines: split the file or move detail out (topics, the log); keep the entry short."
 exit "$fail"

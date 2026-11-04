@@ -8,10 +8,11 @@ folder; `scripts/check.sh receipt` shows it and says whether the files have chan
 | --- | --- | --- |
 | Stack checks | `check.sh` | format, lint or tests fail for the stack it finds (Rust, Node, Python, C) |
 | Ceilings | `check-ceilings.sh`, only with `scripts/ceilings.json` | a count that may not rise (ignored tests, lint suppressions, TODOs) rises |
-| Line ceilings | `check-lines.sh`, always | `AGENTS.md` passes 40 lines, `project.md` 120, `task.md` 80, `memory/INDEX.md` or a topic 150 |
+| Line ceilings | `check-lines.sh`, always | `AGENTS.md` passes 40 lines, `project.md` 120, `task.md` 80, `memory/INDEX.md`, a topic or a thread 150 |
 | Private terms | `check-memory.sh`, with `memory/` | a line of `.scrub-patterns` appears in any file, or `.scrub-patterns` is missing or not gitignored |
-| Append-only log | `check-memory.sh`, with `memory/` | a file in `memory/log/` was edited or deleted (full mode also checks unpushed commits) |
-| One hop | `check-memory.sh`, with `memory/` | a topic has no row in `memory/INDEX.md`, or the index links to a missing topic |
+| Append-only log | `check-memory.sh`, with `memory/` | anything committed under `memory/log/` (entries, run folders, deliverables) was edited or deleted (full mode also checks unpushed commits) |
+| One hop | `check-memory.sh`, with `memory/` | a topic or thread has no row in `memory/INDEX.md`, or the index links to a missing file |
+| Runs and threads | `check-memory.sh`, with `memory/` | a log folder has no `run.md`; a thread has no `State:` line. Warns (never fails) when a run names no thread or a live thread is 60 days untouched |
 | Your checks | `scripts/local/checks.sh` | whatever you add there |
 | Template version | `template-status.sh`, full mode | never fails; prints a note when a newer template exists |
 

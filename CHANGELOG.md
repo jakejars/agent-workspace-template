@@ -3,6 +3,22 @@
 One section per version, newest first. Each says what changed in plain words and what you need to do.
 `bin/workspace status` prints the sections newer than the version a workspace is on.
 
+## 3.1.0 (2026-11-04)
+
+Long-horizon memory in three zoom levels (`docs/memory.md`).
+- `memory/threads/<name>.md`: one file per through-line (goal, where it stands, decisions, dated run
+  list), updated in place, 150-line ceiling, a row in the Threads table of `memory/INDEX.md`. A live
+  thread untouched for 60 days is a gate warning until updated, paused or done.
+- Runs with deliverables are folders in the log: `memory/log/YYYY-MM-DD-<slug>/run.md` (names its
+  thread) plus the files beside it. Committed log content never changes; a run in progress may still
+  edit its own uncommitted `run.md`.
+- Checks: every thread indexed, every log folder has a `run.md`, thread ceiling; the agent hooks know
+  about threads and treat only committed log content as frozen.
+
+What to do: in an existing assistant workspace, add the Threads table and the rules text from
+`assistant/memory/INDEX.md` to your `memory/INDEX.md` (it is yours, upgrades do not touch it), then
+`mkdir memory/threads`. Nothing else changes.
+
 ## 3.0.1 (2026-11-04)
 
 Small fixes after a review.

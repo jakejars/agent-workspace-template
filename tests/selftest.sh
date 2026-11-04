@@ -47,6 +47,31 @@ mv "$A/.scrub-patterns" "$TMP/sp"
 no "missing .scrub-patterns fails" "(cd $A && scripts/check.sh)"
 mv "$TMP/sp" "$A/.scrub-patterns"
 
+echo "threads and runs:"
+printf '# Thread: homelab\nState: live. Updated: 2026-11-04.\n\n## Goal\nquiet\n' > "$A/memory/threads/homelab.md"
+no "thread missing from the index fails" "(cd $A && scripts/check.sh)"
+echo "| [homelab](threads/homelab.md) | live | quiet so far | 2026-11-04 |" >> "$A/memory/INDEX.md"
+ok "indexed thread passes" "(cd $A && scripts/check.sh)"
+printf '# Thread: x\n\n## Goal\n' > "$A/memory/threads/nostate.md"; echo "| [nostate](threads/nostate.md) | | | |" >> "$A/memory/INDEX.md"
+no "thread without a State line fails" "(cd $A && scripts/check.sh)"
+rm "$A/memory/threads/nostate.md"; sed -i.bak '/nostate/d' "$A/memory/INDEX.md"; rm -f "$A/memory/INDEX.md.bak"
+printf '# Thread: old\nState: live. Updated: 2025-01-01.\n' > "$A/memory/threads/old.md"; echo "| [old](threads/old.md) | live | | 2025-01-01 |" >> "$A/memory/INDEX.md"
+ok "stale live thread warns but passes" "(cd $A && scripts/check.sh | grep -q 'WARN.*old.md' && scripts/check.sh)"
+rm "$A/memory/threads/old.md"; sed -i.bak '/threads\/old.md/d' "$A/memory/INDEX.md"; rm -f "$A/memory/INDEX.md.bak"
+mkdir -p "$A/memory/log/2026-11-04-first-run"
+no "log folder without run.md fails" "(cd $A && scripts/check.sh)"
+printf 'Thread: homelab\n\nDid the thing.\n' > "$A/memory/log/2026-11-04-first-run/run.md"; echo "result" > "$A/memory/log/2026-11-04-first-run/report.txt"
+ok "run folder with run.md and a deliverable passes" "(cd $A && scripts/check.sh)"
+ok "hook: editing an uncommitted run.md allowed" "hook $A claude before-tool.sh '{\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":\"$A/memory/log/2026-11-04-first-run/run.md\",\"new_string\":\"x\"}}'"
+(cd "$A" && git add -A && git commit -qm run)
+no "hook: editing a committed run.md blocked" "hook $A claude before-tool.sh '{\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":\"$A/memory/log/2026-11-04-first-run/run.md\",\"new_string\":\"x\"}}'"
+echo "edited" >> "$A/memory/log/2026-11-04-first-run/report.txt"
+no "editing a committed deliverable fails the gate" "(cd $A && scripts/check.sh)"
+git -C "$A" checkout -q memory/log/2026-11-04-first-run/report.txt
+for i in $(seq 1 160); do echo "x" >> "$A/memory/threads/homelab.md"; done
+no "thread over 150 lines fails" "(cd $A && scripts/check.sh)"
+git -C "$A" checkout -q memory/threads/homelab.md
+
 echo "agent hooks:"
 ok "session start shows the next action" "hook $A claude session-start.sh '{}' | grep >/dev/null 'Next action'"
 ok "session start shows the memory index" "hook $A claude session-start.sh '{}' | grep >/dev/null 'topics/people.md'"

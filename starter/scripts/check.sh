@@ -43,7 +43,7 @@ fi
 fail=0
 run() {  # run <name> <command...>: prints one line, the tail of the output on failure
   local name="$1" out; shift
-  if out="$("$@" 2>&1)"; then echo "  ok    $name"
+  if out="$("$@" 2>&1)"; then echo "  ok    $name"; grep 'WARN' <<<"$out" | sed 's/^/        /' || true
   else echo "  FAIL  $name"; printf '%s\n' "$out" | tail -40 | sed 's/^/        /'; fail=1; fi
 }
 have() { command -v "$1" >/dev/null 2>&1; }

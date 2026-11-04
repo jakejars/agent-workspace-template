@@ -18,7 +18,7 @@ agent: "Read AGENTS.md and help me with my current task." Setup never overwrites
 | Start | You get |
 | --- | --- |
 | **Project** | `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `build-notes/` (project, task, taste), `scripts/check.sh` and its checks, `.githooks/` |
-| **Assistant** | Project, plus `memory/` (`INDEX.md`, `topics/`, `log/`) and a gitignored `.scrub-patterns` for private terms |
+| **Assistant** | Project, plus `memory/` (`INDEX.md`, `threads/`, `topics/`, `log/`) and a gitignored `.scrub-patterns` for private terms. Three zoom levels: `docs/memory.md` |
 
 ## What is whose
 
@@ -46,6 +46,7 @@ agent can bypass; the gate and the receipt are the proof.
 ## More
 
 - `docs/checks.md`: what the gate checks and why.
+- `docs/memory.md`: threads, topics and runs: the three zoom levels of an assistant's memory.
 - `docs/moving.md`: moving an old-layout workspace to 3.0.
 - `tests/selftest.sh`: sets up both starts in a temporary folder and proves the checks.
 
