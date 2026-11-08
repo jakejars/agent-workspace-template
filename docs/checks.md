@@ -25,3 +25,24 @@ Stopping: the before-stop hook asks for a passing gate when files changed. The o
 Line limits can be changed in `scripts/local/limits.env`, with the reason in the same commit. Agents
 cannot change that file or an existing `scripts/ceilings.json`; the owner does. The
 checks are rules a tool can see; anything that needs judgement belongs in `AGENTS.md` or a review.
+
+## Enforcement contract
+
+Hooks ask an agent to follow the rules; a harness that can enforce them reads one JSON file instead, written
+by `bin/workspace` into that harness's own folder (today `agents/qsh.json` → `.qsh/workspace.json`; another
+harness gets its own `agents/<name>.json`). Same fields for every harness:
+
+| Field | Meaning |
+|---|---|
+| `hooks` | the `scripts/hooks/` scripts to run (session start, before a tool, after an edit) |
+| `hook_env` | variables the hooks get, e.g. `AGENT_HARNESS`, and `RULES_PINNED=1` when the harness pins the Rules itself |
+| `gate` | the checks that decide "done" (`scripts/check.sh --json`), skipped when nothing outside `build-notes/` changed |
+| `blocked` | the honest way out: `State: blocked` in `build-notes/task.md`, reason under "Open or risky" |
+| `notes` | the file to rewrite before stopping when other files changed |
+| `locked_paths`, `append_only_once_committed` | files the agent may read but never change |
+| `review_on_change` | files whose changes the owner should see (`scripts/local/checks.sh` decides what the gate runs) |
+| `pinned_rules` | the `AGENTS.md` section that goes with every request, whatever a summary drops |
+| `docs` | the docs folder, for a harness that lists docs and points at the one governing a file |
+
+What only takes rights away (locks, pinned rules) can apply at once; anything that runs project code (hooks,
+the gate) should wait for the owner's OK in that harness.

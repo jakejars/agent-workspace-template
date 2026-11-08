@@ -2,7 +2,8 @@
   "about": "Agent Workspace Template contract for qsh (read by qsh's workspace plugin). What only takes rights away (locks, the pinned Rules) applies at once; the gate and the hooks run once the person types /workspace trust in this project. Written by bin/workspace (init, upgrade); replaced on upgrade.",
   "schema": 2,
   "hook_env": {
-    "AGENT_HARNESS": "qsh"
+    "AGENT_HARNESS": "qsh",
+    "RULES_PINNED": "1"
   },
   "hooks": {
     "session_start": "scripts/hooks/session-start.sh",

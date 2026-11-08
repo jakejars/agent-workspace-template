@@ -5,13 +5,14 @@ One section per version, newest first. Each says what changed in plain words and
 
 ## 3.3.0 (2026-11-08)
 
-The qsh contract matches what qsh enforces, docs agents can find, and a plan skill for long work.
-- qsh contract schema 2 (`.qsh/workspace.json`, read by qsh's workspace plugin): locks and the pinned
-  Rules apply at once; the gate (`scripts/check.sh --json`) and the hooks run once you type
-  `/workspace trust` in the project. The gate is skipped on a turn that changed nothing outside
-  `build-notes/`. `State: blocked` with a reason ends the task honestly; files changed with
-  `task.md` untouched get one nudge to rewrite it. Before-stop is the gate's job in qsh, so it is
-  no longer in the contract. Session start leaves out the Rules under qsh (it pins them).
+An enforcement contract any harness can read, docs agents can find, and a plan skill for long work.
+- Enforcement contract, schema 2 (fields in `docs/checks.md`; qsh is the first harness to read it, from
+  `.qsh/workspace.json`): locks and the pinned Rules apply at once; the gate (`scripts/check.sh
+  --json`) and the hooks wait for the owner's OK. The gate is skipped when nothing outside
+  `build-notes/` changed. `State: blocked` with a reason ends the task honestly; files changed with
+  `task.md` untouched get one nudge to rewrite it. A harness that runs the gate itself needs no
+  before-stop hook, so the contract has none. Session start leaves out the Rules when the harness
+  pins them (`RULES_PINNED=1`).
 - `docs/`, when a project has one: each doc carries frontmatter (`description`, `read_when`, optional
   `governs` + `reviewed`); `scripts/check-docs.sh` checks it, the links and the generated
   `docs/index.md`, and warns when governed code changed after a review. See `docs/project-docs.md`.

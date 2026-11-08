@@ -36,16 +36,16 @@ before 3.0 are moved once instead: `docs/moving.md`.
 ## Agent hooks
 
 Setup also writes hook configs for Claude Code (`.claude/settings.json`), Codex (`.codex/hooks.json`),
-Antigravity (`.agents/hooks.json`) and qsh (`.qsh/workspace.json`). They run `scripts/hooks/`: context at session start, guards before a
+Antigravity (`.agents/hooks.json`) and qsh (`.qsh/workspace.json`, the enforcement contract). They run `scripts/hooks/`: context at session start, guards before a
 tool runs (skipping the git hooks, force-push, hard reset, deleting outside the project, editing an old
 log entry or a template file, writing a private term), a check after each edit, and a reminder to run
 the gate before stopping. Claude Code and Antigravity are seen to run them. Codex 0.166 did not run
 project-level hooks in our tests; there the git hooks still hold the gate. Hooks are a convenience an
-agent can bypass; the gate and the receipt are the proof. qsh enforces the contract (its workspace
-plugin): the template's files and the limits files are locked, the Rules section of `AGENTS.md` is
-pinned through compaction, and once you type `/workspace trust` in the project it runs the hooks and
-accepts "done" only when `scripts/check.sh --json` passes, or from `State: blocked` with a reason in
-`build-notes/task.md`.
+agent can bypass; the gate and the receipt are the proof. A harness that can enforce rules instead of
+asking for them reads a contract (format: `docs/checks.md`, "Enforcement contract"): the template's files
+and the limits files locked, the Rules section of `AGENTS.md` pinned through compaction, and "done"
+accepted only when `scripts/check.sh --json` passes, or from `State: blocked` with a reason in
+`build-notes/task.md`. Anything in it that runs project code waits for your OK in that harness.
 
 ## More
 

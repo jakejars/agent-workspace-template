@@ -141,7 +141,9 @@ git -C "$P" checkout -q build-notes/task.md; rm "$P/wip.md"
 
 echo "qsh contract v2:"
 ok "the gate runs check.sh --json; before-stop is left to qsh's gate" "jtrue $P/.qsh/workspace.json \"d['schema'] == 2 and d['gate']['checks'][0]['run'] == 'scripts/check.sh --json' and 'before_stop' not in d['hooks'] and d['blocked']['file'] == 'build-notes/task.md'\""
-no "qsh: session start leaves the Rules to qsh's pin" "hook $P qsh session-start.sh '{}' | grep >/dev/null 'Rules (AGENTS.md)'"
+ok "the contract tells the hooks the harness pins the Rules" "jtrue $P/.qsh/workspace.json \"d['hook_env']['RULES_PINNED'] == '1'\""
+no "session start leaves the Rules out when the harness pins them" "(cd $P && printf '{}' | RULES_PINNED=1 AGENT_HARNESS=qsh scripts/hooks/session-start.sh) | grep >/dev/null 'Rules (AGENTS.md)'"
+ok "qsh without the flag still gets the Rules (no harness names in the hooks)" "hook $P qsh session-start.sh '{}' | grep >/dev/null 'Rules (AGENTS.md)'"
 ok "qsh: session start still shows the task state" "hook $P qsh session-start.sh '{}' | grep >/dev/null '(state: active)'"
 ok "exec-plan skill installed" "[[ -f $P/.agents/skills/exec-plan/SKILL.md ]] && grep -q '^name: exec-plan' $P/.agents/skills/exec-plan/SKILL.md"
 
