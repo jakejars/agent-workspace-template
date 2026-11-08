@@ -59,11 +59,16 @@ install_hooks() {  # install_hooks <dir>: merge the template's agent hooks into 
   python3 -I - "$TPL/agents" "$1" <<'PY'
 import json, os, sys
 src, dst = sys.argv[1], sys.argv[2]
-targets = {"claude.json": ".claude/settings.json", "codex.json": ".codex/hooks.json", "agy.json": ".agents/hooks.json"}
+targets = {"claude.json": ".claude/settings.json", "codex.json": ".codex/hooks.json", "agy.json": ".agents/hooks.json",
+           "qsh.json": ".qsh/workspace.json"}
 ours = lambda h: isinstance(h, dict) and "/scripts/hooks/" in str(h.get("command", "")) and "AGENT_HARNESS=" in str(h.get("command", ""))
 for name, rel in targets.items():
     new = json.load(open(os.path.join(src, name)))
     path = os.path.join(dst, rel)
+    if name == "qsh.json":  # the template's own file: written whole, replaced on upgrade
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f: json.dump(new, f, indent=2); f.write("\n")
+        print(f"  hooks  {rel}"); continue
     try: cur = json.load(open(path))
     except FileNotFoundError: cur = {}
     except ValueError: print(f"  skipped {rel}: not valid JSON, fix it and re-run"); continue

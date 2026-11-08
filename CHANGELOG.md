@@ -3,6 +3,31 @@
 One section per version, newest first. Each says what changed in plain words and what you need to do.
 `bin/workspace status` prints the sections newer than the version a workspace is on.
 
+## 3.2.0 (2026-11-08)
+
+Gate results a harness can read, an honest way to stop when stuck, and a contract for qsh.
+- `scripts/check.sh --json` prints one JSON object: the result, the tree hash, and each check with its
+  status, warnings and (when it fails) the tail of its output. Every run also writes
+  `last-check.json` beside the text receipt. `scripts/check.sh receipt --json` adds whether the tree
+  still matches and exits 0 only when it does.
+- Stuck is now a real outcome: `State: active | blocked | done` in `build-notes/task.md`. The
+  before-stop hook lets an agent stop without a passing gate only when the state is `blocked` and the
+  reason is written under "Open or risky".
+- Session start re-shows the Rules section of `AGENTS.md` (also after a compaction, so a summary
+  cannot drop it) and the task state.
+- Agents can no longer change an existing `scripts/local/limits.env` or `scripts/ceilings.json`: the
+  limits the gate enforces are the owner's call. Creating a first `ceilings.json` is still allowed.
+- qsh: setup writes `.qsh/workspace.json`, which runs the same hooks and tells qsh what to enforce
+  rather than ask: locked paths (template files, the limits files), the Rules section to pin, the
+  JSON gate and receipt, and when "done" or "blocked" may be accepted.
+- Starter `AGENTS.md` asks for one file up front (`task.md`); `project.md`, `taste.md` and the
+  memory index are read when the task needs them. It adds a Done rule.
+
+What to do: `bin/workspace upgrade <dir> --yes`. Your own files are not touched, so by hand:
+in `AGENTS.md`, replace "Read first" with the starter's version and add its Done rule to Rules;
+in `build-notes/task.md`, add the `State:` line under the Updated line. Both are optional; without
+the State line an agent is treated as active.
+
 ## 3.1.0 (2026-11-04)
 
 Long-horizon memory in three zoom levels (`docs/memory.md`).

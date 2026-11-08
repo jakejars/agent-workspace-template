@@ -4,11 +4,11 @@
 `CLAUDE.md` and `GEMINI.md` point here. Facts only; keep it under 40 lines.
 
 ## Read first
-1. `build-notes/task.md`: what exists, what was verified, the next action. Check it against the repo
-   before acting; rewrite it before you stop.
-2. `build-notes/project.md`: what this is, how it is built, what is decided and why.
-3. `build-notes/taste.md`: the owner's standing preferences, in their words.
-4. `memory/INDEX.md`, if present: what is remembered and where; its rules are at its top.
+`build-notes/task.md`: what exists, what was verified, the next action. Check it against the repo
+before acting; rewrite it before you stop. Read the rest only when the task needs it:
+- `build-notes/project.md` for a design or scope decision (what is decided and why);
+- `build-notes/taste.md` for anything the owner will see or use (their standing preferences);
+- `memory/INDEX.md`, if present, for anything worked on before (open a topic only when needed).
 
 ## Commands
 | Do this | Run this |
@@ -19,6 +19,7 @@
 | Show what was last checked | `scripts/check.sh receipt` |
 
 ## Rules
+- Done: the gate passes and task.md is rewritten. Stuck: set `State: blocked` in task.md, with why.
 - Invariants: <rules a change may never break, or "none yet">.
 - Ask the owner first before: <actions on real data, releases, accounts, money, anything irreversible>.
 - Project checks go in `scripts/local/checks.sh`; `scripts/*.sh` belong to the template (see Template).

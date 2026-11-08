@@ -1,0 +1,46 @@
+{
+  "about": "Agent Workspace Template contract for qsh. The same hook scripts as the other agents; qsh also enforces as locks what the hooks can only ask for. Written by bin/workspace (init, upgrade); replaced on upgrade.",
+  "schema": 1,
+  "hook_env": {
+    "AGENT_HARNESS": "qsh"
+  },
+  "hook_event_shape": "claude",
+  "hooks": {
+    "session_start": "scripts/hooks/session-start.sh",
+    "before_tool": "scripts/hooks/before-tool.sh",
+    "after_edit": "scripts/hooks/after-edit.sh",
+    "before_stop": "scripts/hooks/before-stop.sh"
+  },
+  "gate": {
+    "fast": "scripts/check.sh --json",
+    "full": "scripts/check.sh full --json",
+    "receipt": "scripts/check.sh receipt --json"
+  },
+  "done": {
+    "accept_when": "receipt result is PASS and tree_matches_now is true",
+    "blocked_when": "build-notes/task.md has 'State: blocked' and a filled-in 'Open or risky' section",
+    "ignore_changes_under": [
+      "build-notes/"
+    ]
+  },
+  "locked_paths": [
+    "scripts/*.sh",
+    "scripts/hooks/**",
+    "scripts/TEMPLATE_VERSION",
+    ".githooks/**",
+    "scripts/local/limits.env",
+    "scripts/ceilings.json",
+    ".qsh/workspace.json"
+  ],
+  "review_on_change": [
+    "scripts/local/checks.sh"
+  ],
+  "append_only_once_committed": [
+    "memory/log/**"
+  ],
+  "pinned_rules": {
+    "file": "AGENTS.md",
+    "section": "Rules"
+  },
+  "secret_patterns_file": ".scrub-patterns"
+}

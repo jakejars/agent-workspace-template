@@ -2,7 +2,8 @@
 # Part of the Agent Workspace Template (version in scripts/TEMPLATE_VERSION). Upgrades replace it.
 # before-tool.sh: stops actions that break a workspace rule, before they run, and says why.
 # Shell: skipping the git hooks, force-push, hard reset, recursive delete outside the project.
-# Writes: editing a committed memory log entry (a run in progress may still edit its own uncommitted run.md), editing a template-owned file, writing a private term.
+# Writes: editing a committed memory log entry (a run in progress may still edit its own uncommitted run.md), editing a template-owned file,
+# changing an existing limits file (scripts/local/limits.env, scripts/ceilings.json: the owner's call), writing a private term.
 # Private terms are checked in what gets written, not in shell commands, so an agent can still search for one.
 . "$(dirname "$0")/lib.sh"
 if [[ "$KIND" == shell ]]; then
@@ -25,6 +26,8 @@ elif [[ "$KIND" == write ]]; then
       block "Blocked: memory/log/ is append-only once committed. Add a new entry instead of changing $r."
     [[ "${TEMPLATE_DEV:-}" == 1 ]] || ! template_owned "$r" ||
       block "Blocked: $r belongs to the template and upgrades replace it. Put project checks in scripts/local/checks.sh."
+    owner_limit "$r" && [[ -e "$r" ]] &&
+      block "Blocked: $r sets the limits the gate enforces, so the owner changes it. Propose the change and the reason in your reply."
   done <<<"$FILES"
 fi
 if [[ "$KIND" == write ]]; then

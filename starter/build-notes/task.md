@@ -1,6 +1,7 @@
 # Task: <one line>
 
 Updated: <date>. Size: <Tiny | Small | Medium | Big>. Risk: <green | amber | red>.
+State: <active | blocked | done>. Blocked means the reason is written under "Open or risky".
 
 ## Now
 <What exists and works, two or three lines. Only what you have seen run.>

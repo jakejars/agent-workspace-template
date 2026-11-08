@@ -16,5 +16,12 @@ folder; `scripts/check.sh receipt` shows it and says whether the files have chan
 | Your checks | `scripts/local/checks.sh` | whatever you add there |
 | Template version | `template-status.sh`, full mode | never fails; prints a note when a newer template exists |
 
-Line limits can be changed in `scripts/local/limits.env`, with the reason in the same commit. The
+`scripts/check.sh --json` (and `receipt --json`) give the same results as one JSON object for harnesses:
+each check's name, status, warnings and failing output, the tree hash, and whether the tree still matches.
+
+Stopping: the before-stop hook asks for a passing gate when files changed. The other honest exit is
+`State: blocked` in `build-notes/task.md` with the reason under "Open or risky".
+
+Line limits can be changed in `scripts/local/limits.env`, with the reason in the same commit. Agents
+cannot change that file or an existing `scripts/ceilings.json`; the owner does. The
 checks are rules a tool can see; anything that needs judgement belongs in `AGENTS.md` or a review.

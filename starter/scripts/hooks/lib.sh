@@ -1,7 +1,8 @@
 # Part of the Agent Workspace Template (version in scripts/TEMPLATE_VERSION). Upgrades replace it.
 # lib.sh: shared by the agent hooks. Each agent sends its hook event as JSON on stdin in its own
 # shape; this reads it once and sets the same variables for all of them:
-#   HARNESS  claude | codex | agy | other (from $AGENT_HARNESS, set in each agent's hook config)
+#   HARNESS  claude | codex | agy | qsh | other (from $AGENT_HARNESS, set in each agent's hook config;
+#            qsh sends Claude Code's event shape)
 #   ROOT     the project root          KIND   shell | write | other
 #   CMD      the shell command         FILES  the paths a write touches, one per line
 #   TEXTS    a temp file with every string the action carries (checked for private terms)
@@ -74,6 +75,20 @@ template_owned() {  # template_owned <relative path>: true for files that templa
     scripts/*.sh|scripts/hooks/*|scripts/TEMPLATE_VERSION|.githooks/*) return 0 ;;
   esac
   return 1
+}
+owner_limit() {  # owner_limit <relative path>: true for the files that set the limits the gate enforces
+  case "$1" in scripts/local/limits.env|scripts/ceilings.json) return 0 ;; esac
+  return 1
+}
+section() {  # section <file> <heading>: the non-empty lines of one "## heading" section
+  awk -v h="## $2" '$0 == h {on = 1; next} /^## / {on = 0} on && NF' "$1" 2>/dev/null
+}
+task_state() {  # active | blocked | done, from the State: line of build-notes/task.md (active when unset)
+  local s; s="$(sed -n 's/^State: *\([a-z]*\).*/\1/p' build-notes/task.md 2>/dev/null | head -1)"
+  case "$s" in blocked|done) echo "$s" ;; *) echo active ;; esac
+}
+blocked_reason() {  # the filled-in lines under "Open or risky" in task.md (placeholders in <...> skipped)
+  section build-notes/task.md "Open or risky" | grep -v '^[[:space:]]*<' || true
 }
 say() {  # say <text>: add text to the agent's context (session start)
   if [[ "$HARNESS" == agy ]]; then

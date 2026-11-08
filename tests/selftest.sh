@@ -8,6 +8,12 @@ export GIT_CONFIG_GLOBAL="$TMP/gitconfig" GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t
 pass=0 fail=0
 ok() { if eval "$2" >/dev/null 2>&1; then echo "  ok    $1"; pass=$((pass + 1)); else echo "  FAIL  $1"; fail=$((fail + 1)); fi; }
 no() { ok "$1" "! { $2; }"; }
+jtrue() {  # jtrue <file> <python expression on d>: true when the JSON in <file> makes it true
+  python3 -I -c 'import json, sys; d = json.load(open(sys.argv[1])); sys.exit(0 if eval(sys.argv[2]) else 1)' "$1" "$2"
+}
+edit() {  # edit <file> <old> <new>: replace text in a file (portable, no sed -i)
+  python3 -I -c 'import sys; p, a, b = sys.argv[1:4]; s = open(p).read(); assert a in s, a; open(p, "w").write(s.replace(a, b, 1))' "$1" "$2" "$3"
+}
 hook() {  # hook <dir> <harness> <script> <json>: run one agent hook the way that agent would
   (cd "$1" && printf '%s' "$4" | AGENT_HARNESS="$2" CLAUDE_PROJECT_DIR="$1" "$1/scripts/hooks/$3")
 }
@@ -16,7 +22,7 @@ echo "project start:"
 P="$TMP/proj"; "$W" init project "$P" >/dev/null
 ok "init made the core" "[[ -f $P/AGENTS.md && -f $P/build-notes/task.md && -x $P/scripts/check.sh ]]"
 ok "version recorded" "[[ \$(cat $P/scripts/TEMPLATE_VERSION) == \$($W version) ]]"
-ok "agent hooks installed for Claude, Codex, Antigravity" "[[ -f $P/.claude/settings.json && -f $P/.codex/hooks.json && -f $P/.agents/hooks.json ]]"
+ok "agent hooks installed for Claude, Codex, Antigravity, qsh" "[[ -f $P/.claude/settings.json && -f $P/.codex/hooks.json && -f $P/.agents/hooks.json && -f $P/.qsh/workspace.json ]]"
 ok "git hooks switched on" "[[ \$(git -C $P config core.hooksPath) == .githooks ]]"
 ok "fast gate passes" "(cd $P && scripts/check.sh)"
 ok "first commit through the pre-commit hook" "(cd $P && git add -A && git commit -qm start)"
@@ -99,6 +105,39 @@ ok "before stop: asks only once" "hook $A claude before-stop.sh '{}'"
 (cd "$A" && scripts/check.sh >/dev/null)
 echo "more" >> "$A/new-file.md"
 ok "before stop: passing gate lets it stop" "(cd $A && scripts/check.sh) && hook $A claude before-stop.sh '{}'"
+
+echo "json gate and receipt:"
+ok "gate --json prints one JSON object that passes" "(cd $P && scripts/check.sh --json > $TMP/g.json) && jtrue $TMP/g.json \"d['result'] == 'PASS' and any(c['name'] == 'line ceilings' and c['status'] == 'ok' for c in d['checks'])\""
+ok "JSON receipt written beside the text one" "jtrue \$(git -C $P rev-parse --absolute-git-dir)/last-check.json \"d['result'] == 'PASS' and d['tree']\""
+ok "receipt --json: tree still matches" "(cd $P && scripts/check.sh receipt --json > $TMP/r.json) && jtrue $TMP/r.json \"d['tree_matches_now'] is True\""
+echo "scratch" > "$P/scratch.md"
+no "receipt --json: tree moved since" "(cd $P && scripts/check.sh receipt --json)"
+rm "$P/scratch.md"
+for i in $(seq 1 45); do echo "line $i" >> "$P/AGENTS.md"; done
+ok "failing gate --json names the failing check and its output" "(cd $P && ! scripts/check.sh --json > $TMP/g.json) && jtrue $TMP/g.json \"d['result'] == 'FAIL' and any(c['name'] == 'line ceilings' and c['status'] == 'fail' and c['output_tail'] for c in d['checks'])\""
+git -C "$P" checkout -q AGENTS.md
+
+echo "qsh contract and the limits files:"
+ok "qsh contract locks the limits and pins the Rules" "jtrue $P/.qsh/workspace.json \"'scripts/local/limits.env' in d['locked_paths'] and d['pinned_rules']['section'] == 'Rules'\""
+no "qsh: --no-verify blocked" "hook $P qsh before-tool.sh '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"git commit --no-verify -m x\"}}'"
+ok "qsh: a safe command allowed" "hook $P qsh before-tool.sh '{\"tool_name\":\"Bash\",\"tool_input\":{\"command\":\"ls\"}}'"
+no "changing limits.env blocked" "hook $P claude before-tool.sh '{\"tool_name\":\"Edit\",\"tool_input\":{\"file_path\":\"$P/scripts/local/limits.env\",\"new_string\":\"LINES_AGENTS=400\"}}'"
+ok "creating a first ceilings.json allowed" "hook $P claude before-tool.sh '{\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"$P/scripts/ceilings.json\",\"content\":\"{}\"}}'"
+echo '{}' > "$P/scripts/ceilings.json"
+no "changing an existing ceilings.json blocked" "hook $P claude before-tool.sh '{\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"$P/scripts/ceilings.json\",\"content\":\"{}\"}}'"
+rm "$P/scripts/ceilings.json"
+ok "session start re-shows the Rules section" "hook $P claude session-start.sh '{}' | grep >/dev/null 'Rules (AGENTS.md)'"
+ok "session start shows the task state" "hook $P claude session-start.sh '{}' | grep >/dev/null '(state: active)'"
+
+echo "blocked exit:"
+echo "work in progress" > "$P/wip.md"
+no "before stop: asks when files changed and nothing passed" "hook $P claude before-stop.sh '{}'"
+edit "$P/build-notes/task.md" "State: <active | blocked | done>." "State: blocked."
+no "before stop: blocked without a reason still asks" "hook $P claude before-stop.sh '{}'"
+ok "session start shows the blocked state" "hook $P claude session-start.sh '{}' | grep >/dev/null '(state: blocked)'"
+edit "$P/build-notes/task.md" "<Known bugs, unverified parts, assumptions that could be wrong.>" "Waiting on the owner for the API key."
+ok "before stop: blocked with a reason lets it stop" "hook $P claude before-stop.sh '{}'"
+git -C "$P" checkout -q build-notes/task.md; rm "$P/wip.md"
 
 echo "versions and upgrades:"
 ok "up to date" "$W status $P | grep >/dev/null 'up to date'"

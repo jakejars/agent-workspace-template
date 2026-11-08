@@ -35,13 +35,16 @@ before 3.0 are moved once instead: `docs/moving.md`.
 
 ## Agent hooks
 
-Setup also writes hook configs for Claude Code (`.claude/settings.json`), Codex (`.codex/hooks.json`) and
-Antigravity (`.agents/hooks.json`). They run `scripts/hooks/`: context at session start, guards before a
+Setup also writes hook configs for Claude Code (`.claude/settings.json`), Codex (`.codex/hooks.json`),
+Antigravity (`.agents/hooks.json`) and qsh (`.qsh/workspace.json`). They run `scripts/hooks/`: context at session start, guards before a
 tool runs (skipping the git hooks, force-push, hard reset, deleting outside the project, editing an old
 log entry or a template file, writing a private term), a check after each edit, and a reminder to run
 the gate before stopping. Claude Code and Antigravity are seen to run them. Codex 0.166 did not run
 project-level hooks in our tests; there the git hooks still hold the gate. Hooks are a convenience an
-agent can bypass; the gate and the receipt are the proof.
+agent can bypass; the gate and the receipt are the proof. qsh reads the same hooks from its contract file
+and enforces the rest as locks: the template's files and the limits files cannot be written, the Rules
+section of `AGENTS.md` is pinned through compaction, and "done" is accepted only from a passing JSON
+receipt that matches the tree, or from `State: blocked` with a reason in `build-notes/task.md`.
 
 ## More
 

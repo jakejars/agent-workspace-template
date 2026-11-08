@@ -2,16 +2,17 @@
 # Part of the Agent Workspace Template (version in scripts/TEMPLATE_VERSION). Upgrades replace it.
 # session-start.sh: what an agent needs at the start of every session, so it need not remember to look:
 # the next action and open risks from build-notes/task.md, whether the last check still holds, any
-# template upgrade waiting, and the memory index. Never fails. Also safe to run by hand.
+# template upgrade waiting, the Rules section of AGENTS.md (re-shown after a compaction, so it is not
+# lost from a summary) and the memory index. Never fails. Also safe to run by hand.
 . "$(dirname "$0")/lib.sh"
-section() {  # section <file> <heading>: the body of one "## heading" section
-  awk -v h="## $2" '$0 == h {on = 1; next} /^## / {on = 0} on && NF' "$1" 2>/dev/null
-}
 out="Workspace: $(basename "$ROOT"). AGENTS.md is the entrance; read it before acting."$'\n'
 if [[ -f build-notes/task.md ]]; then
-  out+="Task: $(sed -n 's/^# Task: //p' build-notes/task.md | head -1)"$'\n'
+  out+="Task: $(sed -n 's/^# Task: //p' build-notes/task.md | head -1) (state: $(task_state))"$'\n'
   n="$(section build-notes/task.md "Next action")"; [[ -n "$n" ]] && out+="Next action:"$'\n'"$n"$'\n'
   r="$(section build-notes/task.md "Open or risky")"; [[ -n "$r" ]] && out+="Open or risky:"$'\n'"$r"$'\n'
+fi
+if [[ -f AGENTS.md ]]; then
+  r="$(section AGENTS.md Rules)"; [[ -n "$r" ]] && out+="Rules (AGENTS.md):"$'\n'"$r"$'\n'
 fi
 if [[ -x scripts/check.sh ]]; then
   s="$(scripts/check.sh receipt 2>&1)"
