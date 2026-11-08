@@ -34,6 +34,7 @@ a newer version exists; upgrade with `<template>/bin/workspace upgrade .`.
 ## Map
 | Path | What |
 |---|---|
-| `build-notes/` | current truth: project, task, taste |
+| `build-notes/` | current truth: project, task, taste; `plans/` for long work (skill `exec-plan`) |
+| `docs/` | when needed: one topic per doc, frontmatter `description`, `read_when`; index generated |
 | `scripts/` | the gate and its checks; `scripts/local/` is this project's own |
 | `<src>` | <what lives there> |

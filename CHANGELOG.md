@@ -3,6 +3,25 @@
 One section per version, newest first. Each says what changed in plain words and what you need to do.
 `bin/workspace status` prints the sections newer than the version a workspace is on.
 
+## 3.3.0 (2026-11-08)
+
+The qsh contract matches what qsh enforces, docs agents can find, and a plan skill for long work.
+- qsh contract schema 2 (`.qsh/workspace.json`, read by qsh's workspace plugin): locks and the pinned
+  Rules apply at once; the gate (`scripts/check.sh --json`) and the hooks run once you type
+  `/workspace trust` in the project. The gate is skipped on a turn that changed nothing outside
+  `build-notes/`. `State: blocked` with a reason ends the task honestly; files changed with
+  `task.md` untouched get one nudge to rewrite it. Before-stop is the gate's job in qsh, so it is
+  no longer in the contract. Session start leaves out the Rules under qsh (it pins them).
+- `docs/`, when a project has one: each doc carries frontmatter (`description`, `read_when`, optional
+  `governs` + `reviewed`); `scripts/check-docs.sh` checks it, the links and the generated
+  `docs/index.md`, and warns when governed code changed after a review. See `docs/project-docs.md`.
+- `.agents/skills/exec-plan/SKILL.md`: when and how to keep a plan for long work in
+  `build-notes/plans/`, with a required decision log.
+- `AGENTS.md` Map names `docs/` and `build-notes/plans/`.
+
+What to do: `bin/workspace upgrade <dir> --yes` (it also adds the exec-plan skill once). By hand, in
+`AGENTS.md`'s Map, add the `docs/` row and the `plans/` note from the starter (optional).
+
 ## 3.2.0 (2026-11-08)
 
 Gate results a harness can read, an honest way to stop when stuck, and a contract for qsh.

@@ -111,8 +111,10 @@ fi
 # ceilings: counts that may not rise (allow, ignore, todo, undocumented unsafe...)
 [[ -f scripts/ceilings.json ]] && run "ceilings" scripts/check-ceilings.sh
 
-# entry files stay short; memory/ keeps its rules (private terms, append-only log, everything indexed)
+# entry files stay short; docs/ keeps its frontmatter and index; memory/ keeps its rules (private terms,
+# append-only log, everything indexed)
 run "line ceilings" scripts/check-lines.sh
+[[ -d docs ]] && run "docs" scripts/check-docs.sh
 [[ -d memory ]] && run "memory" scripts/check-memory.sh "$MODE"
 
 # project: this project's own checks live in scripts/local/checks.sh (never edited by upgrades)

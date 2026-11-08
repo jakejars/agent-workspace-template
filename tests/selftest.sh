@@ -139,6 +139,26 @@ edit "$P/build-notes/task.md" "<Known bugs, unverified parts, assumptions that c
 ok "before stop: blocked with a reason lets it stop" "hook $P claude before-stop.sh '{}'"
 git -C "$P" checkout -q build-notes/task.md; rm "$P/wip.md"
 
+echo "qsh contract v2:"
+ok "the gate runs check.sh --json; before-stop is left to qsh's gate" "jtrue $P/.qsh/workspace.json \"d['schema'] == 2 and d['gate']['checks'][0]['run'] == 'scripts/check.sh --json' and 'before_stop' not in d['hooks'] and d['blocked']['file'] == 'build-notes/task.md'\""
+no "qsh: session start leaves the Rules to qsh's pin" "hook $P qsh session-start.sh '{}' | grep >/dev/null 'Rules (AGENTS.md)'"
+ok "qsh: session start still shows the task state" "hook $P qsh session-start.sh '{}' | grep >/dev/null '(state: active)'"
+ok "exec-plan skill installed" "[[ -f $P/.agents/skills/exec-plan/SKILL.md ]] && grep -q '^name: exec-plan' $P/.agents/skills/exec-plan/SKILL.md"
+
+echo "project docs:"
+mkdir -p "$P/docs"; printf '# Auth\n' > "$P/docs/auth.md"
+no "a doc without frontmatter fails the gate" "(cd $P && scripts/check.sh)"
+printf -- '---\ndescription: Auth rules\nread_when: changing auth\ngoverns: [src/**]\nreviewed: 2000-01-01\n---\n# Auth\nSee [the old notes](nope.md).\n' > "$P/docs/auth.md"
+no "a broken link fails" "(cd $P && scripts/check-docs.sh --write >/dev/null; scripts/check-docs.sh)"
+edit "$P/docs/auth.md" "See [the old notes](nope.md)." "See the code."
+edit "$P/docs/auth.md" "description: Auth rules" "description: Session and auth rules"
+no "a stale index fails" "(cd $P && scripts/check-docs.sh)"
+ok "--write generates the index from the frontmatter" "(cd $P && scripts/check-docs.sh --write) && grep >/dev/null '| \[auth.md\](auth.md) | Session and auth rules | changing auth |' $P/docs/index.md"
+mkdir -p "$P/src"; echo "x = 1" > "$P/src/a.txt"
+ok "a commit with docs passes the pre-commit gate" "git -C $P add -A && git -C $P commit -qm 'docs and code'"
+ok "governed code changed after review: a warning, not a failure" "(cd $P && scripts/check.sh) | grep >/dev/null 'WARN docs/auth.md: code it governs changed'"
+git -C "$P" rm -q -r docs src; git -C "$P" commit -qm "drop docs" >/dev/null
+
 echo "versions and upgrades:"
 ok "up to date" "$W status $P | grep >/dev/null 'up to date'"
 echo 2.9.0 > "$P/scripts/TEMPLATE_VERSION"; echo "# old" >> "$P/scripts/check-lines.sh"

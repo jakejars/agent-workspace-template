@@ -11,7 +11,7 @@ if [[ -f build-notes/task.md ]]; then
   n="$(section build-notes/task.md "Next action")"; [[ -n "$n" ]] && out+="Next action:"$'\n'"$n"$'\n'
   r="$(section build-notes/task.md "Open or risky")"; [[ -n "$r" ]] && out+="Open or risky:"$'\n'"$r"$'\n'
 fi
-if [[ -f AGENTS.md ]]; then
+if [[ -f AGENTS.md && "$HARNESS" != qsh ]]; then  # qsh pins the Rules section to every request itself
   r="$(section AGENTS.md Rules)"; [[ -n "$r" ]] && out+="Rules (AGENTS.md):"$'\n'"$r"$'\n'
 fi
 if [[ -x scripts/check.sh ]]; then

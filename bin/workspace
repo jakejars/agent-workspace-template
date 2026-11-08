@@ -168,6 +168,8 @@ cmd_upgrade() {
   mkdir -p "$dir/scripts/local"
   [[ -f "$dir/scripts/local/checks.sh" ]] || cp -p "$TPL/starter/scripts/local/checks.sh" "$dir/scripts/local/checks.sh"
   [[ -f "$dir/scripts/local/limits.env" ]] || cp -p "$TPL/starter/scripts/local/limits.env" "$dir/scripts/local/limits.env"
+  [[ -e "$dir/.agents/skills/exec-plan" ]] || { mkdir -p "$dir/.agents/skills" &&  # added in 3.3.0; yours once there
+    cp -Rp "$TPL/starter/.agents/skills/exec-plan" "$dir/.agents/skills/exec-plan"; }
   git -C "$dir" config core.hooksPath .githooks
   echo "Upgraded to $LATEST. AGENTS.md, build-notes/, memory/ and scripts/local/ were not touched."
   (( kept == 0 )) || echo "Move any project-specific lines from the *.before-$LATEST copies into scripts/local/checks.sh, then delete those copies."

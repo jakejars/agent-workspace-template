@@ -41,14 +41,16 @@ tool runs (skipping the git hooks, force-push, hard reset, deleting outside the 
 log entry or a template file, writing a private term), a check after each edit, and a reminder to run
 the gate before stopping. Claude Code and Antigravity are seen to run them. Codex 0.166 did not run
 project-level hooks in our tests; there the git hooks still hold the gate. Hooks are a convenience an
-agent can bypass; the gate and the receipt are the proof. qsh reads the same hooks from its contract file
-and enforces the rest as locks: the template's files and the limits files cannot be written, the Rules
-section of `AGENTS.md` is pinned through compaction, and "done" is accepted only from a passing JSON
-receipt that matches the tree, or from `State: blocked` with a reason in `build-notes/task.md`.
+agent can bypass; the gate and the receipt are the proof. qsh enforces the contract (its workspace
+plugin): the template's files and the limits files are locked, the Rules section of `AGENTS.md` is
+pinned through compaction, and once you type `/workspace trust` in the project it runs the hooks and
+accepts "done" only when `scripts/check.sh --json` passes, or from `State: blocked` with a reason in
+`build-notes/task.md`.
 
 ## More
 
 - `docs/checks.md`: what the gate checks and why.
+- `docs/project-docs.md`: a project's own docs: frontmatter agents route by, the generated index, freshness.
 - `docs/memory.md`: threads, topics and runs: the three zoom levels of an assistant's memory.
 - `docs/moving.md`: moving an old-layout workspace to 3.0.
 - `tests/selftest.sh`: sets up both starts in a temporary folder and proves the checks.

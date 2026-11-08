@@ -1,25 +1,34 @@
 {
-  "about": "Agent Workspace Template contract for qsh. The same hook scripts as the other agents; qsh also enforces as locks what the hooks can only ask for. Written by bin/workspace (init, upgrade); replaced on upgrade.",
-  "schema": 1,
+  "about": "Agent Workspace Template contract for qsh (read by qsh's workspace plugin). What only takes rights away (locks, the pinned Rules) applies at once; the gate and the hooks run once the person types /workspace trust in this project. Written by bin/workspace (init, upgrade); replaced on upgrade.",
+  "schema": 2,
   "hook_env": {
     "AGENT_HARNESS": "qsh"
   },
-  "hook_event_shape": "claude",
   "hooks": {
     "session_start": "scripts/hooks/session-start.sh",
     "before_tool": "scripts/hooks/before-tool.sh",
-    "after_edit": "scripts/hooks/after-edit.sh",
-    "before_stop": "scripts/hooks/before-stop.sh"
+    "after_edit": "scripts/hooks/after-edit.sh"
   },
   "gate": {
-    "fast": "scripts/check.sh --json",
-    "full": "scripts/check.sh full --json",
-    "receipt": "scripts/check.sh receipt --json"
+    "checks": [
+      {
+        "name": "gate",
+        "run": "scripts/check.sh --json"
+      }
+    ],
+    "unchanged": {
+      "ignore": [
+        "build-notes/"
+      ]
+    }
   },
-  "done": {
-    "accept_when": "receipt result is PASS and tree_matches_now is true",
-    "blocked_when": "build-notes/task.md has 'State: blocked' and a filled-in 'Open or risky' section",
-    "ignore_changes_under": [
+  "blocked": {
+    "file": "build-notes/task.md",
+    "reason_section": "Open or risky"
+  },
+  "notes": {
+    "file": "build-notes/task.md",
+    "ignore": [
       "build-notes/"
     ]
   },
@@ -32,15 +41,17 @@
     "scripts/ceilings.json",
     ".qsh/workspace.json"
   ],
+  "append_only_once_committed": [
+    "memory/log/"
+  ],
   "review_on_change": [
     "scripts/local/checks.sh"
-  ],
-  "append_only_once_committed": [
-    "memory/log/**"
   ],
   "pinned_rules": {
     "file": "AGENTS.md",
     "section": "Rules"
   },
-  "secret_patterns_file": ".scrub-patterns"
+  "docs": {
+    "dir": "docs"
+  }
 }
