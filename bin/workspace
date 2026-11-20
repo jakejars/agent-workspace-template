@@ -6,7 +6,7 @@
 #                                      which template version <dir> is on; if a newer one exists,
 #                                      what changed (from CHANGELOG.md) and which files it replaces
 #   workspace upgrade [dir] [--yes]    show the status, then with --yes replace the template's own
-#                                      files. Never touches AGENTS.md, build-notes/, memory/ or scripts/local/.
+#                                      files. Never touches AGENTS.md, build-notes/, memory/, .harness/ or scripts/local/.
 #   workspace version                  this template's version
 set -euo pipefail
 TPL="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
@@ -50,6 +50,11 @@ copy_missing() {  # copy_missing <from> <to>: add files that are not there yet; 
     if [[ -e "$to/$f" ]]; then echo "  kept   $f (already there)"
     else mkdir -p "$to/$(dirname "$f")"; cp -p "$from/$f" "$to/$f"; echo "  added  $f"; fi
   done < <(cd "$from" && find . -type f | sort)
+}
+harness_dir() {  # harness_dir <dir>: the folder a learning harness writes; made once, never overwritten
+  [[ -e "$1/.harness" ]] && return 0
+  mkdir -p "$1/.harness"; cp -p "$TPL/harness/README.md" "$1/.harness/README.md"
+  printf '*\n' > "$1/.harness/.gitignore"; echo "  added  .harness/ (ignores itself; a learning harness writes it)"
 }
 ignore_line() {  # ignore_line <dir> <pattern>: add a .gitignore line once
   grep -qxF "$2" "$1/.gitignore" 2>/dev/null || echo "$2" >> "$1/.gitignore"
@@ -115,6 +120,7 @@ cmd_init() {
   chmod +x "$dir"/scripts/*.sh "$dir"/scripts/hooks/*.sh "$dir"/.githooks/*
   git -C "$dir" config core.hooksPath .githooks
   install_hooks "$dir"
+  harness_dir "$dir"
   echo "Next: fill the <...> brackets in AGENTS.md and build-notes/, then run scripts/check.sh."
 }
 
@@ -170,8 +176,9 @@ cmd_upgrade() {
   [[ -f "$dir/scripts/local/limits.env" ]] || cp -p "$TPL/starter/scripts/local/limits.env" "$dir/scripts/local/limits.env"
   [[ -e "$dir/.agents/skills/exec-plan" ]] || { mkdir -p "$dir/.agents/skills" &&  # added in 3.3.0; yours once there
     cp -Rp "$TPL/starter/.agents/skills/exec-plan" "$dir/.agents/skills/exec-plan"; }
+  harness_dir "$dir"  # added in 3.4.0; the harness's once there
   git -C "$dir" config core.hooksPath .githooks
-  echo "Upgraded to $LATEST. AGENTS.md, build-notes/, memory/ and scripts/local/ were not touched."
+  echo "Upgraded to $LATEST. AGENTS.md, build-notes/, memory/, .harness/ and scripts/local/ were not touched."
   (( kept == 0 )) || echo "Move any project-specific lines from the *.before-$LATEST copies into scripts/local/checks.sh, then delete those copies."
   echo "Next: run scripts/check.sh full."
 }

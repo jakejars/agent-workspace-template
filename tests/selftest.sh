@@ -161,6 +161,21 @@ ok "a commit with docs passes the pre-commit gate" "git -C $P add -A && git -C $
 ok "governed code changed after review: a warning, not a failure" "(cd $P && scripts/check.sh) | grep >/dev/null 'WARN docs/auth.md: code it governs changed'"
 git -C "$P" rm -q -r docs src; git -C "$P" commit -qm "drop docs" >/dev/null
 
+echo "the .harness folder:"
+ok "init made .harness with its README" "[[ -f $P/.harness/README.md && \$(cat $P/.harness/.gitignore) == '*' ]]"
+echo "learned" > "$P/.harness/memory.md"
+ok ".harness ignores itself: nothing shows in git status" "[[ -z \$(git -C $P status --porcelain) ]]"
+ok "the gate still passes with .harness content" "(cd $P && scripts/check.sh)"
+no "hook: an agent's write into .harness blocked" "hook $P claude before-tool.sh '{\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"$P/.harness/memory.md\",\"content\":\"x\"}}'"
+no "hook: Codex apply_patch into .harness blocked" "hook $P codex before-tool.sh '{\"tool_name\":\"apply_patch\",\"tool_input\":{\"input\":\"*** Begin Patch\n*** Add File: .harness/skills/x/SKILL.md\n*** End Patch\"}}'"
+ok "hook: the harness's improver may write there" "(cd $P && printf '%s' '{\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"$P/.harness/memory.md\",\"content\":\"x\"}}' | HARNESS_IMPROVER=1 AGENT_HARNESS=claude CLAUDE_PROJECT_DIR=$P scripts/hooks/before-tool.sh)"
+ok "hook: a write beside .harness still allowed" "hook $P claude before-tool.sh '{\"tool_name\":\"Write\",\"tool_input\":{\"file_path\":\"$P/harness-notes.md\",\"content\":\"x\"}}'"
+ok "session start names .harness once a harness wrote to it" "hook $P claude session-start.sh '{}' | grep >/dev/null '.harness/README.md'"
+no "session start says nothing about an empty .harness" "hook $A claude session-start.sh '{}' | grep >/dev/null '.harness/README.md'"
+ok "the contract names the folder as the harness's" "jtrue $P/.qsh/workspace.json \"d['harness_owned'] == ['.harness/**'] and not any(p.startswith('.harness') for p in d['locked_paths'])\""
+ok "init again keeps what the harness wrote" "$W init project $P >/dev/null && [[ \$(cat $P/.harness/memory.md) == learned ]]"
+ok "starter AGENTS.md links the folder and stays within 40 lines" "grep -q '.harness/README.md' $TPL/starter/AGENTS.md && (( \$(wc -l < $TPL/starter/AGENTS.md) <= 40 ))"
+
 echo "versions and upgrades:"
 ok "up to date" "$W status $P | grep >/dev/null 'up to date'"
 echo 2.9.0 > "$P/scripts/TEMPLATE_VERSION"; echo "# old" >> "$P/scripts/check-lines.sh"
@@ -169,6 +184,10 @@ ok "older version: what changed, from the change log" "$W status $P | grep >/dev
 ok "older version: lists files to replace" "$W status $P | grep >/dev/null 'changed  scripts/check-lines.sh'"
 ok "upgrade without --yes changes nothing" "$W upgrade $P >/dev/null && grep -q 2.9.0 $P/scripts/TEMPLATE_VERSION"
 ok "upgrade --yes applies and keeps the edited copy" "$W upgrade $P --yes >/dev/null && grep -q \$($W version) $P/scripts/TEMPLATE_VERSION && [[ -f $P/scripts/check-lines.sh.before-\$($W version) ]]"
+U="$TMP/up"; "$W" init project "$U" >/dev/null; mv "$U/.harness" "$TMP/gone"; echo 3.3.0 > "$U/scripts/TEMPLATE_VERSION"
+ok "upgrade adds .harness when it is missing" "$W upgrade $U --yes >/dev/null && [[ -f $U/.harness/README.md && -f $U/.harness/.gitignore ]]"
+echo "kept" > "$U/.harness/memory.md"; echo 3.3.0 > "$U/scripts/TEMPLATE_VERSION"
+ok "upgrade never touches an existing .harness" "$W upgrade $U --yes >/dev/null && [[ \$(cat $U/.harness/memory.md) == kept ]]"
 O="$TMP/old"; mkdir -p "$O/workspace" "$O/20_intent"; echo x > "$O/workspace/AGENTS.md"; git -C "$O" init -q
 ok "old layout: told to move" "$W status $O --brief | grep >/dev/null 'old layout'"
 no "old layout: init refuses" "$W init assistant $O"

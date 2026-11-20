@@ -42,6 +42,9 @@
     "scripts/ceilings.json",
     ".qsh/workspace.json"
   ],
+  "harness_owned": [
+    ".harness/**"
+  ],
   "append_only_once_committed": [
     "memory/log/"
   ],

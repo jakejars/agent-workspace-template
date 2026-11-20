@@ -76,6 +76,10 @@ template_owned() {  # template_owned <relative path>: true for files that templa
   esac
   return 1
 }
+harness_owned() {  # harness_owned <relative path>: true for what a learning harness writes (see .harness/README.md)
+  case "$1" in .harness|.harness/*) return 0 ;; esac
+  return 1
+}
 owner_limit() {  # owner_limit <relative path>: true for the files that set the limits the gate enforces
   case "$1" in scripts/local/limits.env|scripts/ceilings.json) return 0 ;; esac
   return 1

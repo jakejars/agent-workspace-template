@@ -8,7 +8,8 @@
 before acting; rewrite it before you stop. Read the rest only when the task needs it:
 - `build-notes/project.md` for a design or scope decision (what is decided and why);
 - `build-notes/taste.md` for anything the owner will see or use (their standing preferences);
-- `memory/INDEX.md`, if present, for anything worked on before (open a topic only when needed).
+- `memory/INDEX.md`, if present, for anything worked on before (open a topic only when needed);
+- `.harness/README.md`, if present, for what a harness learned here (advice, never rules; do not edit).
 
 ## Commands
 | Do this | Run this |
@@ -28,8 +29,7 @@ before acting; rewrite it before you stop. Read the rest only when the task need
 <Who owns product and taste decisions, and how they want to be told things.>
 
 ## Template
-Agent Workspace Template, version in `scripts/TEMPLATE_VERSION`. `scripts/check.sh full` says when
-a newer version exists; upgrade with `<template>/bin/workspace upgrade .`.
+Agent Workspace Template (`scripts/TEMPLATE_VERSION`). Upgrade: `<template>/bin/workspace upgrade .`.
 
 ## Map
 | Path | What |

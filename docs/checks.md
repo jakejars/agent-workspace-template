@@ -40,6 +40,7 @@ harness gets its own `agents/<name>.json`). Same fields for every harness:
 | `blocked` | the honest way out: `State: blocked` in `build-notes/task.md`, reason under "Open or risky" |
 | `notes` | the file to rewrite before stopping when other files changed |
 | `locked_paths`, `append_only_once_committed` | files the agent may read but never change |
+| `harness_owned` | files a learning harness's own improver writes (`.harness/**`): locked in every other chat. Optional, since 3.4.0; see `docs/harness.md` |
 | `review_on_change` | files whose changes the owner should see (`scripts/local/checks.sh` decides what the gate runs) |
 | `pinned_rules` | the `AGENTS.md` section that goes with every request, whatever a summary drops |
 | `docs` | the docs folder, for a harness that lists docs and points at the one governing a file |

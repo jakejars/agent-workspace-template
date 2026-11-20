@@ -25,6 +25,8 @@ agent: "Read AGENTS.md and help me with my current task." Setup never overwrites
 - **Yours:** `AGENTS.md`, `build-notes/`, `memory/`, `scripts/local/` (your own checks, limits and the
   template's location) and `scripts/ceilings.json`. Upgrades never touch them.
 - **The template's:** `scripts/*.sh`, `scripts/TEMPLATE_VERSION` and `.githooks/`. Upgrades replace them.
+- **The harness's:** `.harness/`, what a harness that learns from past work keeps for this project. It ignores
+  itself in git; agents read it and never edit it. Upgrades never touch it. See `docs/harness.md`.
 
 ## Versions and upgrades
 
@@ -52,6 +54,7 @@ accepted only when `scripts/check.sh --json` passes, or from `State: blocked` wi
 - `docs/checks.md`: what the gate checks and why.
 - `docs/project-docs.md`: a project's own docs: frontmatter agents route by, the generated index, freshness.
 - `docs/memory.md`: threads, topics and runs: the three zoom levels of an assistant's memory.
+- `docs/harness.md`: the `.harness/` folder: who writes it, who reads it, how it is kept safe.
 - `docs/moving.md`: moving an old-layout workspace to 3.0.
 - `tests/selftest.sh`: sets up both starts in a temporary folder and proves the checks.
 

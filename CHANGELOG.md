@@ -3,6 +3,25 @@
 One section per version, newest first. Each says what changed in plain words and what you need to do.
 `bin/workspace status` prints the sections newer than the version a workspace is on.
 
+## 3.4.0 (2026-11-20)
+
+A place for what a harness learns about a project, readable by every agent and written by none of them.
+- `.harness/`: made by `init` and `upgrade` when missing, never overwritten. It holds `README.md` (what
+  the folder is and its rules) and a `.gitignore` with `*`, so the folder ignores itself: no noise in
+  `git status`, and no change to the project's own `.gitignore`. A harness that learns from past work
+  writes `memory.md`, `skills/` and `scripts/` there. To share it, delete `.harness/.gitignore`.
+- Three owners now: yours, the template's, the harness's. See `docs/harness.md`.
+- The before-tool hook blocks an agent's write into `.harness/`. A harness's own improver sets
+  `HARNESS_IMPROVER=1`. Session start names the folder once a harness has written to it.
+- Enforcement contract: new optional field `harness_owned` (`.harness/**`). A harness that can enforce
+  locks the folder in every chat except its improver's. A harness that does not know the field ignores
+  it; there the hook is the only guard.
+- `AGENTS.md` starter: a "Read first" line for `.harness/README.md`; the Template section is one line.
+
+What to do: `bin/workspace upgrade <dir> --yes` (it adds `.harness/` once). By hand, in `AGENTS.md`
+under "Read first", add the `.harness/README.md` line from the starter (optional; keep the file under
+40 lines).
+
 ## 3.3.0 (2026-11-08)
 
 An enforcement contract any harness can read, docs agents can find, and a plan skill for long work.

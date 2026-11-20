@@ -3,6 +3,7 @@
 # before-tool.sh: stops actions that break a workspace rule, before they run, and says why.
 # Shell: skipping the git hooks, force-push, hard reset, recursive delete outside the project.
 # Writes: editing a committed memory log entry (a run in progress may still edit its own uncommitted run.md), editing a template-owned file,
+# writing into .harness/ (a learning harness's own improver sets HARNESS_IMPROVER=1),
 # changing an existing limits file (scripts/local/limits.env, scripts/ceilings.json: the owner's call), writing a private term.
 # Private terms are checked in what gets written, not in shell commands, so an agent can still search for one.
 . "$(dirname "$0")/lib.sh"
@@ -26,6 +27,8 @@ elif [[ "$KIND" == write ]]; then
       block "Blocked: memory/log/ is append-only once committed. Add a new entry instead of changing $r."
     [[ "${TEMPLATE_DEV:-}" == 1 ]] || ! template_owned "$r" ||
       block "Blocked: $r belongs to the template and upgrades replace it. Put project checks in scripts/local/checks.sh."
+    [[ "${HARNESS_IMPROVER:-}" == 1 ]] || ! harness_owned "$r" ||
+      block "Blocked: .harness/ holds what a harness learned and tested, and only its improver writes it. Say what is wrong in your reply."
     owner_limit "$r" && [[ -e "$r" ]] &&
       block "Blocked: $r sets the limits the gate enforces, so the owner changes it. Propose the change and the reason in your reply."
   done <<<"$FILES"
