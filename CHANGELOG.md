@@ -3,6 +3,15 @@
 One section per version, newest first. Each says what changed in plain words and what you need to do.
 `bin/workspace status` prints the sections newer than the version a workspace is on.
 
+## 3.4.1 (2026-11-20)
+
+The README is rewritten in plain words for new and experienced users alike.
+- Copy-paste messages that tell your agent to install the template, update a workspace, or move an
+  existing workspace onto it.
+- Short "by hand" steps for each, and a plain explanation of what the files are for.
+
+What to do: nothing. No workspace file changed; `bin/workspace upgrade` only moves the version number.
+
 ## 3.4.0 (2026-11-20)
 
 A place for what a harness learns about a project, readable by every agent and written by none of them.
